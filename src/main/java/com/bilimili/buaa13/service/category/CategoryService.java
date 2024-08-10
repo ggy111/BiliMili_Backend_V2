@@ -10,6 +10,14 @@ public interface CategoryService {
      */
     ResponseResult getAll();
 
+
+    /**
+     * 获取某个分区数据
+     * @return 响应对象
+     */
+    ResponseResult getOne(Integer mainCategoryId,Integer subCategoryId);
+
+
     /**
      * 根据id查询对应分区信息
      * @param mcId 主分区ID

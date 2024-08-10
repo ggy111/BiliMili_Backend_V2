@@ -14,4 +14,15 @@ public class Category {
     private String scName;
     private String descr;
     private String rcmTag;
+
+
+    public Category Category_initial(){
+        Category tempCategory = new Category();
+        tempCategory.setMcId(0);
+        tempCategory.setScId(1);
+        tempCategory.setMcName("unknown");
+        tempCategory.setScName("unknown");
+        tempCategory.setDescr("Category Not Defined");
+        return tempCategory;
+    }
 }

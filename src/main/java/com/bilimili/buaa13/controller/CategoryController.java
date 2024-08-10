@@ -19,4 +19,17 @@ public class CategoryController {
     public ResponseResult getAll() {
         return categoryService.getAll();
     }
+
+    /**
+     *  获取单个分区接口
+     * @return单个响应对象
+     *
+     * **/
+
+    @GetMapping("/category/getone")
+    public ResponseResult getOne(Integer mcId,Integer scId)
+    {
+        return CategoryService.getOne();
+    }
+
 }
