@@ -14,6 +14,7 @@ import com.bilimili.buaa13.service.video.VideoService;
 import com.bilimili.buaa13.service.video.VideoStatsService;
 import com.bilimili.buaa13.utils.ESUtil;
 import com.bilimili.buaa13.utils.OssUtil;
+import com.bilimili.buaa13.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,8 @@ public class VideoServiceImpl implements VideoService {
 
     @Autowired
     private OssUtil ossUtil;
+    @Autowired
+    private RedisUtil redisUtil;
 
     @Autowired
     private ESUtil esUtil;
@@ -255,10 +258,11 @@ public class VideoServiceImpl implements VideoService {
                 if (flag > 0) {
                     // 更新成功
                     esUtil.deleteVideo(vid);
+                    redisUtil.delValue("barrage_bidSet:" + vid);   // 删除该视频的弹幕
                     //注释redis
                     /*redisUtil.delMember("video_status:" + lastStatus, vid);     // 从旧状态移除
                     redisUtil.delValue("video:" + vid);     // 删除旧的视频信息
-                    redisUtil.delValue("danmu_idset:" + vid);   // 删除该视频的弹幕
+
                     redisUtil.zsetDelMember("user_video_upload:" + video.getUid(), video.getVid());*/
                     // 搞个异步线程去删除OSS的源文件
                     //注释异步线程

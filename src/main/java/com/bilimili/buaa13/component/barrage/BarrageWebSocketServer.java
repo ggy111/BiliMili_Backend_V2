@@ -1,4 +1,4 @@
-package com.bilimili.buaa13.component.danmu;
+package com.bilimili.buaa13.component.barrage;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -10,22 +10,23 @@ import com.bilimili.buaa13.utils.JwtUtil;
 import com.bilimili.buaa13.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 
 @Slf4j
 @Component
-@ServerEndpoint(value = "/ws/danmu/{vid}")
-public class DanmuWebSocketServer {
+@ServerEndpoint(value = "/ws/barrage/{vid}")
+public class BarrageWebSocketServer {
 
     // 由于每个连接都不是共享一个WebSocketServer，所以要静态注入
     private static JwtUtil jwtUtil;
@@ -35,14 +36,17 @@ public class DanmuWebSocketServer {
 
     @Autowired
     public void setDependencies(JwtUtil jwtUtil, RedisUtil redisUtil, BarrageMapper barrageMapper, VideoStatsService videoStatsService) {
-        DanmuWebSocketServer.jwtUtil = jwtUtil;
-        DanmuWebSocketServer.redisUtil = redisUtil;
-        DanmuWebSocketServer.barrageMapper = barrageMapper;
-        DanmuWebSocketServer.videoStatsService = videoStatsService;
+        BarrageWebSocketServer.jwtUtil = jwtUtil;
+        BarrageWebSocketServer.redisUtil = redisUtil;
+        BarrageWebSocketServer.barrageMapper = barrageMapper;
+        BarrageWebSocketServer.videoStatsService = videoStatsService;
     }
+    @Autowired
+    @Qualifier("taskExecutor")
+    private Executor taskExecutor;
 
     // 对每个视频存储该视频下的session集合
-    private static final Map<String, Set<Session>> videoConnectionMap = new ConcurrentHashMap<>();
+    private static final Map<String, List<Session>> videoConnectionMap = new ConcurrentHashMap<>();
 
     /**
      * 连接建立时触发，记录session到map
@@ -50,16 +54,16 @@ public class DanmuWebSocketServer {
      * @param vid   视频的ID
      */
     @OnOpen
-    public void onOpen(Session session, @PathParam("vid") String vid) {
-        if (videoConnectionMap.get(vid) == null) {
-            Set<Session> set = new HashSet<>();
-            set.add(session);
-            videoConnectionMap.put(vid, set);
+    public void connectRecordMap(Session session, @PathParam("vid") String vid) {
+        //检测vid字段有没有session
+        if (videoConnectionMap.get(vid) == null || videoConnectionMap.get(vid).isEmpty()) {
+            List<Session> sessionList = new ArrayList<>();
+            sessionList.add(session);
+            videoConnectionMap.put(vid, sessionList);
         } else {
             videoConnectionMap.get(vid).add(session);
         }
         sendMessage(vid, "当前观看人数" + videoConnectionMap.get(vid).size());
-//        System.out.println("建立连接，当前观看人数: " + videoConnectionMap.get(vid).size());
     }
 
     /**
@@ -69,22 +73,17 @@ public class DanmuWebSocketServer {
      * @param vid   视频ID
      */
     @OnMessage
-    public void onMessage(Session session, String message, @PathParam("vid") String vid) {
+    public void connectOnMessage(Session session, String message, @PathParam("vid") String vid) {
         try {
-            JSONObject msg = JSON.parseObject(message);
-
+            JSONObject jsonMessage = JSON.parseObject(message);
             // token鉴权
-            String token = msg.getString("token");
-            if (!StringUtils.hasText(token) || !token.startsWith("Bearer ")) {
+            String token = jsonMessage.getString("token");
+            boolean verifyTokenMessage = jwtUtil.verifyToken(token.substring(7));
+            if (!StringUtils.hasText(token) || !token.startsWith("Bearer ") || !verifyTokenMessage) {
                 session.getBasicRemote().sendText("登录已过期");
                 return;
             }
             token = token.substring(7);
-            boolean verifyToken = jwtUtil.verifyToken(token);
-            if (!verifyToken) {
-                session.getBasicRemote().sendText("登录已过期");
-                return;
-            }
             String userId = JwtUtil.getSubjectFromToken(token);
             String role = JwtUtil.getClaimFromToken(token, "role");
             User user = redisUtil.getObject("security:" + role + ":" + userId, User.class);
@@ -93,9 +92,7 @@ public class DanmuWebSocketServer {
                 return;
             }
 
-            // 写库
-            JSONObject data = msg.getJSONObject("data");
-//            System.out.println(data);
+            JSONObject data = jsonMessage.getJSONObject("data");
             Barrage barrage = new Barrage(
                     null,
                     Integer.parseInt(vid),
@@ -108,15 +105,28 @@ public class DanmuWebSocketServer {
                     1,
                     new Date()
             );
-            barrageMapper.insert(barrage);
-            videoStatsService.updateVideoStats(Integer.parseInt(vid), "barrage", true, 1);
-            redisUtil.addMember("danmu_idset:" + vid, barrage.getBid());   // 加入对应视频的ID集合，以便查询
+
+            // 使用CompletableFuture处理异步操作
+            CompletableFuture<Void> insertBarrageFuture = CompletableFuture.runAsync(() -> barrageMapper.insert(barrage),taskExecutor);
+
+            CompletableFuture<Void> updateVideoStatsFuture = CompletableFuture.runAsync(() ->
+                    videoStatsService.updateVideoStats(Integer.parseInt(vid), "barrage", true, 1)
+                    , taskExecutor
+            );
+
+            CompletableFuture<Void> addRedisMemberFuture = CompletableFuture.runAsync(() ->
+                    redisUtil.addMember("barrage_bidSet:" + vid, barrage.getBid()),taskExecutor
+            );
+
+            // 等待所有异步任务完成
+            CompletableFuture.allOf(insertBarrageFuture, updateVideoStatsFuture, addRedisMemberFuture).join();
 
             // 广播弹幕
-            String dmJson = JSON.toJSONString(barrage);
-            sendMessage(vid, dmJson);
+            String barrageJson = JSON.toJSONString(barrage);
+            sendMessage(vid, barrageJson);
+
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e); // 记录异常
         }
     }
 
@@ -126,17 +136,18 @@ public class DanmuWebSocketServer {
      * @param vid   视频ID
      */
     @OnClose
-    public void onClose(Session session, @PathParam("vid") String vid) {
+    public void connectOnClose(Session session, @PathParam("vid") String vid) {
+
+        CopyOnWriteArrayList<Session> sessions = (CopyOnWriteArrayList<Session>) videoConnectionMap.get(vid);
         // 从缓存中移除连接记录
         videoConnectionMap.get(vid).remove(session);
-        if (videoConnectionMap.get(vid).size() == 0) {
+        if (videoConnectionMap.get(vid).isEmpty()) {
             // 如果没人了就直接移除这个视频
             videoConnectionMap.remove(vid);
         } else {
             // 否则更新在线人数
             sendMessage(vid, "当前观看人数" + videoConnectionMap.get(vid).size());
         }
-//        System.out.println("关闭连接，当前观看人数: " + videoConnectionMap.get(vid).size());
     }
 
     @OnError
@@ -150,14 +161,15 @@ public class DanmuWebSocketServer {
      * @param vid   视频ID
      * @param text  消息内容，对象需转成JSON字符串
      */
-    public void sendMessage(String vid, String text) {
-        Set<Session> set = videoConnectionMap.get(vid);
+    private void sendMessage(String vid, String text) {
+        List<Session> sessionList = videoConnectionMap.get(vid);
         // 使用并行流往各客户端发送数据
-        set.parallelStream().forEach(session -> {
+        sessionList.parallelStream().forEach(session -> {
             try {
                 session.getBasicRemote().sendText(text);
             } catch (Exception e) {
                 e.printStackTrace();
+                log.error(e.getMessage());
             }
         });
     }
