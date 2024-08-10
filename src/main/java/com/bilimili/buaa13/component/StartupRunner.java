@@ -13,15 +13,15 @@ import java.io.File;
 public class StartupRunner implements CommandLineRunner {
 
     @Value("${directory.chunk}")
-    private String chunkDirectory;
+    private String Fragment_Directory;
 
     @Override
-    public void run(String... args) throws Exception {
-        File chunkDir = new File(chunkDirectory);
-        if (!chunkDir.exists()) {
-            boolean created = chunkDir.mkdirs();
+    public void run(String... args) throws RuntimeException {
+        File fragmentDir = new File(Fragment_Directory);
+        if (!fragmentDir.exists()) {
+            boolean created = fragmentDir.mkdirs();
             if (!created) {
-                throw new RuntimeException("Failed to create directory: " + chunkDirectory);
+                throw new RuntimeException("创建分片文件夹失败: " + Fragment_Directory);
             }
         }
     }
