@@ -2,8 +2,8 @@ package com.bilimili.buaa13.component.danmu;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.bilimili.buaa13.mapper.DanmuMapper;
-import com.bilimili.buaa13.entity.Danmu;
+import com.bilimili.buaa13.mapper.BarrageMapper;
+import com.bilimili.buaa13.entity.Barrage;
 import com.bilimili.buaa13.entity.User;
 import com.bilimili.buaa13.service.video.VideoStatsService;
 import com.bilimili.buaa13.utils.JwtUtil;
@@ -30,14 +30,14 @@ public class DanmuWebSocketServer {
     // 由于每个连接都不是共享一个WebSocketServer，所以要静态注入
     private static JwtUtil jwtUtil;
     private static RedisUtil redisUtil;
-    private static DanmuMapper danmuMapper;
+    private static BarrageMapper barrageMapper;
     private static VideoStatsService videoStatsService;
 
     @Autowired
-    public void setDependencies(JwtUtil jwtUtil, RedisUtil redisUtil, DanmuMapper danmuMapper, VideoStatsService videoStatsService) {
+    public void setDependencies(JwtUtil jwtUtil, RedisUtil redisUtil, BarrageMapper barrageMapper, VideoStatsService videoStatsService) {
         DanmuWebSocketServer.jwtUtil = jwtUtil;
         DanmuWebSocketServer.redisUtil = redisUtil;
-        DanmuWebSocketServer.danmuMapper = danmuMapper;
+        DanmuWebSocketServer.barrageMapper = barrageMapper;
         DanmuWebSocketServer.videoStatsService = videoStatsService;
     }
 
@@ -96,24 +96,24 @@ public class DanmuWebSocketServer {
             // 写库
             JSONObject data = msg.getJSONObject("data");
 //            System.out.println(data);
-            Danmu danmu = new Danmu(
+            Barrage barrage = new Barrage(
                     null,
                     Integer.parseInt(vid),
                     user.getUid(),
                     data.getString("content"),
-                    data.getInteger("fontsize"),
+                    data.getInteger("word_size"),
                     data.getInteger("mode"),
                     data.getString("color"),
                     data.getDouble("timePoint"),
                     1,
                     new Date()
             );
-            danmuMapper.insert(danmu);
-            videoStatsService.updateVideoStats(Integer.parseInt(vid), "danmu", true, 1);
-            redisUtil.addMember("danmu_idset:" + vid, danmu.getId());   // 加入对应视频的ID集合，以便查询
+            barrageMapper.insert(barrage);
+            videoStatsService.updateVideoStats(Integer.parseInt(vid), "barrage", true, 1);
+            redisUtil.addMember("danmu_idset:" + vid, barrage.getBid());   // 加入对应视频的ID集合，以便查询
 
             // 广播弹幕
-            String dmJson = JSON.toJSONString(danmu);
+            String dmJson = JSON.toJSONString(barrage);
             sendMessage(vid, dmJson);
         } catch (Exception e) {
             e.printStackTrace();

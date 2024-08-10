@@ -1,8 +1,8 @@
 package com.bilimili.buaa13.controller;
 
 import com.bilimili.buaa13.entity.ResponseResult;
-import com.bilimili.buaa13.entity.Danmu;
-import com.bilimili.buaa13.service.danmu.DanmuService;
+import com.bilimili.buaa13.entity.Barrage;
+import com.bilimili.buaa13.service.danmu.BarrageService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Set;
 
 @RestController
-public class DanmuController {
+public class BarrageController {
     @Autowired
-    private DanmuService danmuService;
+    private BarrageService barrageService;
 
     @Autowired
     private RedisUtil redisUtil;
@@ -28,11 +28,15 @@ public class DanmuController {
      * @return  响应对象
      */
     @GetMapping("/danmu-list/{vid}")
-    public ResponseResult getDanmuList(@PathVariable("vid") String vid) {
+    public ResponseResult getBarrageList(@PathVariable("vid") String vid) {
         Set<Object> idset = redisUtil.getMembers("danmu_idset:" + vid);
-        List<Danmu> danmuList = danmuService.getDanmuListByIdset(idset);
+        int vidInt = 0;
+        for(int i=0;i<vid.length();++i){
+            vidInt = vidInt*10 + vid.charAt(i)-'0';
+        }
+        List<Barrage> barrageList = barrageService.getBarrageListByIdSetOrVid(idset, vidInt);
         ResponseResult responseResult = new ResponseResult();
-        responseResult.setData(danmuList);
+        responseResult.setData(barrageList);
         return responseResult;
     }
 
@@ -42,8 +46,8 @@ public class DanmuController {
      * @return  响应对象
      */
     @PostMapping("/danmu/delete")
-    public ResponseResult deleteDanmu(@RequestParam("id") Integer id) {
+    public ResponseResult deleteBarrage(@RequestParam("id") Integer id) {
         Integer loginUid = currentUser.getUserId();
-        return danmuService.deleteDanmu(id, loginUid, currentUser.isAdmin());
+        return barrageService.deleteBarrage(id, loginUid, currentUser.isAdmin());
     }
 }

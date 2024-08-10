@@ -46,7 +46,7 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
             return map;
         }
         QueryWrapper<ChatDetailed> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("id", set);*/
+        queryWrapper.in("bid", set);*/
         if(offset >= Integer.MAX_VALUE){
             //不要超过int最大值
             map.put("messageList", Collections.emptyList());
@@ -90,7 +90,7 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
                 chatDetailedMapper.update(null, updateWrapper);
                 //注释Redis
                 /*String key = "chat_detailed_zset:" + chatDetailed.getAcceptId() + ":" + uid;
-                redisUtil.zsetDelMember(key, id);*/
+                redisUtil.zsetDelMember(key, bid);*/
                 return true;
             } else if (chatDetailed.getAcceptId().equals(uid)) {
                 // 如果自己是接收方
@@ -98,7 +98,7 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
                 chatDetailedMapper.update(null, updateWrapper);
                 //注释Redis
                 /*String key = "chat_detailed_zset:" + chatDetailed.getPostId() + ":" + uid;
-                redisUtil.zsetDelMember(key, id);*/
+                redisUtil.zsetDelMember(key, bid);*/
                 return true;
             } else return false;
         } catch (Exception e) {

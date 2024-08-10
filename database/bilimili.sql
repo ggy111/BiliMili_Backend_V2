@@ -110,7 +110,7 @@ DROP TABLE IF EXISTS `video_stats`;
 CREATE TABLE `video_stats` (
                                `vid` int(11) NOT NULL COMMENT '视频ID',
                                `play` int(11) NOT NULL DEFAULT '0' COMMENT '播放量',
-                               `danmu` int(11) NOT NULL DEFAULT '0' COMMENT '弹幕数',
+                               `barrage` int(11) NOT NULL DEFAULT '0' COMMENT '弹幕数',
                                `good` int(11) NOT NULL DEFAULT '0' COMMENT '点赞数',
                                `bad` int(11) NOT NULL DEFAULT '0' COMMENT '点踩数',
                                `coin` int(11) NOT NULL DEFAULT '0' COMMENT '投币数',
@@ -257,25 +257,25 @@ CREATE TABLE `postComment` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `danmu`
+-- Table structure for table `barrage`
 --
 
-DROP TABLE IF EXISTS `danmu`;
+DROP TABLE IF EXISTS `barrage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `danmu` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '弹幕ID',
+CREATE TABLE `barrage` (
+  `bid` int(11) NOT NULL AUTO_INCREMENT COMMENT '弹幕ID',
   `vid` int(11) NOT NULL COMMENT '视频ID',
   `uid` int(11) NOT NULL COMMENT '用户ID',
   `content` varchar(100) NOT NULL COMMENT '弹幕内容',
-  `fontsize` tinyint(4) NOT NULL DEFAULT '25' COMMENT '字体大小',
+  `word_size` tinyint(4) NOT NULL DEFAULT '25' COMMENT '字体大小',
   `mode` tinyint(4) NOT NULL DEFAULT '1' COMMENT '弹幕模式 1滚动 2顶部 3底部',
   `color` varchar(7) NOT NULL DEFAULT '#FFFFFF' COMMENT '弹幕颜色 6位十六进制标准格式',
-  `time_point` double NOT NULL COMMENT '弹幕所在视频的时间点',
+  `time_in_video` double NOT NULL COMMENT '弹幕所在视频的时间点',
   `state` tinyint(4) NOT NULL DEFAULT '1' COMMENT '弹幕状态 1默认过审 2被举报审核中 3删除',
   `create_date` datetime NOT NULL COMMENT '发送弹幕的日期时间',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`)
+  PRIMARY KEY (bid),
+  UNIQUE KEY `id` (bid)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COMMENT='弹幕表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 

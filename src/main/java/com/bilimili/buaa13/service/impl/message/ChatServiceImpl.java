@@ -116,7 +116,7 @@ public class ChatServiceImpl implements ChatService {
         if (set == null || set.isEmpty()) return Collections.emptyList();
         // 查询
         QueryWrapper<Chat> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("id", set).eq("is_deleted", 0).orderByDesc("latest_time");
+        queryWrapper.in("bid", set).eq("is_deleted", 0).orderByDesc("latest_time");
         List<Chat> chatList = chatMapper.selectList(queryWrapper);*/
         List<Chat> chatList = chatMapper.selectChatByUid(uid);
         // 没有数据则返回空列表

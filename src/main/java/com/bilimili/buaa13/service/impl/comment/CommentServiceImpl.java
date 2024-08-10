@@ -270,7 +270,7 @@ public class CommentServiceImpl implements CommentService {
         /*Set<Object> replyIds = redisUtil.zRange("comment_reply:" + rootId, start, end);
         if (replyIds == null || replyIds.isEmpty()) return Collections.emptyList();
         QueryWrapper<Comment> wrapper = new QueryWrapper<>();
-        wrapper.in("id", replyIds).ne("is_deleted", 1);
+        wrapper.in("bid", replyIds).ne("is_deleted", 1);
         return commentMapper.selectList(wrapper);*/
         if(end.equals(-1L)){
             return commentMapper.getRootCommentByStartNoLimit(rootId, start);
@@ -300,7 +300,7 @@ public class CommentServiceImpl implements CommentService {
         if (rootIdsSet == null || rootIdsSet.isEmpty()) return Collections.emptyList();
 
         QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<>();
-        commentQueryWrapper.in("id", rootIdsSet).ne("is_deleted", 1);
+        commentQueryWrapper.in("bid", rootIdsSet).ne("is_deleted", 1);
         if (sortType == 1) { // 热度
             commentQueryWrapper.orderByDesc("(up_vote - down_vote)").last("LIMIT 10 OFFSET " + offset);
         } else if(sortType == 2){ // 时间
