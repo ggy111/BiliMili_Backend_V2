@@ -2,7 +2,7 @@ package com.bilimili.buaa13.controller;
 
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Barrage;
-import com.bilimili.buaa13.service.danmu.BarrageService;
+import com.bilimili.buaa13.service.barrage.BarrageService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;

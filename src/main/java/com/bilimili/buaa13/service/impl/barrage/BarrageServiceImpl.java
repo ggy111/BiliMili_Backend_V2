@@ -1,4 +1,4 @@
-package com.bilimili.buaa13.service.impl.danmu;
+package com.bilimili.buaa13.service.impl.barrage;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
@@ -7,7 +7,7 @@ import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Video;
 import com.bilimili.buaa13.mapper.BarrageMapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
-import com.bilimili.buaa13.service.danmu.BarrageService;
+import com.bilimili.buaa13.service.barrage.BarrageService;
 import com.bilimili.buaa13.service.video.VideoStatsService;
 import com.bilimili.buaa13.utils.RedisUtil;
 import io.vertx.core.Future;

@@ -1,4 +1,4 @@
-package com.bilimili.buaa13.service.danmu;
+package com.bilimili.buaa13.service.barrage;
 
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Barrage;
