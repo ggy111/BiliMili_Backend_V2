@@ -42,4 +42,19 @@ public class StartupRunner implements CommandLineRunner {
             }
         }
     }
+
+    private void RunEnd(String[] arguments) throws RuntimeException {
+        File fragmentDir = new File(Fragment_Directory);
+        for(String argument : arguments) {
+            System.out.println(argument);
+            File fragmentFile = new File(fragmentDir, argument);
+            if (fragmentFile.exists()) {
+                System.out.println(fragmentFile.getAbsolutePath());
+                boolean deleted = fragmentFile.delete();
+                if (!deleted) {
+                    throw new RuntimeException("环境结束失败: " + argument);
+                }
+            }
+        }
+    }
 }

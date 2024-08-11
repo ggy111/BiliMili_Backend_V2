@@ -37,7 +37,7 @@ public class NoticeHandler {
     private static ChatDetailedMapper chatDetailedMapper;
     private static UserService userService;
     private static RedisUtil redisUtil;
-    private static Executor taskExecutor;
+    public static Executor taskExecutor;
     private static UserService userServiceService;
 
 
@@ -98,11 +98,6 @@ public class NoticeHandler {
      */
     public static void send(ChannelHandlerContext ctx, TextWebSocketFrame tx) {
         try {
-            //ChatDetailed chatDetailed = JSONObject.parseObject(tx.text(), ChatDetailed.class);
-            //System.out.println("接收到聊天消息：" + chatDetailed);
-
-            // 从channel中获取当前用户id 封装写库
-            //System.out.println("");
             Integer user_id = (Integer) ctx.channel().attr(AttributeKey.valueOf("userId")).get();
             System.out.println("这里没问题" + user_id);
             List<Integer> fans = followService.getUidFans(user_id/*,true*/);
@@ -253,12 +248,11 @@ public class NoticeHandler {
             }
         } catch (Exception e) {
             log.error("发送聊天信息时出错了：" + e);
-            //ctx.channel().writeAndFlush(IMResponse.error("发送消息时出错了 Σ(ﾟдﾟ;)"));
         }
     }
 
 
-    //添加于2024-08-08
+    //2024-08-08
 
     public static void sendNotification(Integer upId, Integer articleId) {
         try {
@@ -266,8 +260,6 @@ public class NoticeHandler {
             User tempUser = new User();
             UserDTO tempUserDTO = new UserDTO();
             List<Integer> fans = followService.getUidFans(upId, true);
-
-
 
             // 处理每个关注者
             fans.forEach(fanId -> {
