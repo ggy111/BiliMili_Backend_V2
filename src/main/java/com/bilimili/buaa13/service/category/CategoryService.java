@@ -4,6 +4,7 @@ import com.bilimili.buaa13.entity.Category;
 import com.bilimili.buaa13.entity.ResponseResult;
 
 public interface CategoryService {
+
     /**
      * 获取全部分区数据
      * @return 响应对象
@@ -17,6 +18,8 @@ public interface CategoryService {
      */
     ResponseResult getOne(Integer mainCategoryId,Integer subCategoryId);
 
+
+    Category getOne(String mainCategoryId, String subCategoryId);
 
     /**
      * 根据id查询对应分区信息

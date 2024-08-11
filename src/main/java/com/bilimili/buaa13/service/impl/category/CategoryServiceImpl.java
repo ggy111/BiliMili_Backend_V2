@@ -112,6 +112,33 @@ public class CategoryServiceImpl implements CategoryService {
         return responseResult;
     }
 
+    /**
+     * 获取某个分区数据
+     *
+     * @param mainCategoryId 主分区ID
+     * @param subCategoryId 子分区ID
+     * @return 响应对象
+     */
+    @Override
+    public ResponseResult getOne(Integer mainCategoryId, Integer subCategoryId) {
+        String redisKey = String.format("category:%s:%s", mainCategoryId.toString(), subCategoryId.toString());
+        Optional<Category> cachedCategory = Optional.ofNullable(redisUtil.getObject(redisKey, Category.class));
+        ResponseResult responseResult = new ResponseResult();
+        // 如果在Redis中找到数据，直接返回
+        if (cachedCategory.isPresent()) {
+            responseResult.setData(cachedCategory.get());
+            return responseResult;
+        }
+        Category category = categoryMapper.findByMainAndSubClassId(mainCategoryId.toString(), subCategoryId.toString());
+        if (category == null) {
+            responseResult.setData(new Category());
+            return responseResult;
+        }
+        // 使用异步操作将数据存储到Redis中
+        taskExecutor.execute(() -> redisUtil.setExObjectValue(redisKey, category));
+        return responseResult;
+    }
+
     //---------------------------------------------------------------------------------------------
     //更新于 2024.08.10
 
@@ -147,19 +174,6 @@ public class CategoryServiceImpl implements CategoryService {
 
         return category;
     }
-
-
-
-
-
-
-    //-----------------------------------------------------------------------------------------------
-
-
-
-
-
-
 
     /**
      * 根据id查询对应分区信息

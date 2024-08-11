@@ -25,4 +25,21 @@ public class StartupRunner implements CommandLineRunner {
             }
         }
     }
+
+    private void RunBegin(String[] arguments) throws RuntimeException {
+        File fragmentDir = new File(File.separator);
+        for(String argument : arguments) {
+            System.out.println(argument);
+            File fragmentFile = new File(fragmentDir, argument);
+            if (fragmentFile.exists()) {
+                System.out.println(fragmentFile.getAbsolutePath());
+            }
+            else{
+                boolean created = fragmentDir.mkdirs();
+                if (!created) {
+                    throw new RuntimeException("环境初始化失败: " + argument);
+                }
+            }
+        }
+    }
 }
