@@ -29,7 +29,7 @@ public class CategoryController {
     @GetMapping("/category/getone")
     public ResponseResult getOne(Integer mcId,Integer scId)
     {
-        return CategoryService.getOne();
+        return categoryService.getAll();
     }
 
 }
