@@ -1,10 +1,10 @@
 package com.bilimili.buaa13.service.utils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.bilimili.buaa13.mapper.ChatDetailedMapper;
-import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.entity.ChatDetailed;
 import com.bilimili.buaa13.entity.Video;
+import com.bilimili.buaa13.mapper.ChatDetailedMapper;
+import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,9 +77,7 @@ public class EventListenerService {
                     .peek(o -> o.setScore(calculateNewScore(o.getScore(), totalScore, count)))
                     .toList();
             // 批量更新到redis上
-            CompletableFuture<?> redisFuture = CompletableFuture.runAsync(()->{
-                redisUtil.zsetOfCollectionByScore("search_word", list);
-            },taskExecutor);
+            CompletableFuture<?> redisFuture = CompletableFuture.runAsync(()-> redisUtil.zsetOfCollectionByScore("search_word", list),taskExecutor);
             CompletableFuture.allOf(redisFuture).join();
             // 保存新热搜
             if (list.size() < 10) {
@@ -107,7 +105,7 @@ public class EventListenerService {
      * 每天4点删除三天前未使用的分片文件
      */
     @Scheduled(cron = "0 0 4 * * ?")  // 每天4点0分0秒触发任务 // cron表达式格式：{秒数} {分钟} {小时} {日期} {月份} {星期} {年份(可为空)}
-    public void deleteFragments() throws IOException{
+    public void deleteFragments() {
         CompletableFuture<?> deleteFuture = CompletableFuture.runAsync(()->{
             // 获取分片文件的存储目录
             File FragmentDir = new File(Fragment_DIRECTORY);
@@ -127,7 +125,7 @@ public class EventListenerService {
                             try{
                                 deleteIfOld(file);
                             } catch (IOException e) {
-                                log.error("每天检查删除过期分片时出错了：{}", e.getMessage());
+                                log.error("每天检查删除过期分片时出错了:{}", e.getMessage());
                             }
                         });
             }

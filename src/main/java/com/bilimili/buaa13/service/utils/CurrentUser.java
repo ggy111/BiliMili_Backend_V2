@@ -1,7 +1,7 @@
 package com.bilimili.buaa13.service.utils;
 
-import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.entity.User;
+import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.service.impl.user.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
