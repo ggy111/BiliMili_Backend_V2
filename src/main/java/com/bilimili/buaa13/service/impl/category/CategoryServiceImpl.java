@@ -112,6 +112,55 @@ public class CategoryServiceImpl implements CategoryService {
         return responseResult;
     }
 
+    //---------------------------------------------------------------------------------------------
+    //更新于 2024.08.10
+
+    /**
+     * 根据id查询对应分区信息
+     * @param mainCategoryId 主分区ID
+     * @param subCategoryId 子分区ID
+     * @return Category类信息
+     */
+
+    @Override
+    public Category getOne(String mainCategoryId, String subCategoryId) {
+        String redisKey = String.format("category:%s:%s", mainCategoryId, subCategoryId);
+
+        // 使用Optional避免NullPointerException
+        Optional<Category> cachedCategory = Optional.ofNullable(redisUtil.getObject(redisKey, Category.class));
+
+        // 如果在Redis中找到数据，直接返回
+        if (cachedCategory.isPresent()) {
+            return cachedCategory.get();
+        }
+
+        // 如果Redis中没有数据，从数据库中查询
+        Category category = categoryMapper.findByMainAndSubClassId(mainCategoryId, subCategoryId);
+
+        // 如果数据库中没有数据，返回一个新的Category实例
+        if (category == null) {
+            return new Category();
+        }
+
+        // 使用异步操作将数据存储到Redis中
+        taskExecutor.execute(() -> redisUtil.setExObjectValue(redisKey, category));
+
+        return category;
+    }
+
+
+
+
+
+
+    //-----------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
     /**
      * 根据id查询对应分区信息
      * @param mcId 主分区ID

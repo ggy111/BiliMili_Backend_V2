@@ -6,4 +6,10 @@ import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface CategoryMapper extends BaseMapper<Category> {
+
+
+    // 自定义查询方法
+    @Select("SELECT * FROM category WHERE main_class_id = #{mcId} AND sub_class_id = #{scId}")
+    Category findByMainAndSubClassId(@Param("mcId") String mcId, @Param("scId") String scId);
+
 }
