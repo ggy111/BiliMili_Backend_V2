@@ -3,17 +3,24 @@ package com.bilimili.buaa13.service.utils;
 import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.entity.User;
 import com.bilimili.buaa13.service.impl.user.UserDetailsImpl;
-import com.bilimili.buaa13.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class CurrentUser {
 
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    @Qualifier("taskExecutor")
+    private Executor taskExecutor;
 
     /**
      * 获取当前登录用户的uid，也是JWT认证的一环
@@ -33,13 +40,31 @@ public class CurrentUser {
      */
     public Boolean isAdmin() {
         Integer uid = getUserId();
-        //注释Redis
-//        User user = redisUtil.getObject("user:" + uid, User.class);
-//        if (user == null) {
-//            user = userMapper.selectById(uid);
-//            redisUtil.setExObjectValue("user:" + user.getUid(), user);
-//        }
         User user = userMapper.selectById(uid);
         return (user.getRole() == 1 || user.getRole() == 2);
+    }
+
+    /**
+     * 获取当前用户
+     * @return User
+     */
+    public User getUser() {
+        Integer uid = getUserId();
+        return userMapper.selectById(uid);
+    }
+
+    public Integer getUserUid(){
+        AtomicReference<UsernamePasswordAuthenticationToken> authenticationToken = new AtomicReference<>((UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication());
+        AtomicReference<User> sUser = new AtomicReference<>(new User());
+        CompletableFuture<?> futureUid = CompletableFuture.runAsync(()->{
+            authenticationToken.set((UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication());
+            UserDetailsImpl loginUser = (UserDetailsImpl) authenticationToken.get().getPrincipal();
+            sUser.set(loginUser.getUser());   // 这里的user是登录时存的security:user，因为是静态数据，可能会跟实际的有区别，所以只能用作获取uid用
+        },taskExecutor);
+        CompletableFuture<?> futureUser = CompletableFuture.runAsync(()->{
+            sUser.set((User) authenticationToken.get().getPrincipal());
+        },taskExecutor);
+        CompletableFuture.allOf(futureUid, futureUser).join();
+        return sUser.get().getUid();
     }
 }

@@ -8,6 +8,7 @@ import com.bilimili.buaa13.entity.Video;
 import com.bilimili.buaa13.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -25,13 +26,19 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
 public class EventListenerService {
 
     @Value("${directory.chunk}")
-    private String CHUNK_DIRECTORY;   // 分片存储目录
+    private String Fragment_DIRECTORY;   // 分片存储目录
 
     @Autowired
     private RedisUtil redisUtil;
@@ -44,66 +51,117 @@ public class EventListenerService {
 
     public static List<RedisUtil.ZObjScore> hotSearchWords = new ArrayList<>();     // 上次更新的热搜词条
 
+    @Autowired
+    @Qualifier("taskExecutor")
+    private Executor taskExecutor;
+
     /**
      * 每一小时更新一次热搜词条热度
      */
     @Scheduled(fixedDelay = 1000 * 60 * 60)
     public void updateHotSearch() {
-        List<RedisUtil.ZObjScore> list = redisUtil.zReverangeWithScores("search_word", 0, -1);
-        if (list == null || list.isEmpty()) return;
-        int count = list.size();
-        double total = 0;
-        // 计算总分数
-        for (RedisUtil.ZObjScore o : list) {
-            total += o.getScore();
-        }
-        BigDecimal bt = new BigDecimal(total);
-        total = bt.setScale(2, RoundingMode.HALF_UP).doubleValue();
-        // 更新每个词条的分数    新分数 = (旧分数 / 总分数) * 词条数
-        for (RedisUtil.ZObjScore o : list) {
-            BigDecimal b = new BigDecimal((o.getScore() / total) * count);
-            double score = b.setScale(2, RoundingMode.HALF_UP).doubleValue();
-            o.setScore(score);
-        }
-        // 批量更新到redis上
-        redisUtil.zsetOfCollectionByScore("search_word", list);
-        // 保存新热搜
-        if (list.size() < 10) {
-            hotSearchWords = list.subList(0, list.size());
-        } else {
-            hotSearchWords = list.subList(0, 10);
-        }
+        CompletableFuture<?> updateFuture = CompletableFuture.runAsync(()->{
+            List<RedisUtil.ZObjScore> list = redisUtil.zReverangeWithScores("search_word", 0, -1);
+            if (list == null || list.isEmpty()) return;
+            int count = list.size();
+            double total = 0;
+            // 计算总分数
+            for (RedisUtil.ZObjScore o : list) {
+                total += o.getScore();
+            }
+            BigDecimal bt = new BigDecimal(total);
+            total = bt.setScale(2, RoundingMode.HALF_UP).doubleValue();
+            double totalScore = calculateTotalScore(list);
+            // 更新每个词条的分数    新分数 = (旧分数 / 总分数) * 词条数
+            List<RedisUtil.ZObjScore> updatedList = list.stream()
+                    .peek(o -> o.setScore(calculateNewScore(o.getScore(), totalScore, count)))
+                    .toList();
+            // 批量更新到redis上
+            CompletableFuture<?> redisFuture = CompletableFuture.runAsync(()->{
+                redisUtil.zsetOfCollectionByScore("search_word", list);
+            },taskExecutor);
+            CompletableFuture.allOf(redisFuture).join();
+            // 保存新热搜
+            if (list.size() < 10) {
+                hotSearchWords = list.subList(0, list.size());
+            } else {
+                hotSearchWords = list.subList(0, 10);
+            }
+        },taskExecutor);
+        CompletableFuture.allOf(updateFuture).join();
+    }
+
+    private double calculateTotalScore(List<RedisUtil.ZObjScore> list) {
+        double total = list.stream()
+                .mapToDouble(RedisUtil.ZObjScore::getScore)
+                .sum();
+        return new BigDecimal(total).setScale(2, RoundingMode.HALF_UP).doubleValue();
+    }
+
+    private double calculateNewScore(double oldScore, double totalScore, int count) {
+        BigDecimal newScore = new BigDecimal((oldScore / totalScore) * count);
+        return newScore.setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 
     /**
      * 每天4点删除三天前未使用的分片文件
-     * @throws IOException
      */
     @Scheduled(cron = "0 0 4 * * ?")  // 每天4点0分0秒触发任务 // cron表达式格式：{秒数} {分钟} {小时} {日期} {月份} {星期} {年份(可为空)}
-    public void deleteChunks() {
-        try {
+    public void deleteFragments() throws IOException{
+        CompletableFuture<?> deleteFuture = CompletableFuture.runAsync(()->{
             // 获取分片文件的存储目录
-            File chunkDir = new File(CHUNK_DIRECTORY);
+            File FragmentDir = new File(Fragment_DIRECTORY);
             // 获取所有分片文件
-            File[] chunkFiles = chunkDir.listFiles();
-            if (chunkFiles != null && chunkFiles.length > 0) {
-                for (File chunkFile : chunkFiles) {
-                    Path filePath = chunkFile.toPath();
-                    BasicFileAttributes attr = Files.readAttributes(filePath, BasicFileAttributes.class);   // 读取文件属性
-                    FileTime createTime = attr.creationTime();  // 文件的创建时间
-                    Instant instant = createTime.toInstant();
-                    ZonedDateTime zonedDateTime = instant.atZone(ZoneId.systemDefault());   // 转换为本地时区时间
-                    LocalDateTime createDateTime = zonedDateTime.toLocalDateTime();     // 获取文件创建时间
-                    LocalDateTime threeDaysAgo = LocalDateTime.now().minusDays(3);      // 3天前的时间
-                    if (createDateTime.isBefore(threeDaysAgo)) {
-//                    System.out.println("删除分片文件 " + chunkFile.getName());
-                        // 文件创建时间早于三天前，删除分片文件
-                        chunkFile.delete();
-                    }
-                }
+            File[] fragmentFiles = FragmentDir.listFiles();
+            if (fragmentFiles != null) {
+                Arrays.stream(fragmentFiles)
+                        .filter(file -> {
+                            try{
+                                return isOldFile(file);
+                            }catch (IOException ioe){
+                                log.error("每天检查删除过期分片时出错了：{}", ioe.getMessage());
+                                return false;
+                            }
+                        })
+                        .forEach(file -> {
+                            try{
+                                deleteIfOld(file);
+                            } catch (IOException e) {
+                                log.error("每天检查删除过期分片时出错了：{}", e.getMessage());
+                            }
+                        });
             }
-        } catch (IOException ioe) {
-            log.error("每天检查删除过期分片时出错了：" + ioe);
+        },taskExecutor);
+        deleteFuture.join();
+    }
+
+    private boolean isOldFile(File fragmentFile) throws IOException {
+        Path filePath = fragmentFile.toPath();
+        BasicFileAttributes attr = Files.readAttributes(filePath, BasicFileAttributes.class);
+        FileTime createTime = attr.creationTime();
+        Instant instant = createTime.toInstant();
+        ZonedDateTime zonedDateTime = instant.atZone(ZoneId.systemDefault());
+        LocalDateTime createDateTime = zonedDateTime.toLocalDateTime();
+        LocalDateTime threeDaysAgo = LocalDateTime.now().minusDays(3);
+        return createDateTime.isBefore(threeDaysAgo);
+    }
+
+    private void deleteIfOld(File fragmentFile) throws IOException {
+        Path filePath = fragmentFile.toPath();
+        BasicFileAttributes attr = Files.readAttributes(filePath, BasicFileAttributes.class);
+        FileTime createTime = attr.creationTime();
+        Instant instant = createTime.toInstant();
+        ZonedDateTime zonedDateTime = instant.atZone(ZoneId.systemDefault());
+        LocalDateTime createDateTime = zonedDateTime.toLocalDateTime();
+        LocalDateTime threeDaysAgo = LocalDateTime.now().minusDays(3);
+
+        if (createDateTime.isBefore(threeDaysAgo)) {
+            boolean deleted = fragmentFile.delete();
+            if (deleted) {
+                log.info("已删除文件: {}", fragmentFile.getName());
+            } else {
+                log.error("无法删除文件: {}", fragmentFile.getName());
+            }
         }
     }
 
@@ -127,6 +185,27 @@ public class EventListenerService {
         }
     }
 
+    public void updateVideoStats() {
+        IntStream.range(0, 3).forEach(i -> {
+            AtomicReference<List<Object>> vidList = new AtomicReference<>(new ArrayList<>());
+            CompletableFuture<?> futureVideo = CompletableFuture.runAsync(()->{
+                QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
+                queryWrapper.eq("status", i).isNull("delete_date").select("vid");
+                vidList.set(videoMapper.selectObjs(queryWrapper));
+            },taskExecutor);
+            CompletableFuture<?> futureRedis = CompletableFuture.runAsync(()->{
+                try {
+                    redisUtil.delValue("video_status:" + i);
+                    if (vidList.get() != null && !vidList.get().isEmpty()) {
+                        redisUtil.addMembers("video_status:" + i, vidList.get());
+                    }
+                } catch (Exception e) {
+                    log.error("Redis 更新审核视频集合失败：{}", e.getMessage());
+                }
+            },taskExecutor);
+            CompletableFuture.allOf(futureVideo,futureRedis).join();
+        });
+    }
     /**
      * 每天4点15分同步一下全部用户的聊天记录
      */
@@ -149,22 +228,7 @@ public class EventListenerService {
                 chatSet.add(fromMap);
                 if (chatDetailed.getPostDel() == 0) {
                     // 发送者没删就加到对应聊天的有序集合
-                    if (setMap.get(from) == null) {
-                        Map<Integer, Set<RedisUtil.ZObjTime>> map = new HashMap<>();
-                        Set<RedisUtil.ZObjTime> set = new HashSet<>();
-                        set.add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
-                        map.put(to, set);
-                        setMap.put(from, map);
-                    } else {
-                        if (setMap.get(from).get(to) == null) {
-                            Set<RedisUtil.ZObjTime> set = new HashSet<>();
-                            set.add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
-                            setMap.get(from).put(to, set);
-                        } else {
-                            setMap.get(from).get(to)
-                                    .add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
-                        }
-                    }
+                    addOrderlySet(setMap, chatDetailed, from, to);
                 }
 
                 // 接收者视角 chat_detailed_zset:from:to
@@ -174,22 +238,7 @@ public class EventListenerService {
                 chatSet.add(toMap);
                 if (chatDetailed.getAcceptDel() == 0) {
                     // 接收者没删就加到对应聊天的有序集合
-                    if (setMap.get(to) == null) {
-                        Map<Integer, Set<RedisUtil.ZObjTime>> map = new HashMap<>();
-                        Set<RedisUtil.ZObjTime> set = new HashSet<>();
-                        set.add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
-                        map.put(from, set);
-                        setMap.put(to, map);
-                    } else {
-                        if (setMap.get(to).get(from) == null) {
-                            Set<RedisUtil.ZObjTime> set = new HashSet<>();
-                            set.add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
-                            setMap.get(to).put(from, set);
-                        } else {
-                            setMap.get(to).get(from)
-                                    .add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
-                        }
-                    }
+                    addOrderlySet(setMap, chatDetailed, to, from);
                 }
             }
 
@@ -205,5 +254,82 @@ public class EventListenerService {
             log.error("每天同步聊天记录时出错了：" + e);
         }
 
+    }
+
+    public void updateChatDetailedOrderlySet() {
+        CompletableFuture.runAsync(() -> {
+            try {
+                QueryWrapper<ChatDetailed> queryWrapper = new QueryWrapper<>();
+                List<ChatDetailed> list = chatDetailedMapper.selectList(queryWrapper);
+                // 使用并行流来处理列表
+                Map<Integer, Map<Integer, Set<RedisUtil.ZObjTime>>> setMap = list.parallelStream()
+                        .flatMap(chatDetailed -> {
+                            Integer from = chatDetailed.getPostId();    // 发送者ID
+                            Integer to = chatDetailed.getAcceptId();   // 接收者ID
+                            // 发送者视角
+                            Set<Map.Entry<String, Integer>> fromEntries = new HashSet<>();
+                            if (chatDetailed.getPostDel() == 0) {
+                                fromEntries.add(Map.entry("user_id", to));
+                                fromEntries.add(Map.entry("another_id", from));
+                            }
+                            // 接收者视角
+                            Set<Map.Entry<String, Integer>> toEntries = new HashSet<>();
+                            if (chatDetailed.getAcceptDel() == 0) {
+                                toEntries.add(Map.entry("user_id", from));
+                                toEntries.add(Map.entry("another_id", to));
+                            }
+                            // 将两个视角的结果返回
+                            return Stream.of(fromEntries, toEntries).flatMap(Set::stream);
+                        })
+                        .collect(Collectors.toMap(
+                                Map.Entry::getValue,
+                                e -> {
+                                    Map<Integer, Set<RedisUtil.ZObjTime>> innerMap = new HashMap<>();
+                                    innerMap.put(e.getValue(), new HashSet<>());
+                                    return innerMap;
+                                },
+                                (existing, replacement) -> existing
+                        ));
+                // 更新Redis，异步操作
+                CompletableFuture.allOf(
+                        setMap.entrySet().stream()
+                                .flatMap(entry -> entry.getValue().entrySet().stream())
+                                .map(innerEntry -> CompletableFuture.runAsync(() -> {
+                                    String key = "chat_detailed_zset:" + innerEntry.getKey() + ":" + innerEntry.getValue();
+                                    redisUtil.delValue(key);
+                                    redisUtil.zsetOfCollectionByTime(key, innerEntry.getValue());
+                                }))
+                                .toArray(CompletableFuture[]::new)
+                ).join();  // 等待所有异步操作完成
+            } catch (Exception e) {
+                log.error("每天同步聊天记录时出错了:{}", e.getMessage());
+            }
+        });
+    }
+
+    private void addOrderlySet(Map<Integer, Map<Integer, Set<RedisUtil.ZObjTime>>> setMap, ChatDetailed chatDetailed, Integer from, Integer to) {
+        if (setMap.get(from) == null) {
+            Map<Integer, Set<RedisUtil.ZObjTime>> map = new HashMap<>();
+            Set<RedisUtil.ZObjTime> set = new HashSet<>();
+            set.add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
+            map.put(to, set);
+            setMap.put(from, map);
+        } else {
+            if (setMap.get(from).get(to) == null) {
+                Set<RedisUtil.ZObjTime> set = new HashSet<>();
+                set.add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
+                setMap.get(from).put(to, set);
+            } else {
+                setMap.get(from).get(to)
+                        .add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
+            }
+        }
+    }
+
+    private void addZSet(Map<Integer, Map<Integer, Set<RedisUtil.ZObjTime>>> setMap, ChatDetailed chatDetailed, Integer from, Integer to) {
+        // 使用 computeIfAbsent 方法减少重复代码
+        setMap.computeIfAbsent(from, k -> new HashMap<>())
+                .computeIfAbsent(to, k -> new HashSet<>())
+                .add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
     }
 }
