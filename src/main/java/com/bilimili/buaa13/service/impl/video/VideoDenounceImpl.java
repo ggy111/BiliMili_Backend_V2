@@ -66,29 +66,31 @@ public class VideoDenounceImpl implements VideoDenounceService {
 
         if (critique == null) {
             // 评论不存在
-            return new ResponseResult(404, "评论不存在");
+            return new ResponseResult();
         }
 
         // 获取文章信息
         Article article = articleMapper.selectById(critique.getAid());
 
         // 判断删除权限：管理员、本评论的发布者、文章作者
-        if (isAdmin || critique.getPostId().equals(postId) || article.getPostId().equals(postId)) {
+        if (isAdmin || critique.getPostId().equals(postId) || article.getUid().equals(postId)) {
             // 标记该评论为已删除
             critiqueMapper.update(null, new UpdateWrapper<Critique>()
                     .eq("criId", criId)
                     .set("is_deleted", 1));
 
             // 更新文章统计数据
-            articleStatsService.updateArticleStats(critique.getAid(), "critique", false, 1);
+            //articleStatsService.updateArticleStats(critique.getAid(), "critique", false, 1);
 
             // 递归删除所有子评论
             deleteChildCritiques(criId, postId);
                                       // 删除成功
-            return new ResponseResult(200, "删除成功!");
+            //return new ResponseResult(200, "删除成功!");
+            return new ResponseResult();
         } else {
             // 无权删除
-            return new ResponseResult(403, "你无权删除该条评论");
+            //return new ResponseResult(403, "你无权删除该条评论");
+            return new ResponseResult();
         }
     }
 
@@ -103,6 +105,10 @@ public class VideoDenounceImpl implements VideoDenounceService {
                 deleteChildCritiques(child.getCriId(), postId);
             }
         }
+    }
+
+    private List<Critique> getChildCritiquesByRootId(Integer rootCriId, long l, long l1) {
+        return List.of();
     }
 
 }
