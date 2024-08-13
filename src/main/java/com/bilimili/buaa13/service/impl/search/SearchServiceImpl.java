@@ -50,15 +50,15 @@ public class SearchServiceImpl implements SearchService {
         if (keywordLength < 2 || keywordLength > 25) return formattedString;
         // 查询是否有该词条，用异步线程不耽误后面查询
         CompletableFuture.runAsync(() -> {
-            //注释Redis
-            /*if (redisUtil.zsetExist("search_word", formattedString)) {
+            //1注释Redis
+            if (redisUtil.zsetExist("search_word", formattedString)) {
                 // 如果有，就热度加一
                 redisUtil.zincrby("search_word", formattedString, 1);
             } else {
                 // 否则添加成员到redis和ES
                 redisUtil.zsetWithScore("search_word", formattedString, 1);
                 esUtil.addSearchWord(formattedString);
-            }*/
+            }
             QueryWrapper<HotSearch> hotSearchQueryWrapper = new QueryWrapper<>();
             hotSearchQueryWrapper.eq("content", formattedString);
             HotSearch hotSearch = hotSearchMapper.selectOne(hotSearchQueryWrapper);
@@ -93,14 +93,14 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public List<HotSearch> getHotSearch() {
-        //注释Redis
-       /* List<RedisUtil.ZObjScore> curr = redisUtil.zReverangeWithScores("search_word", 0, 9);
+        //1注释Redis
+        List<RedisUtil.ZObjScore> curr = redisUtil.zReverangeWithScores("search_word", 0, 9);
         List<HotSearch> list = new ArrayList<>();
         for (RedisUtil.ZObjScore o : curr) {
             HotSearch word = new HotSearch();
             word.setContent(o.getMember().toString());
             word.setHot(o.getScore());
-            Double lastScore = findScoreForName(o.getMember());
+            Double lastScore = findScoreByName(o.getMember());
             if (lastScore == null) {
                 word.setType(1);    // 没有找到就是新词条
                 if (o.getScore() > 3) {
@@ -110,7 +110,7 @@ public class SearchServiceImpl implements SearchService {
                 word.setType(2);    // 短时间内搜索超过3次就是热词条
             }
             list.add(word);
-        }*/
+        }
         return hotSearchMapper.getHotSearchByCount(10);
     }
 

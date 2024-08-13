@@ -1,19 +1,12 @@
 package com.bilimili.buaa13.entity;
 
-
-
-
 import com.bilimili.buaa13.entity.dto.UserDTO;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.baomidou.mybatisplus.annotation.IdType;
+
 import java.util.Date;
 import java.util.List;
-
-import lombok.Data;
-import com.baomidou.mybatisplus.annotation.TableId;
-import lombok.AllArgsConstructor;
-
-
 
 @Data
 @AllArgsConstructor
@@ -24,11 +17,11 @@ public class CritiqueTree {
     private Integer rootCid;
     private Integer parentCid;//父节点id，给这个id的评论发送
     private String content;//评论内容
-    private Integer postId;
-    private Integer acceptId;
+    private UserDTO post;//发送者
+    private UserDTO accept;//接收者
     private Integer upVote;
     private Integer downVote;
-    private List<CommentTree> sonNode;//子节点，用于递归
+    private List<CritiqueTree> sonNode;//子节点，用于递归
     private Date createTime;
     private Long count;//回复的数量
 }

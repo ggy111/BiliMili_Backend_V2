@@ -1,10 +1,13 @@
 package com.bilimili.buaa13.service.impl.article;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.bilimili.buaa13.entity.Article;
 import com.bilimili.buaa13.mapper.ArticleMapper;
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.article.ArticleReviewService;
 import com.bilimili.buaa13.service.article.ArticleService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
+import com.bilimili.buaa13.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +22,8 @@ public class ArticleReviewServiceImpl implements ArticleReviewService {
     private ArticleService articleService;
     @Autowired
     private ArticleMapper articleMapper;
+    @Autowired
+    private RedisUtil redisUtil;
     /**
      * 查询对应状态的专栏数量
      *
@@ -55,14 +60,14 @@ public class ArticleReviewServiceImpl implements ArticleReviewService {
             return responseResult;
         }
         // 从 redis 获取待审核的专栏id集合，为了提升效率就不遍历数据库了，前提得保证 Redis 没崩，数据一致性采用定时同步或者中间件来保证
-        //注释Redis
-        //Set<Object> set = redisUtil.getMembers("article_status:" + status);
-        /*if(set == null || set.isEmpty()){
+        //1注释Redis
+        Set<Object> set = redisUtil.getMembers("article_status:" + status);
+        if(set == null || set.isEmpty()){
             QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("status", status);
             List<Integer> aids = articleMapper.getArticleIdsByStatus(status);
             set = new HashSet<>(aids);
-        }*/
+        }
         List<Integer> aids = articleMapper.getArticleIdsByStatus(status);
         Set<Integer> aidSet = new HashSet<>(aids);
         if (!aidSet.isEmpty()) {

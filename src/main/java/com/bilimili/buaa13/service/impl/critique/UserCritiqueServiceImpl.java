@@ -2,19 +2,16 @@ package com.bilimili.buaa13.service.impl.critique;
 
 import com.bilimili.buaa13.service.critique.UserCritiqueService;
 
-package com.bilimili.buaa13.service.impl.critique;
-
-import com.bilimili.buaa13.service.critique.UserCritiqueService;
 import com.bilimili.buaa13.service.critique.CritiqueService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.bilimili.buaa13.utils.RedisUtil;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Service
 @Slf4j
@@ -24,62 +21,34 @@ public class UserCritiqueServiceImpl implements UserCritiqueService {
 
     @Autowired
     private CritiqueService critiqueService;
+    @Qualifier("taskExecutor")
+    @Autowired
+    private Executor taskExecutor;
 
 
     /**
+     * 获取用户点赞和点踩的评论集合
      *
-     *@Override
-     * public void setUserUpVoteOrDownVote(Integer postId, Integer criId, boolean isLike, boolean isCancel) {
-     *     boolean hasLiked = redisUtil.isMember("upVote:" + postId, criId);
-     *     boolean hasDisliked = redisUtil.isMember("downVote:" + postId, criId);
+     * @param uid 当前用户
+     * @return 点赞和点踩的评论集合
+     */
+    @Override
+    public Map<String, Object> getUserUpVoteAndDownVoteForArticle(Integer uid) {
+        return Map.of();
+    }
+
+    /**
+     * 点赞或点踩某条评论
      *
-     *     // 如果同时存在点赞和点踩的情况（理论上不应该发生）
-     *     if (hasLiked && hasDisliked) {
-     *         throw new IllegalStateException("系统错误：同时存在点赞和点踩记录");
-     *     }
-     *
-     *     if (isCancel) {
-     *         if (isLike && hasLiked) {
-     *             // 取消点赞
-     *             redisUtil.delMember("upVote:" + postId, criId);
-     *             critiqueService.updateCritique(criId, "up_vote", false, 1);
-     *         } else if (!isLike && hasDisliked) {
-     *             // 取消点踩
-     *             redisUtil.delMember("downVote:" + postId, criId);
-     *             critiqueService.updateCritique(criId, "down_vote", false, 1);
-     *         }
-     *     } else {
-     *         if (isLike) {
-     *             if (hasDisliked) {
-     *                 // 取消点踩并点赞
-     *                 redisUtil.delMember("downVote:" + postId, criId);
-     *                 critiqueService.updateCritique(criId, "down_vote", false, 1);
-     *             }
-     *             if (!hasLiked) {
-     *                 // 添加点赞
-     *                 redisUtil.addMember("upVote:" + postId, criId);
-     *                 critiqueService.updateCritique(criId, "up_vote", true, 1);
-     *             }
-     *         } else {
-     *             if (hasLiked) {
-     *                 // 取消点赞并点踩
-     *                 redisUtil.delMember("upVote:" + postId, criId);
-     *                 critiqueService.updateCritique(criId, "up_vote", false, 1);
-     *             }
-     *             if (!hasDisliked) {
-     *                 // 添加点踩
-     *                 redisUtil.addMember("downVote:" + postId, criId);
-     *                 critiqueService.updateCritique(criId, "down_vote", true, 1);
-     *             }
-     *         }
-     *     }
-     * }
-     * **/
+     * @param uid      当前用户id
+     * @param criId    评论id
+     * @param isLike   true 赞 false 踩
+     * @param isCancel true 取消  false 点中
+     */
+    @Override
+    public void setUserUpVoteOrDownVoteForArticle(Integer uid, Integer criId, boolean isLike, boolean isCancel) {
 
-
-
-
-
+    }
 
     /**
      * 获取用户点赞和点踩的评论集合
@@ -93,9 +62,9 @@ public class UserCritiqueServiceImpl implements UserCritiqueService {
         Set<Object> userDislike = redisUtil.getMembers("downVote:" + postId);
         map.put("userLike", userLike==null?new ArrayList<>():userLike);
         map.put("userDislike", userDislike==null?new ArrayList<>():userDislike);
-        //注释Redis
+        //1注释Redis
         //注释异步线程
-        /*// 获取用户点赞列表，并放入map中
+        // 获取用户点赞列表，并放入map中
         CompletableFuture<Void> userLikeFuture = CompletableFuture.runAsync(() -> {
 
             if (userLike == null) {
@@ -116,7 +85,7 @@ public class UserCritiqueServiceImpl implements UserCritiqueService {
         }, taskExecutor);
 
         userDislikeFuture.join();
-        userLikeFuture.join();*/
+        userLikeFuture.join();
 
         return map;
     }

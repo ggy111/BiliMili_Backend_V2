@@ -8,11 +8,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class VideoStats {
+public class VideoStatus {
     @TableId
     private Integer vid;
     private Integer play;
-    private Integer danmu;
+    private Integer barrage;
     private Integer good;
     private Integer bad;
     private Integer coin;

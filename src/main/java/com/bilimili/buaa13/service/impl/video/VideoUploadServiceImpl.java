@@ -2,10 +2,10 @@ package com.bilimili.buaa13.service.impl.video;
 
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Video;
-import com.bilimili.buaa13.entity.VideoStats;
+import com.bilimili.buaa13.entity.VideoStatus;
 import com.bilimili.buaa13.entity.dto.VideoUploadInfoDTO;
 import com.bilimili.buaa13.mapper.VideoMapper;
-import com.bilimili.buaa13.mapper.VideoStatsMapper;
+import com.bilimili.buaa13.mapper.VideoStatusMapper;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.VideoUploadService;
 import com.bilimili.buaa13.utils.ESUtil;
@@ -42,7 +42,7 @@ public class VideoUploadServiceImpl implements VideoUploadService {
     private VideoMapper videoMapper;
 
     @Autowired
-    private VideoStatsMapper videoStatsMapper;
+    private VideoStatusMapper videoStatusMapper;
 
     @Autowired
     private CurrentUser currentUser;
@@ -187,13 +187,13 @@ public class VideoUploadServiceImpl implements VideoUploadService {
         // 存入数据库
         Video video = getVideoByVideoUploadInfoDTO(videoUploadInfoDTO, url);
         videoMapper.insert(video);
-        VideoStats videoStats = new VideoStats(video.getVid(),0,0,0,0,0,0,0,0);
-        videoStatsMapper.insert(videoStats);
+        VideoStatus videoStatus = new VideoStatus(video.getVid(),0,0,0,0,0,0,0,0);
+        videoStatusMapper.insert(videoStatus);
         esUtil.addVideo(video);
         //注释Redis
         /*CompletableFuture.runAsync(() -> redisUtil.setExObjectValue("video:" + video.getVid(), video), taskExecutor);
         CompletableFuture.runAsync(() -> redisUtil.addMember("video_status:0", video.getVid()), taskExecutor);
-        CompletableFuture.runAsync(() -> redisUtil.setExObjectValue("videoStats:" + video.getVid(), videoStats), taskExecutor);*/
+        CompletableFuture.runAsync(() -> redisUtil.setExObjectValue("videoStatus:" + video.getVid(), videoStatus), taskExecutor);*/
     }
 
     /**

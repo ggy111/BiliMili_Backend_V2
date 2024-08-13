@@ -357,22 +357,34 @@ CREATE TABLE `article` (
                          `aid` int(11) NOT NULL AUTO_INCREMENT COMMENT '文章ID',
                          `uid` int(11) NOT NULL COMMENT '投稿用户ID',
                          `title` varchar(80) NOT NULL COMMENT '标题',
-                         /*`type` tinyint(4) NOT NULL DEFAULT '1' COMMENT '类型 1自制 2转载',
-                         `author` tinyint(4) NOT NULL DEFAULT '0' COMMENT '作者声明 0不声明 1未经允许禁止转载',
-                         `duration` double NOT NULL DEFAULT '0' COMMENT '播放总时长 单位秒',
-                         `main_class_id` varchar(20) NOT NULL COMMENT '主分区ID',
-                         `sub_class_id` varchar(20) NOT NULL COMMENT '子分区ID',
-                         `tags` varchar(500) DEFAULT NULL COMMENT '标签 回车分隔',
-                         `descr` varchar(2000) DEFAULT NULL COMMENT '简介',*/
                          `cover_url` varchar(500) NOT NULL COMMENT '封面url',
                          `vid` varchar(500) NOT NULL COMMENT '关联的视频',
                          `content_url` varchar(500) NOT NULL COMMENT '文章内容url',
                          `status` tinyint(4) NOT NULL DEFAULT '0' COMMENT '状态 0审核中 1已过审 2未通过 3已删除',
-                         /*`upload_date` datetime NOT NULL COMMENT '上传时间',
-                         `delete_date` datetime DEFAULT NULL COMMENT '删除时间',*/
                          PRIMARY KEY (`aid`),
                          UNIQUE KEY `aid` (`aid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8 COMMENT='文章表';
+
+--
+-- Table structure for table `article_stats`
+--
+
+DROP TABLE IF EXISTS `article_stats`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `article_stats` (
+                               `aid` int(11) NOT NULL COMMENT '专栏ID',
+                               `view` int(11) NOT NULL DEFAULT '0' COMMENT '观看量',
+                               `good` int(11) NOT NULL DEFAULT '0' COMMENT '点赞数',
+                               `bad` int(11) NOT NULL DEFAULT '0' COMMENT '点踩数',
+                               `coin` int(11) NOT NULL DEFAULT '0' COMMENT '投币数',
+                               `collect` int(11) NOT NULL DEFAULT '0' COMMENT '收藏数',
+                               `share` int(11) NOT NULL DEFAULT '0' COMMENT '分享数',
+                               `critique` int(11) DEFAULT '0' COMMENT '评论数量统计',
+                               PRIMARY KEY (`aid`),
+                               UNIQUE KEY `vid` (`aid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='专栏数据统计表';
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 
 DROP TABLE IF EXISTS `update`;

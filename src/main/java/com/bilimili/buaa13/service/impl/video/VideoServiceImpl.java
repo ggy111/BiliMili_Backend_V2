@@ -2,16 +2,16 @@ package com.bilimili.buaa13.service.impl.video;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.bilimili.buaa13.entity.VideoStatus;
 import com.bilimili.buaa13.mapper.VideoMapper;
-import com.bilimili.buaa13.mapper.VideoStatsMapper;
+import com.bilimili.buaa13.mapper.VideoStatusMapper;
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Video;
-import com.bilimili.buaa13.entity.VideoStats;
 import com.bilimili.buaa13.service.category.CategoryService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.VideoService;
-import com.bilimili.buaa13.service.video.VideoStatsService;
+import com.bilimili.buaa13.service.video.VideoStatusService;
 import com.bilimili.buaa13.utils.ESUtil;
 import com.bilimili.buaa13.utils.OssUtil;
 import com.bilimili.buaa13.utils.RedisUtil;
@@ -31,7 +31,7 @@ public class VideoServiceImpl implements VideoService {
     private VideoMapper videoMapper;
 
     @Autowired
-    private VideoStatsMapper videoStatsMapper;
+    private VideoStatusMapper videoStatusMapper;
 
     @Autowired
     private UserService userService;
@@ -40,7 +40,7 @@ public class VideoServiceImpl implements VideoService {
     private CategoryService categoryService;
 
     @Autowired
-    private VideoStatsService videoStatsService;
+    private VideoStatusService videoStatusService;
 
     @Autowired
     private CurrentUser currentUser;
@@ -127,14 +127,14 @@ public class VideoServiceImpl implements VideoService {
             }
         } else {
             // 按视频数据排序，就先查videoStats表
-            QueryWrapper<VideoStats> queryWrapper = new QueryWrapper<>();
+            QueryWrapper<VideoStatus> queryWrapper = new QueryWrapper<>();
             queryWrapper.in("vid", vidList).orderByDesc(column).last("LIMIT " + quantity + " OFFSET " + (page - 1) * quantity);
-            List<VideoStats> videoStatsList = videoStatsMapper.selectList(queryWrapper);
-            if (videoStatsList.isEmpty()) {
+            List<VideoStatus> videoStatusList = videoStatusMapper.selectList(queryWrapper);
+            if (videoStatusList.isEmpty()) {
                 return Collections.emptyList();
             }
-            for(VideoStats videoStats : videoStatsList) {
-                Video video = videoMapper.selectById(videoStats.getVid());
+            for(VideoStatus videoStatus : videoStatusList) {
+                Video video = videoMapper.selectById(videoStatus.getVid());
                 Map<String, Object> map = getVideoMap(video);
                 videoMapList.add(map);
             }
@@ -318,7 +318,7 @@ public class VideoServiceImpl implements VideoService {
             try{
                 map.put("video", video);
                 map.put("user", userService.getUserByUId(video.getUid()));
-                map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
+                map.put("stats", videoStatusService.getStatusByVideoId(video.getVid()));
                 map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
             }
             catch (Exception e){

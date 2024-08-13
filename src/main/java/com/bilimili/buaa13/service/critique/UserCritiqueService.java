@@ -26,4 +26,7 @@ public interface UserCritiqueService  {
      */
     void setUserUpVoteOrDownVoteForArticle(Integer uid, Integer criId, boolean isLike, boolean isCancel);
 
+    Map<String, Object> getUserUpVoteAndDownVote(Integer postId);
+
+    void setUserUpVoteOrDownVote(Integer postId, Integer criId, boolean isLike, boolean isCancel);
 }

@@ -3,10 +3,10 @@ package com.bilimili.buaa13.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bilimili.buaa13.mapper.FavoriteVideoMapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
-import com.bilimili.buaa13.mapper.VideoStatsMapper;
+import com.bilimili.buaa13.mapper.VideoStatusMapper;
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Video;
-import com.bilimili.buaa13.entity.VideoStats;
+import com.bilimili.buaa13.entity.VideoStatus;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.FavoriteService;
 import com.bilimili.buaa13.service.video.FavoriteVideoService;
@@ -36,7 +36,7 @@ public class HistoryController {
     @Autowired
     private VideoMapper videoMapper;
     @Autowired
-    private VideoStatsMapper videoStatsMapper;
+    private VideoStatusMapper videoStatusMapper;
 
     /**
      * 获取历史记录
@@ -55,14 +55,14 @@ public class HistoryController {
         for(Integer vid: vids){
             QueryWrapper<Video> videoQueryWrapper = new QueryWrapper<>();
             videoQueryWrapper.eq("vid", vid);
-            QueryWrapper<VideoStats> videoStatsQueryWrapper = new QueryWrapper<>();
+            QueryWrapper<VideoStatus> videoStatsQueryWrapper = new QueryWrapper<>();
             videoStatsQueryWrapper.eq("vid", vid);
             Video video = videoMapper.selectOne(videoQueryWrapper);
-            VideoStats videoStats = videoStatsMapper.selectOne(videoStatsQueryWrapper);
+            VideoStatus videoStatus = videoStatusMapper.selectOne(videoStatsQueryWrapper);
             titles.add(video.getTitle());
             videoTimes.add(video.getVideoTime());
             urls.add(video.getCoverUrl());
-            playCounts.add(videoStats.getPlay());
+            playCounts.add(videoStatus.getPlay());
         }
         Map<String,Object> dataMap = new HashMap<>();
         dataMap.put("vid",vids);

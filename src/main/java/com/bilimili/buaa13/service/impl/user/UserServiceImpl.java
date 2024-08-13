@@ -5,13 +5,13 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.bilimili.buaa13.entity.Follow;
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.User;
-import com.bilimili.buaa13.entity.VideoStats;
+import com.bilimili.buaa13.entity.VideoStatus;
 import com.bilimili.buaa13.entity.dto.UserDTO;
 import com.bilimili.buaa13.mapper.FollowMapper;
 import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.service.user.UserAccountService;
 import com.bilimili.buaa13.service.user.UserService;
-import com.bilimili.buaa13.service.video.VideoStatsService;
+import com.bilimili.buaa13.service.video.VideoStatusService;
 import com.bilimili.buaa13.utils.ESUtil;
 import com.bilimili.buaa13.utils.OssUtil;
 import com.bilimili.buaa13.utils.RedisUtil;
@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
     private UserAccountService userAccountService;
 
     @Autowired
-    private VideoStatsService videoStatsService;
+    private VideoStatusService videoStatusService;
 
     @Autowired
     private FollowMapper followMapper;
@@ -78,7 +78,7 @@ public class UserServiceImpl implements UserService {
         userDTO.setFansCount(0);
         //获取用户对应的视频列表
         //"user_video_upload:" + user.getUid()是完整的键值，可以取出内容。
-        //注释Redis
+        //1注释Redis
         Set<Object> set = redisUtil.zReverange("user_video_upload:" + user.getUid(), 0L, -1L);
         if (set == null || set.isEmpty()) {
             userDTO.setVideoCount(0);
@@ -88,27 +88,26 @@ public class UserServiceImpl implements UserService {
         else{
             // 并发执行每个视频数据统计的查询任务
             //并行流方式遍历列表
-            //注释并行
-            /*List<VideoStats> list = set.stream().parallel()
-                .map(vid -> videoStatsService.getStatsByVideoId((Integer) vid))
-                .collect(Collectors.toList());*/
+            List<VideoStatus> list = set.stream().parallel()
+                .map(vid -> videoStatusService.getStatusByVideoId((Integer) vid))
+                .toList();
             List<Object> listSet = new ArrayList<>(set);
-            List<VideoStats> list = new ArrayList<>();
+            list = new ArrayList<>();
 
             int setSize = listSet.size();
             for(int i=0;i< setSize;++i){
                 int vid = (int)listSet.get(i);
-                VideoStats videoStats = videoStatsService.getStatsByVideoId(vid);
-                list.add(videoStats);
+                VideoStatus videoStatus = videoStatusService.getStatusByVideoId(vid);
+                list.add(videoStatus);
             }
             //遍历查找用户播放，点赞总数据
             int video = list.size(), love = 0, play = 0;
             userDTO.setVideoCount(video);
             while(video>0){
                 video--;
-                VideoStats videoStats = list.get(video);
-                love = love + videoStats.getGood();
-                play = play + videoStats.getPlay();
+                VideoStatus videoStatus = list.get(video);
+                love = love + videoStatus.getGood();
+                play = play + videoStatus.getPlay();
             }
 
             userDTO.setLoveCount(love);
@@ -164,22 +163,22 @@ public class UserServiceImpl implements UserService {
             }
 
             List<Object> listSet = new ArrayList<>(set);
-            List<VideoStats> listVideoStats = new ArrayList<>();
+            List<VideoStatus> listVideoStats = new ArrayList<>();
 
             int setSize = listSet.size();
             for(int j=0;j< setSize;++j){
                 int vid = (int)listSet.get(j);
-                VideoStats videoStats = videoStatsService.getStatsByVideoId(vid);
-                listVideoStats.add(videoStats);
+                VideoStatus videoStatus = videoStatusService.getStatusByVideoId(vid);
+                listVideoStats.add(videoStatus);
             }
             //遍历查找用户播放，点赞总数据
             int video = listVideoStats.size(), love = 0, play = 0;
             userDTO.setVideoCount(video);
             while(video>0){
                 video--;
-                VideoStats videoStats = listVideoStats.get(video);
-                love = love + videoStats.getGood();
-                play = play + videoStats.getPlay();
+                VideoStatus videoStatus = listVideoStats.get(video);
+                love = love + videoStatus.getGood();
+                play = play + videoStatus.getPlay();
             }
             userDTO.setLoveCount(love);
             userDTO.setPlayCount(play);
@@ -227,8 +226,8 @@ public class UserServiceImpl implements UserService {
         new_user.setUid(uid);
         new_user.setNickname(nickname);
         esUtil.updateUser(new_user);
-        //注释Redis
-        //redisUtil.delValue("user:" + uid);
+        //1注释Redis
+        redisUtil.delValue("user:" + uid);
         return responseResult;
     }
 

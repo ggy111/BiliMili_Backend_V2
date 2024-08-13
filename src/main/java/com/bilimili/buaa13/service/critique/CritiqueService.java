@@ -3,10 +3,16 @@ package com.bilimili.buaa13.service.critique;
 import com.bilimili.buaa13.entity.Critique;
 import com.bilimili.buaa13.entity.CritiqueTree;
 import com.bilimili.buaa13.entity.ResponseResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 public interface CritiqueService {
+    //----------------------------------------------------------------------------
+    //基于原来思路的额外修改
+    @Transactional
+    ResponseResult deleteCritiqueFromArticle(Integer criId, Integer postId, boolean isAdmin);
+
     /**
      * 根据文章id获取评论
      * @param aid 文章id

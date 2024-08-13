@@ -1,31 +1,27 @@
 package com.bilimili.buaa13.service.impl.critique;
 
-import com.bilimili.buaa13.service.critique.CritiqueService;
-import org.springframework.stereotype.Service;
-
-
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bilimili.buaa13.entity.*;
 import com.bilimili.buaa13.im.IMServer;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bilimili.buaa13.mapper.ArticleMapper;
 import com.bilimili.buaa13.mapper.CritiqueMapper;
+import com.bilimili.buaa13.service.article.ArticleStatusService;
+import com.bilimili.buaa13.service.critique.CritiqueService;
+import com.bilimili.buaa13.service.message.MsgUnreadService;
+import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.utils.RedisUtil;
+import io.netty.channel.Channel;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Stream;
-import java.util.stream.Collectors;
 import java.util.concurrent.Executor;
-
-
-import com.bilimili.buaa13.service.*;
-import io.netty.channel.Channel;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import java.util.stream.Stream;
 
 
 
@@ -47,7 +43,7 @@ public class CritiqueServiceImpl implements CritiqueService {
     private ArticleMapper articleMapper;
 
     @Autowired
-    private ArticleStatsService articleStatsService;
+    private ArticleStatusService articleStatusService;
 
     @Autowired
     private UserService userService;
@@ -74,30 +70,30 @@ public class CritiqueServiceImpl implements CritiqueService {
 
         if (critique == null) {
             // 评论不存在
-            return new ResponseResult(404, "评论不存在");
+            return new ResponseResult(404, "评论不存在",null);
         }
 
         // 获取文章信息
         Article article = articleMapper.selectById(critique.getAid());
 
         // 判断删除权限：管理员、本评论的发布者、文章作者
-        if (isAdmin || critique.getPostId().equals(postId) || article.getPostId().equals(postId)) {
+        if (isAdmin || critique.getPostId().equals(postId) || article.getUid().equals(postId)) {
             // 标记该评论为已删除
             critiqueMapper.update(null, new UpdateWrapper<Critique>()
                     .eq("criId", criId)
                     .set("is_deleted", 1));
 
             // 更新文章统计数据
-            articleStatsService.updateArticleStats(critique.getAid(), "critique", false, 1);
+            articleStatusService.updateArticleStatus(critique.getAid(), "critique", false, 1);
 
             // 递归删除所有子评论
             deleteChildCritiques(criId, postId);
 
             // 删除成功
-            return new ResponseResult(200, "删除成功!");
+            return new ResponseResult(200, "删除成功!",null);
         } else {
             // 无权删除
-            return new ResponseResult(403, "你无权删除该条评论");
+            return new ResponseResult(403, "你无权删除该条评论",null);
         }
     }
 
@@ -155,8 +151,8 @@ public class CritiqueServiceImpl implements CritiqueService {
         CritiqueTree critiqueTree = new CritiqueTree(
                 critique.getCriId(),
                 critique.getAid(),
-                critique.getRootId(),
-                critique.getParentId(),
+                critique.getRootCid(),
+                critique.getParentCid(),
                 critique.getContent(),
                 userService.getUserByUId(critique.getPostId()),
                 userService.getUserByUId(critique.getAcceptId()),
@@ -184,7 +180,7 @@ public class CritiqueServiceImpl implements CritiqueService {
         //查询回复的评论数组
         critiques = critiquePage.getRecords();
         List<Critique> sonCritiques = getChildCritiquesByRootId(critique.getCriId(), start, end);
-        if (critique.getRootId() == 0 || (critiques!=null && !critiques.isEmpty()) || (sonCritiques !=null && !sonCritiques.isEmpty())) {
+        if (critique.getRootCid() == 0 || (critiques!=null && !critiques.isEmpty()) || (sonCritiques !=null && !sonCritiques.isEmpty())) {
             List<CritiqueTree> sonTreeList = new ArrayList<>();
             if(sonCritiques ==null || sonCritiques.isEmpty()){ sonCritiques = critiques;}
             for(Critique sonCritique : sonCritiques) {
@@ -227,18 +223,18 @@ public class CritiqueServiceImpl implements CritiqueService {
         );
         critiqueMapper.insert(critique);
         // 更新文章评论 + 1
-        articleStatsService.updateArticleStats(critique.getAid(), "critique", true, 1);
+        articleStatusService.updateArticleStatus(critique.getAid(), "critique", true, 1);
 
         CritiqueTree critiqueTree = buildCritiqueTree(critique, 0L, -1L);
 
         try {
-            //注释Redis
+            //1注释Redis
             // 如果不是根级评论，则加入 redis 对应的 zset 中
-            /*if (!rootId.equals(0)) {
+            if (!rootId.equals(0)) {
                 redisUtil.zset("critique_reply:" + rootId, critique.getCriId());
             } else {
                 redisUtil.zset("critique_article:"+ aid, critique.getCriId());
-            }*/
+            }
             // 表示被回复的用户收到的回复评论的 criId 有序集合
             // 如果不是回复自己
             if(!critique.getAcceptId().equals(critique.getPostId())) {
@@ -283,12 +279,12 @@ public class CritiqueServiceImpl implements CritiqueService {
 
         // 限制评论只能由本人或管理员或作者删除
         Article article = articleMapper.selectById(critique.getAid());
-        if (critique.getPostId().equals(postId) || isAdmin || article.getPostId().equals(postId)) {
+        if (critique.getPostId().equals(postId) || isAdmin || article.getUid().equals(postId)) {
             // 删除评论
             UpdateWrapper<Critique> deleteCritiqueWrapper = new UpdateWrapper<>();
             deleteCritiqueWrapper.eq("criId", critique.getCriId()).set("is_deleted", 1);
             critiqueMapper.update(null, deleteCritiqueWrapper);
-            articleStatsService.updateArticleStats(critique.getAid(), "critique", false, 1);
+            articleStatusService.updateArticleStatus(critique.getAid(), "critique", false, 1);
             //并行流递归删除子评论
             List<Critique> childCritiques = getChildCritiquesByRootId(criId,0L,-1L);
             if (childCritiques == null || childCritiques.isEmpty()) {
@@ -301,7 +297,7 @@ public class CritiqueServiceImpl implements CritiqueService {
                         childResponse = deleteCritique(childCritique.getCriId(),postId,true);
                         return Stream.of(childResponse);
                     }
-            ).collect(Collectors.toList());
+            ).toList();
 
 
             responseResult.setCode(200);
@@ -321,12 +317,12 @@ public class CritiqueServiceImpl implements CritiqueService {
      */
     @Override
     public List<Critique> getChildCritiquesByRootId(Integer rootId, Long start, Long end) {
-        //注释Redis
-        /*Set<Object> replyIds = redisUtil.zRange("critique_reply:" + rootId, start, end);
+        //1注释Redis
+        Set<Object> replyIds = redisUtil.zRange("critique_reply:" + rootId, start, end);
         if (replyIds == null || replyIds.isEmpty()) return Collections.emptyList();
         QueryWrapper<Critique> wrapper = new QueryWrapper<>();
         wrapper.in("id", replyIds).ne("is_deleted", 1);
-        return critiqueMapper.selectList(wrapper);*/
+        //return critiqueMapper.selectList(wrapper);
         if(end.equals(-1L)){
             return critiqueMapper.getRootCritiqueByStartNoLimit(rootId, start);
         }
@@ -343,8 +339,8 @@ public class CritiqueServiceImpl implements CritiqueService {
      */
     @Override
     public List<Critique> getRootCritiquesByAid(Integer aid, Long offset, Integer sortType) {
-        //注释Redis
-        /*Set<Object> rootIdsSet;
+        //1注释Redis
+        Set<Object> rootIdsSet;
         if (sortType == 1) {
             // 按热度排序就不能用时间分数查偏移量了，要全部查出来，后续在MySQL筛选
             rootIdsSet = redisUtil.zReverange("critique_article:" + aid, 0L, -1L);
@@ -361,7 +357,7 @@ public class CritiqueServiceImpl implements CritiqueService {
         } else if(sortType == 2){ // 时间
             critiqueQueryWrapper.orderByDesc("create_time");
         }
-        return critiqueMapper.selectList(critiqueQueryWrapper);*/
+        //return critiqueMapper.selectList(critiqueQueryWrapper);
         if(sortType == 1) return critiqueMapper.getAidRootCritiquesByHeat(aid,offset,10L);
         else if (sortType == 2) return critiqueMapper.getAidRootCritiquesByTime(aid,offset,10L);
         else return Collections.emptyList();

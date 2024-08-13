@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.entity.*;
-import com.bilimili.buaa13.service.video.VideoStatsService;
+import com.bilimili.buaa13.service.video.VideoStatusService;
 import com.bilimili.buaa13.utils.ESUtil;
 import com.bilimili.buaa13.utils.OssUtil;
 import com.bilimili.buaa13.utils.RedisUtil;
@@ -51,7 +51,7 @@ class ApplicationTests {
     private UserMapper userMapper;
 
     @Autowired
-    private VideoStatsService videoStatsService;
+    private VideoStatusService videoStatusService;
 
     @Autowired
     private OssUtil ossUtil;
@@ -130,8 +130,8 @@ class ApplicationTests {
 
     @Test
     void test() {
-        VideoStats videoStats = videoStatsService.getStatsByVideoId(1);
-        System.out.println(videoStats);
+        VideoStatus videoStatus = videoStatusService.getStatusByVideoId(1);
+        System.out.println(videoStatus);
     }
 
 

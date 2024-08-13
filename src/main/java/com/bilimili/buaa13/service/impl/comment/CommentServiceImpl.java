@@ -11,7 +11,7 @@ import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.service.comment.CommentService;
 import com.bilimili.buaa13.service.message.MsgUnreadService;
 import com.bilimili.buaa13.service.user.UserService;
-import com.bilimili.buaa13.service.video.VideoStatsService;
+import com.bilimili.buaa13.service.video.VideoStatusService;
 import com.bilimili.buaa13.utils.RedisUtil;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class CommentServiceImpl implements CommentService {
     private VideoMapper videoMapper;
 
     @Autowired
-    private VideoStatsService videoStatsService;
+    private VideoStatusService videoStatusService;
 
     @Autowired
     private UserService userService;
@@ -156,7 +156,7 @@ public class CommentServiceImpl implements CommentService {
         );
         commentMapper.insert(comment);
         // 更新视频评论 + 1
-        videoStatsService.updateVideoStats(comment.getVid(), "comment", true, 1);
+        videoStatusService.updateVideoStatus(comment.getVid(), "comment", true, 1);
 
         CommentTree commentTree = buildCommentTree(comment, 0L, -1L);
 
@@ -217,7 +217,7 @@ public class CommentServiceImpl implements CommentService {
             UpdateWrapper<Comment> deleteCommentWrapper = new UpdateWrapper<>();
             deleteCommentWrapper.eq("cid", comment.getCid()).set("is_deleted", 1);
             commentMapper.update(null, deleteCommentWrapper);
-            videoStatsService.updateVideoStats(comment.getVid(), "comment", false, 1);
+            videoStatusService.updateVideoStatus(comment.getVid(), "comment", false, 1);
             //并行流递归删除子评论
             List<Comment> childComments = getChildCommentsByRootId(cid,0L,-1L);
             if (childComments == null || childComments.isEmpty()) {
@@ -240,11 +240,11 @@ public class CommentServiceImpl implements CommentService {
             if (comment.getRootId()==0) {
                 // 查询总共要减少多少评论数
                 int count = Math.toIntExact(redisUtil.zCard("comment_reply:" + comment.getCid()));
-                videoStatsService.updateVideoStats(comment.getVid(), "comment", false, count + 1);
+                videoStatusService.updateVideoStatus(comment.getVid(), "comment", false, count + 1);
                 redisUtil.zsetDelMember("comment_video:" + comment.getVid(), comment.getCid());
                 redisUtil.delValue("comment_reply:" + comment.getCid());
             } else {
-                videoStatsService.updateVideoStats(comment.getVid(), "comment", false, 1);
+                videoStatusService.updateVideoStatus(comment.getVid(), "comment", false, 1);
                 redisUtil.zsetDelMember("comment_reply:" + comment.getRootId(), comment.getCid());
             }*/
 

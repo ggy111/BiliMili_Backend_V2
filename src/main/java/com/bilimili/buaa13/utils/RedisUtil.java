@@ -28,8 +28,8 @@ public class RedisUtil {
     @Autowired
     private RedisTemplate redisTemplate;
 
-    public static final long REDIS_DEFAULT_EXPIRE_TIME = 60 * 60;
-    public static final TimeUnit REDIS_DEFAULT_EXPIRE_TIMEUNIT = TimeUnit.SECONDS;
+    private static final long REDIS_DEFAULT_EXPIRE_TIME = 60 * 60;
+    private static final TimeUnit REDIS_DEFAULT_EXPIRE_TIMEUNIT = TimeUnit.SECONDS;
 
     // 定义ZSetObject类，表示需要写入到ZSet中的数据
     @Data

@@ -110,15 +110,15 @@ public class ChatServiceImpl implements ChatService {
      */
     @Override
     public List<Map<String, Object>> getChatDataList(Integer uid, Long offset) {
-        //注释Redis
-        /*Set<Object> set = redisUtil.zReverange("chat_zset:" + uid, offset, offset + 9);
+        //1注释Redis
+        Set<Object> set = redisUtil.zReverange("chat_zset:" + uid, offset, offset + 9);
         // 没有数据则返回空列表
         if (set == null || set.isEmpty()) return Collections.emptyList();
         // 查询
         QueryWrapper<Chat> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("bid", set).eq("is_deleted", 0).orderByDesc("latest_time");
-        List<Chat> chatList = chatMapper.selectList(queryWrapper);*/
-        List<Chat> chatList = chatMapper.selectChatByUid(uid);
+        List<Chat> chatList = chatMapper.selectList(queryWrapper);
+        chatList = chatMapper.selectChatByUid(uid);
         // 没有数据则返回空列表
         if (chatList == null || chatList.isEmpty()) return Collections.emptyList();
         Stream<Chat> chatStream;
@@ -174,12 +174,12 @@ public class ChatServiceImpl implements ChatService {
         chatMapper.update(null, updateWrapper);
 
         // 移出最近聊天集合
-        //注释Redis
-        /*try {
+        //1注释Redis
+        try {
             redisUtil.zsetDelMember("chat_zset:" + acceptId, chat.getId());
         } catch (Exception e) {
             log.error("redis移除聊天失败");
-        }*/
+        }
     }
 
     /**
@@ -212,8 +212,8 @@ public class ChatServiceImpl implements ChatService {
                 QueryWrapper<Chat> queryWrapperAP = new QueryWrapper<>();
                 queryWrapperAP.eq("post_id", acceptId).eq("accept_id", postId);
                 Chat chatAP = chatMapper.selectOne(queryWrapperAP);
-                //注释Redis
-                //redisUtil.zset("chat_zset:" + postId, chat1.getId());    // 添加到这个用户的最近聊天的有序集合
+                //1注释Redis
+                redisUtil.zset("chat_zset:" + postId, chatAP.getId());    // 添加到这个用户的最近聊天的有序集合
             },taskExecutor);
             // 再查询 postId -> acceptId 的数据
             Future<Executor> futurePA = executorService.submit(()->{
@@ -235,8 +235,8 @@ public class ChatServiceImpl implements ChatService {
                     }
                     // 更新对方用户的未读消息
                     msgUnreadService.addOneUnread(acceptId, "message");
-                    //注释Redis
-                    //redisUtil.zset("chat_zset:" + acceptId, chatPA.getId());    // 添加到这个用户的最近聊天的有序集合
+                    //1注释Redis
+                    redisUtil.zset("chat_zset:" + acceptId, chatPA.getId());    // 添加到这个用户的最近聊天的有序集合
                 } else {
                     // 如果对方在窗口就不更新未读
                     if (chatPA != null) {
@@ -248,8 +248,8 @@ public class ChatServiceImpl implements ChatService {
                         chatPA = new Chat(null, postId, acceptId, 0, 0, new Date());
                         chatMapper.insert(chatPA);
                     }
-                    //注释Redis
-                    //redisUtil.zset("chat_zset:" + acceptId, chatPA.getId());    // 添加到这个用户的最近聊天的有序集合
+                    //1注释Redis
+                    redisUtil.zset("chat_zset:" + acceptId, chatPA.getId());    // 添加到这个用户的最近聊天的有序集合
                 }
             },taskExecutor);
             futureAP.get();
@@ -322,8 +322,8 @@ public class ChatServiceImpl implements ChatService {
 
     private Map<String,Object> getChatMap(Chat chat){
         Map<String,Object> map = new HashMap<>();
-        //注释Redis
-        //redisUtil.zset("chat_zset:" + chat.getAcceptId(), chat.getId());    // 添加到这个用户的最近聊天的有序集合
+        //1注释Redis
+        redisUtil.zset("chat_zset:" + chat.getAcceptId(), chat.getId());    // 添加到这个用户的最近聊天的有序集合
         // 携带信息返回
         map.put("chat", chat);
         CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() ->

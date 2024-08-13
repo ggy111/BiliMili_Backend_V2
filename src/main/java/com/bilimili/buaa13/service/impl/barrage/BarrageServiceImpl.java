@@ -8,7 +8,7 @@ import com.bilimili.buaa13.entity.Video;
 import com.bilimili.buaa13.mapper.BarrageMapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.service.barrage.BarrageService;
-import com.bilimili.buaa13.service.video.VideoStatsService;
+import com.bilimili.buaa13.service.video.VideoStatusService;
 import com.bilimili.buaa13.utils.RedisUtil;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -40,7 +40,7 @@ public class BarrageServiceImpl implements BarrageService {
     private VideoMapper videoMapper;
 
     @Autowired
-    private VideoStatsService videoStatsService;
+    private VideoStatusService videoStatusService;
 
     @Autowired
     private RedisUtil redisUtil;
@@ -116,7 +116,7 @@ public class BarrageServiceImpl implements BarrageService {
                 barrageMapper.update(null, updateWrapper);
             }, executorService);
             CompletableFuture<Void> updateVideoStats = CompletableFuture.runAsync(()->{
-                videoStatsService.updateVideoStats(barrage.getVid(), "barrage", false, 1);
+                videoStatusService.updateVideoStatus(barrage.getVid(), "barrage", false, 1);
             }, executorService);
             CompletableFuture<Void> deleteRedis = CompletableFuture.runAsync(()->{
                 redisUtil.delMember("barrage_bidSet:" + barrage.getVid(), bid);
@@ -151,7 +151,7 @@ public class BarrageServiceImpl implements BarrageService {
                             });
 
                             Mono<Void> updateVideoStatsMono = Mono.fromRunnable(() ->
-                                    videoStatsService.updateVideoStats(barrage.getVid(), "barrage", false, 1)
+                                    videoStatusService.updateVideoStatus(barrage.getVid(), "barrage", false, 1)
                             );
 
                             Mono<Void> deleteRedisMono = Mono.fromRunnable(() ->
@@ -189,7 +189,7 @@ public class BarrageServiceImpl implements BarrageService {
                     barrageMapper.update(null, updateWrapper);
                     innerPromise.complete();
                 }, res -> {
-                    videoStatsService.updateVideoStats(barrage.getVid(), "barrage", false, 1);
+                    videoStatusService.updateVideoStatus(barrage.getVid(), "barrage", false, 1);
                     redisUtil.delMember("barrage_bidSet:" + barrage.getVid(), bid);
                     promise.complete(new ResponseResult(200, "删除成功", null));
                 });

@@ -5,7 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.bilimili.buaa13.mapper.BarrageMapper;
 import com.bilimili.buaa13.entity.Barrage;
 import com.bilimili.buaa13.entity.User;
-import com.bilimili.buaa13.service.video.VideoStatsService;
+import com.bilimili.buaa13.service.video.VideoStatusService;
 import com.bilimili.buaa13.utils.JwtUtil;
 import com.bilimili.buaa13.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -32,14 +32,14 @@ public class BarrageWebSocketServer {
     private static JwtUtil jwtUtil;
     private static RedisUtil redisUtil;
     private static BarrageMapper barrageMapper;
-    private static VideoStatsService videoStatsService;
+    private static VideoStatusService videoStatusService;
 
     @Autowired
-    public void setDependencies(JwtUtil jwtUtil, RedisUtil redisUtil, BarrageMapper barrageMapper, VideoStatsService videoStatsService) {
+    public void setDependencies(JwtUtil jwtUtil, RedisUtil redisUtil, BarrageMapper barrageMapper, VideoStatusService videoStatusService) {
         BarrageWebSocketServer.jwtUtil = jwtUtil;
         BarrageWebSocketServer.redisUtil = redisUtil;
         BarrageWebSocketServer.barrageMapper = barrageMapper;
-        BarrageWebSocketServer.videoStatsService = videoStatsService;
+        BarrageWebSocketServer.videoStatusService = videoStatusService;
     }
     @Autowired
     @Qualifier("taskExecutor")
@@ -110,7 +110,7 @@ public class BarrageWebSocketServer {
             CompletableFuture<Void> insertBarrageFuture = CompletableFuture.runAsync(() -> barrageMapper.insert(barrage),taskExecutor);
 
             CompletableFuture<Void> updateVideoStatsFuture = CompletableFuture.runAsync(() ->
-                    videoStatsService.updateVideoStats(Integer.parseInt(vid), "barrage", true, 1)
+                    videoStatusService.updateVideoStatus(Integer.parseInt(vid), "barrage", true, 1)
                     , taskExecutor
             );
 

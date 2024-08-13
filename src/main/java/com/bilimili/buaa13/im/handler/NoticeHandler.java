@@ -355,11 +355,11 @@ public class NoticeHandler {
             // 并发执行每个视频数据统计的查询任务
             //并行流方式遍历列表
             //注释并行
-            /*List<VideoStats> list = set.stream().parallel()
-                .map(vid -> videoStatsService.getStatsByVideoId((Integer) vid))
+            /*List<VideoStatus> list = set.stream().parallel()
+                .map(vid -> videoStatsService.getStatusByVideoId((Integer) vid))
                 .collect(Collectors.toList());*/
             List<Object> listSet = new ArrayList<>();
-            List<VideoStats> list = new ArrayList<>();
+            List<VideoStatus> list = new ArrayList<>();
 
     }
 

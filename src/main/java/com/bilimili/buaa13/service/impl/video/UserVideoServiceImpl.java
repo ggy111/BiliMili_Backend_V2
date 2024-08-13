@@ -10,7 +10,7 @@ import com.bilimili.buaa13.entity.UserVideo;
 import com.bilimili.buaa13.entity.Video;
 import com.bilimili.buaa13.service.message.MsgUnreadService;
 import com.bilimili.buaa13.service.video.UserVideoService;
-import com.bilimili.buaa13.service.video.VideoStatsService;
+import com.bilimili.buaa13.service.video.VideoStatusService;
 import com.bilimili.buaa13.utils.RedisUtil;
 import io.netty.channel.Channel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ public class UserVideoServiceImpl implements UserVideoService {
     private UserVideoMapper userVideoMapper;
 
     @Autowired
-    private VideoStatsService videoStatsService;
+    private VideoStatusService videoStatusService;
 
     @Autowired
     private MsgUnreadService msgUnreadService;
@@ -69,7 +69,7 @@ public class UserVideoServiceImpl implements UserVideoService {
         // 异步线程更新video表和redis
         CompletableFuture.runAsync(() -> {
             redisUtil.zset("user_video_history:" + uid, vid);   // 添加到/更新观看历史记录
-            videoStatsService.updateVideoStats(vid, "play", true, 1);
+            videoStatusService.updateVideoStatus(vid, "play", true, 1);
         }, taskExecutor);
         return userVideo;
     }
@@ -105,12 +105,12 @@ public class UserVideoServiceImpl implements UserVideoService {
                 userVideo.setUnlove(0);
                 updateWrapper.setSql("unlove = 0");
                 CompletableFuture.runAsync(() -> {
-                    videoStatsService.updateGoodAndBad(vid, true);
+                    videoStatusService.updateGoodAndBad(vid, true);
                 }, taskExecutor);
             } else {
                 // 原本没点踩，只需要点赞就行
                 CompletableFuture.runAsync(() -> {
-                    videoStatsService.updateVideoStats(vid, "good", true, 1);
+                    videoStatusService.updateVideoStatus(vid, "good", true, 1);
                 }, taskExecutor);
             }
             redisUtil.zset(key, vid);   // 添加点赞记录
@@ -148,7 +148,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             userVideoMapper.update(null, updateWrapper);
             redisUtil.zsetDelMember(key, vid);  // 移除点赞记录
             CompletableFuture.runAsync(() -> {
-                videoStatsService.updateVideoStats(vid, "good", false, 1);
+                videoStatusService.updateVideoStatus(vid, "good", false, 1);
             }, taskExecutor);
         } else if (isSet) {
             // 点踩
@@ -167,12 +167,12 @@ public class UserVideoServiceImpl implements UserVideoService {
                 updateWrapper.setSql("up_vote = 0");
                 redisUtil.zsetDelMember(key, vid);  // 移除点赞记录
                 CompletableFuture.runAsync(() -> {
-                    videoStatsService.updateGoodAndBad(vid, false);
+                    videoStatusService.updateGoodAndBad(vid, false);
                 }, taskExecutor);
             } else {
                 // 原本没点赞，只需要点踩就行
                 CompletableFuture.runAsync(() -> {
-                    videoStatsService.updateVideoStats(vid, "down_vote", true, 1);
+                    videoStatusService.updateVideoStatus(vid, "down_vote", true, 1);
                 }, taskExecutor);
             }
             userVideoMapper.update(null, updateWrapper);
@@ -189,7 +189,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             updateWrapper.setSql("unlove = 0");
             userVideoMapper.update(null, updateWrapper);
             CompletableFuture.runAsync(() -> {
-                videoStatsService.updateVideoStats(vid, "down_vote", false, 1);
+                videoStatusService.updateVideoStatus(vid, "down_vote", false, 1);
             }, taskExecutor);
         }
         return userVideo;
@@ -212,7 +212,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             updateWrapper.setSql("collect = 0");
         }
         CompletableFuture.runAsync(() -> {
-            videoStatsService.updateVideoStats(vid, "collect", isCollect, 1);
+            videoStatusService.updateVideoStatus(vid, "collect", isCollect, 1);
         }, taskExecutor);
         userVideoMapper.update(null, updateWrapper);
     }

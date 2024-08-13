@@ -7,11 +7,7 @@ import com.bilimili.buaa13.im.handler.NoticeHandler;
 import com.bilimili.buaa13.mapper.*;
 import com.bilimili.buaa13.entity.*;
 import com.bilimili.buaa13.service.article.ArticleService;
-import com.bilimili.buaa13.service.comment.CommentService;
-import com.bilimili.buaa13.service.user.UserService;
-import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.FavoriteVideoService;
-import com.bilimili.buaa13.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,7 +37,7 @@ public class ArticleController {
     private ArticleService articleService;
 
     @Autowired
-    private VideoStatsMapper videoStatsMapper;
+    private VideoStatusMapper videoStatusMapper;
 
     @Autowired
     private FavoriteMapper favoriteMapper;
@@ -416,14 +412,14 @@ public class ArticleController {
         for(Integer vid: vids){
             QueryWrapper<Video> videoQueryWrapper = new QueryWrapper<>();
             videoQueryWrapper.eq("vid", vid);
-            QueryWrapper<VideoStats> videoStatsQueryWrapper = new QueryWrapper<>();
+            QueryWrapper<VideoStatus> videoStatsQueryWrapper = new QueryWrapper<>();
             videoStatsQueryWrapper.eq("vid", vid);
             Video video = videoMapper.selectOne(videoQueryWrapper);
-            VideoStats videoStats = videoStatsMapper.selectOne(videoStatsQueryWrapper);
+            VideoStatus videoStatus = videoStatusMapper.selectOne(videoStatsQueryWrapper);
             titles.add(video.getTitle());
             videoTimes.add(video.getVideoTime());
             urls.add(video.getCoverUrl());
-            playCounts.add(videoStats.getPlay());
+            playCounts.add(videoStatus.getPlay());
         }
         Map<String,Object>dataMap = new HashMap<>();
         dataMap.put("vid",vids);

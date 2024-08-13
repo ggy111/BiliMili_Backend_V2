@@ -64,8 +64,8 @@ public class VideoController {
     public ResponseResult randomVideosForVisitor() {
         ResponseResult responseResult = new ResponseResult();
         int count = 11;
-        //注释Redis
-        //Set<Object> idSet = redisUtil.srandmember("video_status:1", count);
+        //1注释Redis
+        Set<Object> idSet = redisUtil.srandmember("video_status:1", count);
         List<Map<String, Object>> videoList = new ArrayList<>();
         List<Video> allVideos = videoMapper.selectAllVideoByStatus(1);
         count = Math.min(count, allVideos.size());
