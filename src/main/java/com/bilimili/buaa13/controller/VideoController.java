@@ -12,6 +12,7 @@ import com.bilimili.buaa13.utils.RedisUtil;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -103,8 +104,8 @@ public class VideoController {
                 }
             }
         }
-        //注释Redis
-        //Set<Object> set = redisUtil.getMembers("video_status:1");
+        //1注释Redis
+        Set<Object> set = redisUtil.getMembers("video_status:1");
         List<Video> allVideos = videoMapper.selectAllVideoByStatus(1);
         List<Integer> allVideoIds = new ArrayList<>();
         if (allVideos == null) {
@@ -203,9 +204,7 @@ public class VideoController {
             return responseResult;
         }
         List<Integer> list = new ArrayList<>();
-        set.forEach(vid -> {
-            list.add((Integer) vid);
-        });
+        set.forEach(vid -> list.add((Integer) vid));
         map.put("count", set.size());
         switch (rule) {
             case 1:
@@ -237,6 +236,11 @@ public class VideoController {
                                             @RequestParam("quantity") Integer quantity) {
         ResponseResult responseResult = new ResponseResult();
         Set<Object> set = redisUtil.zReverange("love_video:" + uid, (long) offset, (long) offset + quantity - 1);
+        return getResponseResult(responseResult, set);
+    }
+
+    @NotNull
+    private ResponseResult getResponseResult(ResponseResult responseResult, Set<Object> set) {
         if (set == null || set.isEmpty()) {
             responseResult.setData(Collections.emptyList());
             return responseResult;
@@ -261,16 +265,7 @@ public class VideoController {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
         Set<Object> set = redisUtil.zReverange("user_video_history:" + uid, (long) offset, (long) offset + quantity - 1);
-        if (set == null || set.isEmpty()) {
-            responseResult.setData(Collections.emptyList());
-            return responseResult;
-        }
-        List<Integer> list = new ArrayList<>();
-        set.forEach(vid -> {
-            list.add((Integer) vid);
-        });
-        responseResult.setData(videoService.getVideosDataWithPageBySort(list, null, 1, list.size()));
-        return responseResult;
+        return getResponseResult(responseResult, set);
     }
 
     /**
@@ -298,24 +293,14 @@ public class VideoController {
             return responseResult;
         }
         List<Integer> list = new ArrayList<>();
-        set.forEach(vid -> {
-            list.add((Integer) vid);
-        });
-        List<Map<String, Object>> result;
-        switch (rule) {
-            case 1:
-                result = videoService.getVideosDataWithPageBySort(list, null, page, quantity);
-                break;
-            case 2:
-                result = videoService.getVideosDataWithPageBySort(list, "play", page, quantity);
-                break;
-            case 3:
-                result = videoService.getVideosDataWithPageBySort(list, "upload_date", page, quantity);
-                break;
-            default:
-                result = videoService.getVideosDataWithPageBySort(list, null, page, quantity);
-        }
-        if (result.size() == 0) {
+        set.forEach(vid -> list.add((Integer) vid));
+        List<Map<String, Object>> result = switch (rule) {
+            case 1 -> videoService.getVideosDataWithPageBySort(list, null, page, quantity);
+            case 2 -> videoService.getVideosDataWithPageBySort(list, "play", page, quantity);
+            case 3 -> videoService.getVideosDataWithPageBySort(list, "upload_date", page, quantity);
+            default -> videoService.getVideosDataWithPageBySort(list, null, page, quantity);
+        };
+        if (result.isEmpty()) {
             responseResult.setData(result);
             return responseResult;
         }

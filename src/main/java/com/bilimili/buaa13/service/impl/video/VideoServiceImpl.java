@@ -17,12 +17,15 @@ import com.bilimili.buaa13.utils.OssUtil;
 import com.bilimili.buaa13.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Slf4j
 @Service
@@ -52,6 +55,9 @@ public class VideoServiceImpl implements VideoService {
 
     @Autowired
     private ESUtil esUtil;
+    @Autowired
+    @Qualifier("taskExecutor")
+    private Executor taskExecutor;
 
     /**
      * 根据id分页获取视频信息，包括用户和分区信息
@@ -152,15 +158,14 @@ public class VideoServiceImpl implements VideoService {
         QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("vid", vid).ne("status", 3);
         Video video = videoMapper.selectOne(queryWrapper);
-        //注释Redis
-        /*if (video != null) {
-            Video finalVideo1 = video;
+        //1注释Redis
+        if (video != null) {
             CompletableFuture.runAsync(() -> {
-                redisUtil.setExObjectValue("video:" + vid, finalVideo1);    // 异步更新到redis
+                redisUtil.setExObjectValue("video:" + vid, video);    // 异步更新到redis
             }, taskExecutor);
         } else  {
             return null;
-        }*/
+        }
         return getVideoMap(video);
     }
 
@@ -217,8 +222,8 @@ public class VideoServiceImpl implements VideoService {
                 responseResult.setMessage("您不是管理员，无权访问");
                 return responseResult;
             }
-            //注释Redis
-            //Integer lastStatus = video.getStatus();
+            //1注释Redis
+            Integer lastStatus = video.getStatus();
             video.setStatus(1);
             UpdateWrapper<Video> updateWrapper = new UpdateWrapper<>();
             // 更新视频状态审核
@@ -227,23 +232,22 @@ public class VideoServiceImpl implements VideoService {
             if (flag > 0) {
                 // 更新成功
                 esUtil.updateVideo(video);  // 更新ES视频文档
-                //注释Redis
-                /*redisUtil.delMember("video_status:" + lastStatus, vid);     // 从旧状态移除
+                //1注释Redis
+                redisUtil.delMember("video_status:" + lastStatus, vid);     // 从旧状态移除
                 redisUtil.addMember("video_status:1", vid);     // 加入新状态
                 redisUtil.zset("user_video_upload:" + video.getUid(), video.getVid());
-                redisUtil.delValue("video:" + vid);     // 删除旧的视频信息*/
+                redisUtil.delValue("video:" + vid);     // 删除旧的视频信息
                 if(status==2){
                     //添加不通过的原因
                     responseResult.setMessage("审核不通过");
                 }
                 else responseResult.setMessage("审核通过");
-                return responseResult;
             } else {
                 // 更新失败，处理错误情况
                 responseResult.setCode(500);
                 responseResult.setMessage("更新状态失败");
-                return responseResult;
             }
+            return responseResult;
 
         } else if (status == 3) {
             if (video.getUid().equals(userId) || currentUser.isAdmin()) {
@@ -251,7 +255,7 @@ public class VideoServiceImpl implements VideoService {
                 String videoName = videoUrl.split("aliyuncs.com/")[1];  // OSS视频文件名
                 String coverUrl = video.getCoverUrl();
                 String coverName = coverUrl.split("aliyuncs.com/")[1];  // OSS封面文件名
-                //Integer lastStatus = video.getStatus();
+                Integer lastStatus = video.getStatus();
                 UpdateWrapper<Video> updateWrapper = new UpdateWrapper<>();
                 updateWrapper.eq("vid", vid).set("status", 3).set("delete_date", new Date());     // 更新视频状态已删除
                 int flag = videoMapper.update(null, updateWrapper);
@@ -259,33 +263,32 @@ public class VideoServiceImpl implements VideoService {
                     // 更新成功
                     esUtil.deleteVideo(vid);
                     redisUtil.delValue("barrage_bidSet:" + vid);   // 删除该视频的弹幕
-                    //注释redis
-                    /*redisUtil.delMember("video_status:" + lastStatus, vid);     // 从旧状态移除
+                    //1注释redis
+                    redisUtil.delMember("video_status:" + lastStatus, vid);     // 从旧状态移除
                     redisUtil.delValue("video:" + vid);     // 删除旧的视频信息
 
-                    redisUtil.zsetDelMember("user_video_upload:" + video.getUid(), video.getVid());*/
+                    redisUtil.zsetDelMember("user_video_upload:" + video.getUid(), video.getVid());
                     // 搞个异步线程去删除OSS的源文件
                     //注释异步线程
-                    /*CompletableFuture.runAsync(() -> ossUtil.deleteFiles(videoName), taskExecutor);
-                    CompletableFuture.runAsync(() -> ossUtil.deleteFiles(coverName), taskExecutor);*/
+                    CompletableFuture.runAsync(() -> ossUtil.deleteFiles(videoName), taskExecutor);
+                    CompletableFuture.runAsync(() -> ossUtil.deleteFiles(coverName), taskExecutor);
                     ossUtil.deleteFiles(videoName);
                     ossUtil.deleteFiles(coverName);
                     // 批量删除该视频下的全部评论缓存
-                    //注释Redis
-                    /*CompletableFuture.runAsync(() -> {
+                    //1注释Redis
+                    CompletableFuture.runAsync(() -> {
                         Set<Object> set = redisUtil.zReverange("comment_video:" + vid, 0, -1);
                         List<String> list = new ArrayList<>();
                         set.forEach(cid -> list.add("comment_reply:" + cid));
                         list.add("comment_video:" + vid);
                         redisUtil.delValues(list);
-                    }, taskExecutor);*/
-                    return responseResult;
+                    }, taskExecutor);
                 } else {
                     // 更新失败，处理错误情况
                     responseResult.setMessage("更新状态失败");
                     responseResult.setCode(500);
-                    return responseResult;
                 }
+                return responseResult;
             } else {
                 responseResult.setMessage("您没有权限删除视频");
                 responseResult.setCode(403);

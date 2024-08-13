@@ -238,8 +238,8 @@ public class CritiqueServiceImpl implements CritiqueService {
             // 表示被回复的用户收到的回复评论的 criId 有序集合
             // 如果不是回复自己
             if(!critique.getAcceptId().equals(critique.getPostId())) {
-                //注释Redis
-                //redisUtil.zset("reply_zset:" + critique.getAcceptId(), critique.getCriId());
+                //1注释Redis
+                redisUtil.zset("reply_zset:" + critique.getAcceptId(), critique.getCriId());
                 msgUnreadService.addOneUnread(critique.getAcceptId(), "reply");
 
                 // 通知未读消息

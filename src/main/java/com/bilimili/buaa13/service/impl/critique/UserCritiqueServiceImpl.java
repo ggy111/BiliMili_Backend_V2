@@ -66,22 +66,11 @@ public class UserCritiqueServiceImpl implements UserCritiqueService {
         //注释异步线程
         // 获取用户点赞列表，并放入map中
         CompletableFuture<Void> userLikeFuture = CompletableFuture.runAsync(() -> {
-
-            if (userLike == null) {
-                map.put("userLike", Collections.emptySet());
-            } else{
-                map.put("userLike", userLike);
-            }
+            map.put("userLike", Objects.requireNonNullElse(userLike, Collections.emptySet()));
         }, taskExecutor);
         // 获取用户点踩列表，并放入map中
         CompletableFuture<Void> userDislikeFuture = CompletableFuture.runAsync(() -> {
-
-            map.put("userDislike", userDislike);
-            if (userDislike == null) {
-                map.put("userDislike", Collections.emptySet());
-            } else {
-                map.put("userDislike", userDislike);
-            }
+            map.put("userDislike", Objects.requireNonNullElse(userDislike, Collections.emptySet()));
         }, taskExecutor);
 
         userDislikeFuture.join();
@@ -196,8 +185,4 @@ public class UserCritiqueServiceImpl implements UserCritiqueService {
     private Integer boolChangeBinary(boolean boolNumber){
         return boolNumber?1:0;
     }
-
-
-
-
 }

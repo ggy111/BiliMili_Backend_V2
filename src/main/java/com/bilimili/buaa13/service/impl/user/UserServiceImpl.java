@@ -243,8 +243,8 @@ public class UserServiceImpl implements UserService {
         updateWrapper.eq("uid", uid).set("headPortrait", headPortrait_url);
         userMapper.update(null, updateWrapper);
         CompletableFuture.runAsync(() -> {
-            //注释Redis
-            //redisUtil.delValue("user:" + uid);  // 删除redis缓存
+            //1注释Redis
+            redisUtil.delValue("user:" + uid);  // 删除redis缓存
             // 如果就头像不是初始头像就去删除OSS的源文件
             if (user.getHeadPortrait().startsWith(OSS_BUCKET_URL)) {
                 String filename = user.getHeadPortrait().substring(OSS_BUCKET_URL.length());

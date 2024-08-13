@@ -10,9 +10,11 @@ import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.VideoUploadService;
 import com.bilimili.buaa13.utils.ESUtil;
 import com.bilimili.buaa13.utils.OssUtil;
+import com.bilimili.buaa13.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Slf4j
 @Service
@@ -52,6 +56,12 @@ public class VideoUploadServiceImpl implements VideoUploadService {
 
     @Autowired
     private ESUtil esUtil;
+    @Qualifier("taskExecutor")
+    @Autowired
+    private Executor taskExecutor;
+
+    @Autowired
+    private RedisUtil redisUtil;
 
     /**
      * 获取视频下一个还没上传的分片序号
@@ -190,10 +200,10 @@ public class VideoUploadServiceImpl implements VideoUploadService {
         VideoStatus videoStatus = new VideoStatus(video.getVid(),0,0,0,0,0,0,0,0);
         videoStatusMapper.insert(videoStatus);
         esUtil.addVideo(video);
-        //注释Redis
-        /*CompletableFuture.runAsync(() -> redisUtil.setExObjectValue("video:" + video.getVid(), video), taskExecutor);
+        //1注释Redis
+        CompletableFuture.runAsync(() -> redisUtil.setExObjectValue("video:" + video.getVid(), video), taskExecutor);
         CompletableFuture.runAsync(() -> redisUtil.addMember("video_status:0", video.getVid()), taskExecutor);
-        CompletableFuture.runAsync(() -> redisUtil.setExObjectValue("videoStatus:" + video.getVid(), videoStatus), taskExecutor);*/
+        CompletableFuture.runAsync(() -> redisUtil.setExObjectValue("videoStatus:" + video.getVid(), videoStatus), taskExecutor);
     }
 
     /**

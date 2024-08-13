@@ -1,16 +1,16 @@
 package com.bilimili.buaa13.service.impl.comment;
 
-import com.bilimili.buaa13.service.comment.UserCommentService;
 import com.bilimili.buaa13.service.comment.CommentService;
-import org.springframework.stereotype.Service;
+import com.bilimili.buaa13.service.comment.UserCommentService;
+import com.bilimili.buaa13.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.bilimili.buaa13.utils.RedisUtil;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Service
 @Slf4j
@@ -20,6 +20,9 @@ public class UserCommentServiceImpl implements UserCommentService {
 
     @Autowired
     private CommentService commentService;
+    @Autowired
+    @Qualifier("taskExecutor")
+    private Executor taskExecutor;
 
     /**
      * 获取用户点赞和点踩的评论集合
@@ -33,30 +36,17 @@ public class UserCommentServiceImpl implements UserCommentService {
         Set<Object> userDislike = redisUtil.getMembers("downVote:" + uid);
         map.put("userLike", userLike==null?new ArrayList<>():userLike);
         map.put("userDislike", userDislike==null?new ArrayList<>():userDislike);
-        //注释Redis
+        //1注释Redis
         //注释异步线程
-        /*// 获取用户点赞列表，并放入map中
+        // 获取用户点赞列表，并放入map中
         CompletableFuture<Void> userLikeFuture = CompletableFuture.runAsync(() -> {
-
-            if (userLike == null) {
-                map.put("userLike", Collections.emptySet());
-            } else{
-                map.put("userLike", userLike);
-            }
+            map.put("userLike", Objects.requireNonNullElse(userLike, Collections.emptySet()));
         }, taskExecutor);
         // 获取用户点踩列表，并放入map中
-        CompletableFuture<Void> userDislikeFuture = CompletableFuture.runAsync(() -> {
-
-            map.put("userDislike", userDislike);
-            if (userDislike == null) {
-                map.put("userDislike", Collections.emptySet());
-            } else {
-                map.put("userDislike", userDislike);
-            }
-        }, taskExecutor);
+        CompletableFuture<Void> userDislikeFuture = CompletableFuture.runAsync(() -> map.put("userDislike", Objects.requireNonNullElse(userDislike, Collections.emptySet())), taskExecutor);
 
         userDislikeFuture.join();
-        userLikeFuture.join();*/
+        userLikeFuture.join();
 
         return map;
     }

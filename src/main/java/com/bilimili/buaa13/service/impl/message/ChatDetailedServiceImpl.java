@@ -1,17 +1,16 @@
 package com.bilimili.buaa13.service.impl.message;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.bilimili.buaa13.entity.ChatDetailed;
 import com.bilimili.buaa13.mapper.ChatDetailedMapper;
 import com.bilimili.buaa13.service.message.ChatDetailedService;
+import com.bilimili.buaa13.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -20,6 +19,8 @@ import java.util.stream.IntStream;
 public class ChatDetailedServiceImpl implements ChatDetailedService {
     @Autowired
     private ChatDetailedMapper chatDetailedMapper;
+    @Autowired
+    private RedisUtil redisUtil;
 
     /**
      * 获取当前聊天的10条消息
@@ -32,8 +33,8 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
     @Override
     public Map<String, Object> getMessage(Integer post_id, Integer accept_id, Long offset) {
         Map<String, Object> map = new HashMap<>();
-        //注释Redis
-        /*String key = "chat_detailed_zset:" + uid + ":" + mid;
+        //1注释Redis
+        String key = "chat_detailed_zset:" + post_id + ":" + accept_id;
         if (offset + 10 < redisUtil.zCard(key)) {
             map.put("more", true);
         } else {
@@ -46,7 +47,7 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
             return map;
         }
         QueryWrapper<ChatDetailed> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("bid", set);*/
+        queryWrapper.in("bid", set);
         if(offset >= Integer.MAX_VALUE){
             //不要超过int最大值
             map.put("messageList", Collections.emptyList());
@@ -88,17 +89,17 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
                 // 如果删除的消息是自己发送的
                 updateWrapper.eq("id", id).setSql("post_del = 1");
                 chatDetailedMapper.update(null, updateWrapper);
-                //注释Redis
-                /*String key = "chat_detailed_zset:" + chatDetailed.getAcceptId() + ":" + uid;
-                redisUtil.zsetDelMember(key, bid);*/
+                //1注释Redis
+                String key = "chat_detailed_zset:" + chatDetailed.getAcceptId() + ":" + uid;
+                redisUtil.zsetDelMember(key, id);
                 return true;
             } else if (chatDetailed.getAcceptId().equals(uid)) {
                 // 如果自己是接收方
                 updateWrapper.eq("id", id).setSql("accept_del = 1");
                 chatDetailedMapper.update(null, updateWrapper);
-                //注释Redis
-                /*String key = "chat_detailed_zset:" + chatDetailed.getPostId() + ":" + uid;
-                redisUtil.zsetDelMember(key, bid);*/
+                //1注释Redis
+                String key = "chat_detailed_zset:" + chatDetailed.getPostId() + ":" + uid;
+                redisUtil.zsetDelMember(key, id);
                 return true;
             } else return false;
         } catch (Exception e) {

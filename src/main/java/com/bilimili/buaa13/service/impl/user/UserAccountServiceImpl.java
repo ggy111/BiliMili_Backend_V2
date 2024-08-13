@@ -19,6 +19,7 @@ import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,6 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -65,6 +69,10 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Autowired
     private AuthenticationProvider authenticationProvider;
+
+    @Qualifier("taskExecutor")
+    @Autowired
+    private Executor taskExecutor;
 
     /**
      * 用户注册
@@ -225,8 +233,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (responseResult == null) { responseResult = new ResponseResult();}
 
         // 更新redis中的数据
-        //注释Redis
-        //redisUtil.setExObjectValue("user:" + user.getUid(), user);  // 默认存活1小时
+        //1注释Redis
+        redisUtil.setExObjectValue("user:" + user.getUid(), user);  // 默认存活1小时
 
         // 检查账号状态，1 表示封禁中，不允许登录
         if (user.getState() == 1) {
@@ -238,15 +246,15 @@ public class UserAccountServiceImpl implements UserAccountService {
         //将uid封装成一个jwttoken，同时token也会被缓存到redis中
         String token = jwtUtil.createToken(user.getUid().toString(), "user");
 
-        //注释Redis
-        /*try {
+        //1注释Redis
+        try {
             // 把完整的用户信息存入redis，时间跟token一样，注意单位
             // 这里缓存的user信息建议只供读取uid用，其中的状态等非静态数据可能不准，所以 redis另外存值
             redisUtil.setExObjectValue("security:user:" + user.getUid(), user, 60L * 60 * 24 * 2, TimeUnit.SECONDS);
         } catch (Exception e) {
             log.error("存储redis数据失败");
             throw e;
-        }*/
+        }
 
         // 每次登录顺便返回user信息，就省去再次发送一次获取用户个人信息的请求
         Map<String, Object> UserDTOMap = getUserDTOMap(user,token);
@@ -275,24 +283,24 @@ public class UserAccountServiceImpl implements UserAccountService {
             responseResult.setMessage("您不是管理员，无权访问");
             return responseResult;
         }
-        //注释Redis
+        //1注释Redis
         // 顺便更新redis中的数据
-        //redisUtil.setExObjectValue("user:" + user.getUid(), user);  // 默认存活1小时
+        redisUtil.setExObjectValue("user:" + user.getUid(), user);  // 默认存活1小时
         // 检查账号状态，1 表示封禁中，不允许登录
         if (user.getState() == 1) {
             responseResult.setCode(403);
             responseResult.setMessage("账号异常，封禁中");
             return responseResult;
         }
-        //注释Redis
+        //1注释Redis
         //将uid封装成一个jwttoken，同时token也会被缓存到redis中
         String token = jwtUtil.createToken(user.getUid().toString(), "admin");
-        /*try {
+        try {
             redisUtil.setExObjectValue("security:admin:" + user.getUid(), user, 60L * 60 * 24 * 2, TimeUnit.SECONDS);
         } catch (Exception e) {
             log.error("存储redis数据失败");
             throw e;
-        }*/
+        }
         // 每次登录顺便返回user信息，就省去再次发送一次获取用户个人信息的请求
         Map<String,Object> userDTOMap = getUserDTOMap(user,token);
         responseResult.setMessage("欢迎回来，主人≥⏝⏝≤");
@@ -326,9 +334,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         Integer LoginUserId = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
         User user = userMapper.selectById(LoginUserId);
-        //注释Redis
+        //1注释Redis
         // 从redis中获取最新数据
-        /*user = redisUtil.getObject("user:" + LoginUserId, User.class);
+        user = redisUtil.getObject("user:" + LoginUserId, User.class);
         // 如果redis中没有user数据，就从mysql中获取并更新到redis
         if (user == null) {
             user = userMapper.selectById(LoginUserId);
@@ -336,7 +344,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             CompletableFuture.runAsync(() -> {
                 redisUtil.setExObjectValue("user:" + finalUser.getUid(), finalUser);  // 默认存活1小时
             }, taskExecutor);
-        }*/
+        }
 
         // 普通用户无权访问
         if (user.getRole() == 0) {
@@ -372,9 +380,9 @@ public class UserAccountServiceImpl implements UserAccountService {
     public void userLogout() {
         Integer LoginUserId = currentUser.getUserId();
         // 清除redis中该用户的登录认证数据
-        //注释Redis
+        //1注释Redis
         redisUtil.delValue("token:user:" + LoginUserId);
-        //redisUtil.delValue("security:user:" + LoginUserId);
+        redisUtil.delValue("security:user:" + LoginUserId);
         redisUtil.delMember("login_member", LoginUserId);   // 从在线用户集合中移除
         redisUtil.deleteKeysWithPrefix("message:" + LoginUserId + ":"); // 清除全部在聊天窗口的状态
 
@@ -401,9 +409,9 @@ public class UserAccountServiceImpl implements UserAccountService {
     public void adminLogout() {
         Integer LoginUserId = currentUser.getUserId();
         // 清除redis中该用户的登录认证数据
-        //注释Redis
+        //1注释Redis
         redisUtil.delValue("token:admin:" + LoginUserId);
-        //redisUtil.delValue("security:admin:" + LoginUserId);
+        redisUtil.delValue("security:admin:" + LoginUserId);
     }
 
     @Override
