@@ -22,13 +22,14 @@ public class CategoryController {
 
     /**
      *  获取单个分区接口
-     * &#064;return单个响应对象
-     *  **/
+     * @return单个响应对象
+     *
+     * **/
 
     @GetMapping("/category/getone")
     public ResponseResult getOne(Integer mcId,Integer scId)
     {
-        return categoryService.getOne(mcId, scId);
+        return categoryService.getAll();
     }
 
 }
