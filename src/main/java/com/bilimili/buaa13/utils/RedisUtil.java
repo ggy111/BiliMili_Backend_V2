@@ -13,10 +13,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -51,32 +47,6 @@ public class RedisUtil {
     // 通用 相关操作 begin -----------------------------------------------------------------------------------------------
 
     /**
-     * 返回指定key的剩余存活时间，单位 秒
-     * @param key
-     * @return
-     */
-    public Long getExpire(String key) {
-        return redisTemplate.getExpire(key, TimeUnit.SECONDS);
-    }
-
-    /**
-     * 设置指定key的存活时间，单位 秒
-     * @param key
-     * @param time
-     */
-    public void setExpire(String key, long time) {
-        redisTemplate.expire(key, time, TimeUnit.SECONDS);
-    }
-
-    /**
-     * 清楚指定key的缓存
-     * @param key
-     */
-    public void removeCache(String key){
-        redisTemplate.delete(key);
-    }
-
-    /**
      * 删除指定前缀的所有key
      * @param prefix
      */
@@ -102,33 +72,6 @@ public class RedisUtil {
     // 通用 相关操作 end -------------------------------------------------------------------------------------------------
 
     // ZSET 相关操作 begin ----------------------------------------------------------------------------------------------
-    /**
-     * 取出整个set的所有记录
-     * @param key
-     * @param expireSec 过期时间 单位是秒
-     * @return
-     */
-    public Set<Object> zgetAllMembers(String key, long expireSec) {
-        long now = System.currentTimeMillis();
-        // 指定获取从该expireSec时间之后的数据
-        long tts = now - expireSec * 1000;
-        return redisTemplate.opsForZSet().rangeByScore(key, tts+1, Long.MAX_VALUE);
-    }
-
-    /**
-     * 取出set中符合条件的指定数量的记录
-     * @param key
-     * @param expireSec 过期时间 单位是秒
-     * @param offset    开始位置
-     * @param count 数量
-     * @return
-     */
-    public Set<Object> zgetMembersWithLimit(String key, long expireSec, long offset, long count) {
-        long now = System.currentTimeMillis();
-        // 指定获取从该expireSec时间之后的数据
-        long tts = now - expireSec * 1000;
-        return redisTemplate.opsForZSet().rangeByScore(key, tts+1, Long.MAX_VALUE, offset, count);
-    }
 
     /**
      * 分数从小到大取排行榜
@@ -167,37 +110,6 @@ public class RedisUtil {
             list.add(new ZObjScore(tuple.getValue(), tuple.getScore()));
         }
         return list;
-    }
-
-    /**
-     * 按时间从大到小取数据携带时间
-     * @param key
-     * @param start
-     * @param end
-     * @return
-     */
-    public List<ZObjTime> zReverangeWithTime(String key, long start, long end) {
-        Set<ZSetOperations.TypedTuple<Object>> result = redisTemplate.opsForZSet().reverseRangeWithScores(key, start, end);
-        if (result == null) return null;
-        List<ZObjTime> list = new ArrayList<>();
-        for (ZSetOperations.TypedTuple<Object> tuple : result) {
-            list.add(new ZObjTime(tuple.getValue(), new Date(tuple.getScore().longValue())));
-        }
-        return list;
-    }
-
-    /**
-     * 获取指定对象的排名
-     * @param key
-     * @param member
-     * @return
-     */
-    public Long reverseRank(String key, Object member) {
-        Long longValue = redisTemplate.opsForZSet().reverseRank(key, member);
-        if (null != longValue) {
-            return longValue;
-        }
-        return redisTemplate.opsForZSet().size(key);
     }
 
     /**
@@ -251,17 +163,6 @@ public class RedisUtil {
     }
 
     /**
-     * 查看匹配数目
-     * @param key
-     * @param min   起始分数
-     * @param max   结束分数
-     * @return
-     */
-    public long zCount(String key, long min, long max){
-        return redisTemplate.opsForZSet().count(key, min, max);
-    }
-
-    /**
      * 获取整个集合元素个数
      * @param key
      * @return
@@ -312,17 +213,6 @@ public class RedisUtil {
         return null != d;
     }
 
-    public Boolean zsetByLimit(String key, Object value, Integer limit) {
-        Boolean result = this.zset(key, value);
-        // 存入数据后，查询zset中的数量
-        Long count = this.zCard(key);
-        // 如果数量大于limit，则进行清除操作，清除之前的数据
-        if (count != null && count > limit) {
-            redisTemplate.opsForZSet().removeRange(key, 0, count-limit-1);
-        }
-        return result;
-    }
-
 
     // ZSET 相关操作 end ------------------------------------------------------------------------------------------------
 
@@ -368,17 +258,6 @@ public class RedisUtil {
     }
 
     /**
-     * 向SET中添加有过期时间的对象
-     * @param key
-     * @param value
-     * @param time 设置指定key的存活时间，单位 秒
-     */
-    public void addExMember(String key, String value, Integer time) {
-        redisTemplate.opsForSet().add(key, value);
-        setExpire(key, time);
-    }
-
-    /**
      * 删除SET中的数据
      * @param key
      * @param value
@@ -421,33 +300,12 @@ public class RedisUtil {
     }
 
     /**
-     * 实体类转换成string再进行操作
-     * 不用更新的缓存信息
-     * @param key
-     * @param value
-     */
-    public void setObjectValue(String key, Object value) {
-        String jsonString = JSON.toJSONString(value);
-        setValue(key, jsonString);
-    }
-
-    /**
      * 使用 默认有效期 和 默认时间单位 存储简单数据类型
      * @param key
      * @param value
      */
     public void setExValue(String key, Object value) {
         setExValue(key, value, REDIS_DEFAULT_EXPIRE_TIME, REDIS_DEFAULT_EXPIRE_TIMEUNIT);
-    }
-
-    /**
-     * 使用 指定有效期 和 默认时间单位 存储简单数据类型
-     * @param key
-     * @param value
-     * @param time
-     */
-    public void setExValue(String key, Object value, long time) {
-        setExValue(key, value, time, REDIS_DEFAULT_EXPIRE_TIMEUNIT);
     }
 
     /**
@@ -513,20 +371,6 @@ public class RedisUtil {
     }
 
     /**
-     * 递增
-     * @param key
-     */
-    public void incr(String key) {
-        redisTemplate.opsForValue().increment(key, 1);
-    }
-    /**
-     * 递减
-     * @param key
-     */
-    public void decr(String key) {
-        redisTemplate.opsForValue().decrement(key, 1);
-    }
-    /**
      * 删除简单数据类型或实体类
      * @param key
      */
@@ -544,74 +388,6 @@ public class RedisUtil {
 
 
     // String 相关操作 end ----------------------------------------------------------------------------------------------
-
-
-
-    // Hash 相关操作 start ----------------------------------------------------------------------------------------------
-    /**
-     * 从redis中获取map数据
-     *
-     * @param key
-     * @return
-     */
-    public Map hmGet(String key) {
-        try {
-            return redisTemplate.opsForHash().entries(key);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * 获取map中的指定hashKey对应的数据
-     * @param key
-     * @param hashKey
-     * @return
-     */
-    public Object hmGet(String key, String hashKey) {
-        try {
-            return redisTemplate.opsForHash().get(key, hashKey);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * 把map存到redis中
-     *
-     * @param key
-     * @param map
-     */
-    public void hmPut(String key, Map map) {
-        redisTemplate.opsForHash().putAll(key, map);
-    }
-
-    /**
-     * 把数据存储在map中指定hashKey的value
-     * @param key
-     * @param hashKey
-     * @param value
-     */
-    public void hmPut(String key, String hashKey, Object value) {
-        redisTemplate.opsForHash().put(key, hashKey, value);
-    }
-
-    /**
-     * 删除map中指定hashKey
-     * @param key
-     * @param hashKeys
-     * @return
-     */
-    public Long hDelete(String key, Object... hashKeys) {
-        return redisTemplate.opsForHash().delete(key, hashKeys);
-    }
-
-
-    // Hash 相关操作 end ------------------------------------------------------------------------------------------------
-
-
 
     // List 相关操作 start ----------------------------------------------------------------------------------------------
     /**
@@ -641,37 +417,6 @@ public class RedisUtil {
         }
         return resultList;
     }
-    /*public List getAllList(String key) {
-        return this.redisTemplate.opsForList().range(key, 0, -1);
-    }*/
 
     // List 相关操作 end ------------------------------------------------------------------------------------------------
-
-
-    /**
-     * 设置一个有效期至午夜12点的缓存
-     * @param key
-     * @param value
-     */
-    public void setExValueForToday(String key, Object value) {
-        //获取当天剩余秒数
-        LocalDateTime midnight = LocalDateTime.now().plusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        long remainTime = ChronoUnit.SECONDS.between(LocalDateTime.now(),midnight);
-        log.info("当天剩余秒数：{}", remainTime);
-        redisTemplate.opsForValue().set(key, value, remainTime, TimeUnit.SECONDS);
-    }
-
-    /**
-     * 设置一个有效期至周日午夜12点的缓存
-     * @param key
-     * @param value
-     */
-    public void setExValueForWeekend(String key, Object value) {
-        //获取本周剩余秒数
-        LocalDateTime midnight = LocalDateTime.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        long remainTime = ChronoUnit.SECONDS.between(LocalDateTime.now(),midnight);
-        log.info("本周剩余秒数：{}", remainTime);
-        redisTemplate.opsForValue().set(key, value, remainTime, TimeUnit.SECONDS);
-    }
-
 }
