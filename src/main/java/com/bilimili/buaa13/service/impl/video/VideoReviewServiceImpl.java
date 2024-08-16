@@ -63,7 +63,7 @@ public class VideoReviewServiceImpl implements VideoReviewService {
         }
         // 从 redis 获取待审核的视频id集合，为了提升效率就不遍历数据库了，前提得保证 Redis 没崩，数据一致性采用定时同步或者中间件来保证
         //1注释Redis
-        Set<Object> set = redisUtil.getMembers("video_status:" + status);
+        Set<Object> set = redisUtil.getSetMembers("video_status:" + status);
         List<Video> videosByStatus = videoMapper.selectAllVideoByStatus(status);
         if (videosByStatus != null && !videosByStatus.isEmpty()) {
             // 判断数组是否为空，不为空则在数据库主键查询，并且返回没有被删除的视频

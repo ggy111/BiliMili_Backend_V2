@@ -35,12 +35,12 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
         Map<String, Object> map = new HashMap<>();
         //1注释Redis
         String key = "chat_detailed_zset:" + post_id + ":" + accept_id;
-        if (offset + 10 < redisUtil.zCard(key)) {
+        if (offset + 10 < redisUtil.getZSetNumber(key)) {
             map.put("more", true);
         } else {
             map.put("more", false);
         }
-        Set<Object> set = redisUtil.zReverange(key, offset, offset + 9);
+        Set<Object> set = redisUtil.reverseRange(key, offset, offset + 9);
         // 没有数据则返回空列表
         if (set == null || set.isEmpty()) {
             map.put("list", Collections.emptyList());
@@ -91,7 +91,7 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
                 chatDetailedMapper.update(null, updateWrapper);
                 //1注释Redis
                 String key = "chat_detailed_zset:" + chatDetailed.getAcceptId() + ":" + uid;
-                redisUtil.zsetDelMember(key, id);
+                redisUtil.deleteZSetMember(key, id);
                 return true;
             } else if (chatDetailed.getAcceptId().equals(uid)) {
                 // 如果自己是接收方
@@ -99,7 +99,7 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
                 chatDetailedMapper.update(null, updateWrapper);
                 //1注释Redis
                 String key = "chat_detailed_zset:" + chatDetailed.getPostId() + ":" + uid;
-                redisUtil.zsetDelMember(key, id);
+                redisUtil.deleteZSetMember(key, id);
                 return true;
             } else return false;
         } catch (Exception e) {

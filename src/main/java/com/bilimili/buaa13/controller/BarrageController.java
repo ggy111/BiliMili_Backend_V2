@@ -29,7 +29,7 @@ public class BarrageController {
      */
     @GetMapping("/danmu-list/{vid}")
     public ResponseResult getBarrageList(@PathVariable("vid") String vid) {
-        Set<Object> idset = redisUtil.getMembers("barrage_bidSet:" + vid);
+        Set<Object> idset = redisUtil.getSetMembers("barrage_bidSet:" + vid);
         int vidInt = 0;
         for(int i=0;i<vid.length();++i){
             vidInt = vidInt*10 + vid.charAt(i)-'0';

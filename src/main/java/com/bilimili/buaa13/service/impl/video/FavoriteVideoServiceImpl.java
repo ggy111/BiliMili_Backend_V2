@@ -81,9 +81,9 @@ public class FavoriteVideoServiceImpl implements FavoriteVideoService {
         // 更新 Redis 中每个 ZSet
         for (Integer fid : fids) {
             String key = "favorite_video:" + fid;
-            redisUtil.zset(key, vid);
+            redisUtil.storeZSet(key, vid);
         }
-        redisUtil.delValue("favorites:" + uid);
+        redisUtil.deleteValue("favorites:" + uid);
     }
 
     @Override
@@ -102,8 +102,8 @@ public class FavoriteVideoServiceImpl implements FavoriteVideoService {
         // 更新 Redis 中每个 ZSet
         for (Integer fid : fids) {
             String key = "favorite_video:" + fid;
-            redisUtil.zsetDelMember(key, vid);
+            redisUtil.deleteZSetMember(key, vid);
         }
-        redisUtil.delValue("favorites:" + uid);
+        redisUtil.deleteValue("favorites:" + uid);
     }
 }

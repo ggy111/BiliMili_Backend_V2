@@ -202,7 +202,7 @@ public class VideoUploadServiceImpl implements VideoUploadService {
         esUtil.addVideo(video);
         //1注释Redis
         CompletableFuture.runAsync(() -> redisUtil.setExObjectValue("video:" + video.getVid(), video), taskExecutor);
-        CompletableFuture.runAsync(() -> redisUtil.addMember("video_status:0", video.getVid()), taskExecutor);
+        CompletableFuture.runAsync(() -> redisUtil.addSetMember("video_status:0", video.getVid()), taskExecutor);
         CompletableFuture.runAsync(() -> redisUtil.setExObjectValue("videoStatus:" + video.getVid(), videoStatus), taskExecutor);
     }
 

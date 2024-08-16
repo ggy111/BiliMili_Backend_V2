@@ -116,8 +116,8 @@ public class NoticeHandler {
                 System.out.println("接收到聊天消息：" + chatDetailed);
                 chatDetailedMapper.insert(chatDetailed);
                 // "chat_detailed_zset:对方:自己"
-                redisUtil.zset("chat_detailed_zset:" + user_id + ":" + chatDetailed.getAcceptId(), chatDetailed.getId());
-                redisUtil.zset("chat _detailed_zset:" + chatDetailed.getAcceptId() + ":" + user_id, chatDetailed.getId());
+                redisUtil.storeZSet("chat_detailed_zset:" + user_id + ":" + chatDetailed.getAcceptId(), chatDetailed.getId());
+                redisUtil.storeZSet("chat _detailed_zset:" + chatDetailed.getAcceptId() + ":" + user_id, chatDetailed.getId());
                 boolean online = chatService.updateOneChat(user_id, chatDetailed.getAcceptId());
 
                 // 转发到发送者和接收者的全部channel
@@ -208,8 +208,8 @@ public class NoticeHandler {
                 System.out.println("接收到聊天消息：" + chatDetailed);
                 chatDetailedMapper.insert(chatDetailed);
                 // "chat_detailed_zset:对方:自己"
-                redisUtil.zset("chat_detailed_zset:" + user_id + ":" + chatDetailed.getAcceptId(), chatDetailed.getId());
-                redisUtil.zset("chat_detailed_zset:" + chatDetailed.getAcceptId() + ":" + user_id, chatDetailed.getId());
+                redisUtil.storeZSet("chat_detailed_zset:" + user_id + ":" + chatDetailed.getAcceptId(), chatDetailed.getId());
+                redisUtil.storeZSet("chat_detailed_zset:" + chatDetailed.getAcceptId() + ":" + user_id, chatDetailed.getId());
                 boolean online = chatService.updateOneChat(user_id, chatDetailed.getAcceptId());
 
                 // 转发到发送者和接收者的全部channel
@@ -317,8 +317,8 @@ public class NoticeHandler {
         String userChatKey = "chat_detailed_zset:" + upId + ":" + chatDetailed.getAcceptId();
         String fanChatKey = "chat_detailed_zset:" + chatDetailed.getAcceptId() + ":" + upId;
 
-        redisUtil.zset(userChatKey, chatDetailed.getId());
-        redisUtil.zset(fanChatKey, chatDetailed.getId());
+        redisUtil.storeZSet(userChatKey, chatDetailed.getId());
+        redisUtil.storeZSet(fanChatKey, chatDetailed.getId());
     }
 
     private static Map<String, Object> prepareChatResponse(ChatDetailed chatDetailed, Integer upId, Integer fanId) {

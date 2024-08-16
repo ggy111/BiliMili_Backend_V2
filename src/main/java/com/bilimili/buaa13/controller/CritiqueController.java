@@ -38,7 +38,7 @@ public class CritiqueController {
                                               @RequestParam("offset") Long offset,
                                               @RequestParam("sortType") Integer sortType) {
         ResponseResult responseResult = new ResponseResult();
-        long count = redisUtil.zCard("comment_video:" + aid);
+        long count = redisUtil.getZSetNumber("comment_video:" + aid);
         Map<String, Object> map = new HashMap<>();
         if (offset >= count) {
             // 表示前端已经获取到全部根评论了，没必要继续

@@ -123,7 +123,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
         // 将分类添加到redis缓存中
         try {
-            redisUtil.delValue("categoryList");
+            redisUtil.deleteValue("categoryList");
             List<CompletableFuture<String>> futureList = sortedCategories.stream()
                     .map(sortedCategory -> CompletableFuture.supplyAsync(() -> JSON.toJSONString(sortedCategory)))
                     .toList();

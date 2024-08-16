@@ -2,7 +2,6 @@ package com.bilimili.buaa13.service.impl.article;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.bilimili.buaa13.entity.ArticleStatus;
-import com.bilimili.buaa13.entity.VideoStatus;
 import com.bilimili.buaa13.mapper.ArticleStatusMapper;
 import com.bilimili.buaa13.service.article.ArticleStatusService;
 import com.bilimili.buaa13.utils.RedisUtil;
@@ -68,7 +67,7 @@ public class ArticleStatusServiceImpl implements ArticleStatusService {
         }
         articleStatusMapper.update(null, updateWrapper);
         //1注释Redis
-        redisUtil.delValue("articleStats:" + aid);
+        redisUtil.deleteValue("articleStats:" + aid);
     }
 
     /**
@@ -91,6 +90,6 @@ public class ArticleStatusServiceImpl implements ArticleStatusService {
         }
         articleStatusMapper.update(null, updateWrapper);
         //1注释Redis
-        redisUtil.delValue("articleStats:" + aid);
+        redisUtil.deleteValue("articleStats:" + aid);
     }
 }

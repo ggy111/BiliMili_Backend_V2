@@ -79,7 +79,7 @@ public class UserServiceImpl implements UserService {
         //获取用户对应的视频列表
         //"user_video_upload:" + user.getUid()是完整的键值，可以取出内容。
         //1注释Redis
-        Set<Object> set = redisUtil.zReverange("user_video_upload:" + user.getUid(), 0L, -1L);
+        Set<Object> set = redisUtil.reverseRange("user_video_upload:" + user.getUid(), 0L, -1L);
         if (set == null || set.isEmpty()) {
             userDTO.setVideoCount(0);
             userDTO.setLoveCount(0);
@@ -155,7 +155,7 @@ public class UserServiceImpl implements UserService {
                     user.getState(),
                     0,0,0,0,0
             );
-            Set<Object> set = redisUtil.zReverange("user_video_upload:" + user.getUid(), 0L, -1L);
+            Set<Object> set = redisUtil.reverseRange("user_video_upload:" + user.getUid(), 0L, -1L);
 
             if (set == null || set.isEmpty()) {
                 userDTOList.add(userDTO);
@@ -227,7 +227,7 @@ public class UserServiceImpl implements UserService {
         new_user.setNickname(nickname);
         esUtil.updateUser(new_user);
         //1注释Redis
-        redisUtil.delValue("user:" + uid);
+        redisUtil.deleteValue("user:" + uid);
         return responseResult;
     }
 
@@ -244,7 +244,7 @@ public class UserServiceImpl implements UserService {
         userMapper.update(null, updateWrapper);
         CompletableFuture.runAsync(() -> {
             //1注释Redis
-            redisUtil.delValue("user:" + uid);  // 删除redis缓存
+            redisUtil.deleteValue("user:" + uid);  // 删除redis缓存
             // 如果就头像不是初始头像就去删除OSS的源文件
             if (user.getHeadPortrait().startsWith(OSS_BUCKET_URL)) {
                 String filename = user.getHeadPortrait().substring(OSS_BUCKET_URL.length());

@@ -5,7 +5,6 @@ import com.bilimili.buaa13.entity.Command;
 import com.bilimili.buaa13.entity.CommandType;
 import com.bilimili.buaa13.entity.IMResponse;
 import com.bilimili.buaa13.im.IMServer;
-import com.bilimili.buaa13.service.user.FollowService;
 import com.bilimili.buaa13.utils.RedisUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -87,7 +86,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
                 if (channelKeys != null && !channelKeys.isEmpty()) {
                     redisTemplate.delete(channelKeys);
                 }
-                redisUtil.delMember("login_member", uid);   // 从在线用户集合中移除
+                redisUtil.deleteSetMember("login_member", uid);   // 从在线用户集合中移除
             }
         }
         // 继续处理后续逻辑

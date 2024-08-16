@@ -63,7 +63,7 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
         if (optionalUid.isPresent()) {
             Integer uid = optionalUid.get();
             channelService.bindUserToChannel(uid, ctx.channel());
-            redisUtil.addMember("login_member", uid);
+            redisUtil.addSetMember("login_member", uid);
             ctx.pipeline().remove(this);
             tx.retain();
             ctx.fireChannelRead(tx);
@@ -100,7 +100,7 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
             } else {
                 IMServer.userChannel.get(uid).add(ctx.channel());
             }
-            redisUtil.addMember("login_member", uid);   // 将用户添加到在线用户集合
+            redisUtil.addSetMember("login_member", uid);   // 将用户添加到在线用户集合
 //            System.out.println("该用户的全部连接状态：" + IMServer.userChannel.get(uid));
 //            System.out.println("当前在线人数：" + IMServer.userChannel.size());
             // 移除token验证处理器，以便以后使用无需判断

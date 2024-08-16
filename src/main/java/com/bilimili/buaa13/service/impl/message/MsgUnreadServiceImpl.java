@@ -11,7 +11,6 @@ import com.bilimili.buaa13.mapper.MsgUnreadMapper;
 import com.bilimili.buaa13.service.message.MsgUnreadService;
 import com.bilimili.buaa13.utils.RedisUtil;
 import io.netty.channel.Channel;
-import org.apache.ibatis.executor.ExecutorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,7 +81,7 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
                 UpdateWrapper<MsgUnread> updateWrapper = new UpdateWrapper<>();
                 updateWrapper.eq("uid", uid).setSql(column + " = " + column + " + 1");
                 msgUnreadMapper.update(null, updateWrapper);
-                redisUtil.delValue("msg_unread:" + uid);
+                redisUtil.deleteValue("msg_unread:" + uid);
             },taskExecutor);
             addFuture.get();
         }catch (Exception e){
@@ -113,7 +112,7 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
         UpdateWrapper<MsgUnread> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("uid", uid).set(column, 0);
         msgUnreadMapper.update(null, updateWrapper);
-        redisUtil.delValue("msg_unread:" + uid);
+        redisUtil.deleteValue("msg_unread:" + uid);
 
         // 通知用户的全部channel 更新该消息类型未读数为0
         Map<String, Object> map = new HashMap<>();
@@ -132,7 +131,7 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
      */
     @Override
     public void subUnreadWhisper(Integer uid, Integer count) {
-        redisUtil.delValue("msg_unread:" + uid);
+        redisUtil.deleteValue("msg_unread:" + uid);
         String sql = "UPDATE msg_unread " +
                 "SET message = IF(message - ? < 0, 0, message - ?) " +
                 "WHERE uid = ?";

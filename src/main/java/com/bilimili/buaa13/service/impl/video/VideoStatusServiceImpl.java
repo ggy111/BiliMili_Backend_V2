@@ -65,7 +65,7 @@ public class VideoStatusServiceImpl implements VideoStatusService {
         }
         videoStatusMapper.update(null, updateWrapper);
         //1注释Redis
-        redisUtil.delValue("videoStats:" + vid);
+        redisUtil.deleteValue("videoStats:" + vid);
     }
 
     /**
@@ -87,6 +87,6 @@ public class VideoStatusServiceImpl implements VideoStatusService {
         }
         videoStatusMapper.update(null, updateWrapper);
         //1注释Redis
-        redisUtil.delValue("videoStats:" + vid);
+        redisUtil.deleteValue("videoStats:" + vid);
     }
 }

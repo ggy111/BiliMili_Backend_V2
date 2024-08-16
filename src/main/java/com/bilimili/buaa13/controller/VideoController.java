@@ -108,7 +108,7 @@ public class VideoController {
             }
         }
         //1注释Redis
-        Set<Object> set = redisUtil.getMembers("video_status:1");
+        Set<Object> set = redisUtil.getSetMembers("video_status:1");
         List<Video> allVideos = videoMapper.selectAllVideoByStatus(1);
         List<Integer> allVideoIds = new ArrayList<>();
         if (allVideos == null) {
@@ -181,7 +181,7 @@ public class VideoController {
 
     @GetMapping("/video/user-works-count")
     public ResponseResult getUserWorksCount(@RequestParam("uid") Integer uid) {
-        return new ResponseResult(200, "OK", redisUtil.zCard("user_video_upload:" + uid));
+        return new ResponseResult(200, "OK", redisUtil.getZSetNumber("user_video_upload:" + uid));
     }
 
     /**
@@ -199,7 +199,7 @@ public class VideoController {
                                        @RequestParam("quantity") Integer quantity) {
         ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = new HashMap<>();
-        Set<Object> set = redisUtil.zReverange("user_video_upload:" + uid, 0, -1);
+        Set<Object> set = redisUtil.reverseRange("user_video_upload:" + uid, 0, -1);
         if (set == null || set.isEmpty()) {
             map.put("count", 0);
             map.put("list", Collections.emptyList());
@@ -238,7 +238,7 @@ public class VideoController {
                                             @RequestParam("offset") Integer offset,
                                             @RequestParam("quantity") Integer quantity) {
         ResponseResult responseResult = new ResponseResult();
-        Set<Object> set = redisUtil.zReverange("love_video:" + uid, (long) offset, (long) offset + quantity - 1);
+        Set<Object> set = redisUtil.reverseRange("love_video:" + uid, (long) offset, (long) offset + quantity - 1);
         return getResponseResult(responseResult, set);
     }
 
@@ -267,7 +267,7 @@ public class VideoController {
                                             @RequestParam("quantity") Integer quantity) {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
-        Set<Object> set = redisUtil.zReverange("user_video_history:" + uid, (long) offset, (long) offset + quantity - 1);
+        Set<Object> set = redisUtil.reverseRange("user_video_history:" + uid, (long) offset, (long) offset + quantity - 1);
         return getResponseResult(responseResult, set);
     }
 
@@ -287,9 +287,9 @@ public class VideoController {
         ResponseResult responseResult = new ResponseResult();
         Set<Object> set;
         if (rule == 1) {
-            set = redisUtil.zReverange("favorite_video:" + fid, (long) (page - 1) * quantity, (long) page * quantity);
+            set = redisUtil.reverseRange("favorite_video:" + fid, (long) (page - 1) * quantity, (long) page * quantity);
         } else {
-            set = redisUtil.zReverange("favorite_video:" + fid, 0, -1);
+            set = redisUtil.reverseRange("favorite_video:" + fid, 0, -1);
         }
         if (set == null || set.isEmpty()) {
             responseResult.setData(Collections.emptyList());

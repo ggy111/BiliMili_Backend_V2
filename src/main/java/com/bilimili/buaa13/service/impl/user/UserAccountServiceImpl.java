@@ -398,9 +398,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         Integer LoginUserId = currentUser.getUserId();
         // 清除redis中该用户的登录认证数据
         //1注释Redis
-        redisUtil.delValue("token:user:" + LoginUserId);
-        redisUtil.delValue("security:user:" + LoginUserId);
-        redisUtil.delMember("login_member", LoginUserId);   // 从在线用户集合中移除
+        redisUtil.deleteValue("token:user:" + LoginUserId);
+        redisUtil.deleteValue("security:user:" + LoginUserId);
+        redisUtil.deleteSetMember("login_member", LoginUserId);   // 从在线用户集合中移除
         // 清除全部在聊天窗口的状态,删除指定前缀的所有key
         // 获取以指定前缀开头的所有键
         Set<String> userKeys = redisTemplate.keys("message:" + LoginUserId + ":" + "*");
@@ -433,8 +433,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         Integer LoginUserId = currentUser.getUserId();
         // 清除redis中该用户的登录认证数据
         //1注释Redis
-        redisUtil.delValue("token:admin:" + LoginUserId);
-        redisUtil.delValue("security:admin:" + LoginUserId);
+        redisUtil.deleteValue("token:admin:" + LoginUserId);
+        redisUtil.deleteValue("security:admin:" + LoginUserId);
     }
 
     @Override

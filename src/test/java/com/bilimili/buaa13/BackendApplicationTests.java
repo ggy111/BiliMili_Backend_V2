@@ -80,17 +80,17 @@ class ApplicationTests {
 
     @Test
     void redis() {
-        List<RedisUtil.ZObjScore> list = redisUtil.zReverangeWithScores("search_word", 0L, -1L);
+        List<RedisUtil.ZSetScore> list = redisUtil.reverseRangeWithScores("search_word", 0L, -1L);
         int count = list.size();
         double total = 0;
-        for (RedisUtil.ZObjScore o : list) {
+        for (RedisUtil.ZSetScore o : list) {
             System.out.println(o.getMember() + " " + o.getScore());
             total += o.getScore();
         }
         BigDecimal bt = new BigDecimal(total);
         total = bt.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
         System.out.println("count " + count + " total " + total);
-        for (RedisUtil.ZObjScore o : list) {
+        for (RedisUtil.ZSetScore o : list) {
             BigDecimal b = new BigDecimal((o.getScore() / total) * count);
             double score = b.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
             o.setScore(score);
@@ -100,7 +100,7 @@ class ApplicationTests {
 
     @Test
     void redisGetMembers() {
-        Set<Object> set = redisUtil.getMembers("video_status:0");
+        Set<Object> set = redisUtil.getSetMembers("video_status:0");
         System.out.println(set);
     }
 

@@ -120,15 +120,15 @@ public class FollowServiceImpl implements FollowService {
         Follow newFollow = new Follow(uidFollow,uidFans,1);
         followMapper.insert(newFollow);
         String key = "follow:" + uidFollow;
-        redisUtil.zset(key,uidFans);
+        redisUtil.storeZSet(key,uidFans);
         String key2 = "fans:" + uidFans;
-        redisUtil.zset(key2,uidFollow);
+        redisUtil.storeZSet(key2,uidFollow);
         String key3 = "userRecord:" + uidFollow;
         UserRecord userRecord = null;
         Set<Object> userRecordSet = redisTemplate.opsForZSet().range(key3, 0, 0);
         if(userRecordSet!=null&& !userRecordSet.isEmpty()){
             userRecord = (UserRecord) userRecordSet.iterator().next();
-            redisUtil.zsetDelMember(key3,userRecord);//注意这里
+            redisUtil.deleteZSetMember(key3,userRecord);//注意这里
         }
         else{
             QueryWrapper<UserRecordString> queryWrapper = new QueryWrapper<>();
@@ -140,7 +140,7 @@ public class FollowServiceImpl implements FollowService {
         }
         if (userRecord != null) {
             userRecord.setFansNew(userRecord.getFansNew()+1);
-            redisUtil.zset(key3,userRecord);
+            redisUtil.storeZSet(key3,userRecord);
             UserRecordString userRecordString = userRecordService.saveUserRecordToString(userRecord);
             userRecordService.saveUserRecordStringToDatabase(userRecordString);
         }
@@ -167,7 +167,7 @@ public class FollowServiceImpl implements FollowService {
         }
         if (userRecord != null) {
             userRecord.setFansNew(userRecord.getFansNew()-1);
-            //redisUtil.zset(key3,userRecord);
+            //redisUtil.storeZSet(key3,userRecord);
             userRecordString = userRecordService.saveUserRecordToString(userRecord);
             userRecordService.saveUserRecordStringToDatabase(userRecordString);
         }

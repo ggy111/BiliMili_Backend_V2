@@ -61,7 +61,7 @@ public class ArticleReviewServiceImpl implements ArticleReviewService {
         }
         // 从 redis 获取待审核的专栏id集合，为了提升效率就不遍历数据库了，前提得保证 Redis 没崩，数据一致性采用定时同步或者中间件来保证
         //1注释Redis
-        Set<Object> set = redisUtil.getMembers("article_status:" + status);
+        Set<Object> set = redisUtil.getSetMembers("article_status:" + status);
         if(set == null || set.isEmpty()){
             QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("status", status);

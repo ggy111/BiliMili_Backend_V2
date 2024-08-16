@@ -119,7 +119,7 @@ public class BarrageServiceImpl implements BarrageService {
                 videoStatusService.updateVideoStatus(barrage.getVid(), "barrage", false, 1);
             }, executorService);
             CompletableFuture<Void> deleteRedis = CompletableFuture.runAsync(()->{
-                redisUtil.delMember("barrage_bidSet:" + barrage.getVid(), bid);
+                redisUtil.deleteSetMember("barrage_bidSet:" + barrage.getVid(), bid);
             }, executorService);
             CompletableFuture.allOf(databaseBarrage,updateVideoStats,deleteRedis).join();
         } else {
@@ -155,7 +155,7 @@ public class BarrageServiceImpl implements BarrageService {
                             );
 
                             Mono<Void> deleteRedisMono = Mono.fromRunnable(() ->
-                                    redisUtil.delMember("barrage_bidSet:" + barrage.getVid(), bid)
+                                    redisUtil.deleteSetMember("barrage_bidSet:" + barrage.getVid(), bid)
                             );
 
                             return Mono.when(updateBarrageMono, updateVideoStatsMono, deleteRedisMono)
@@ -190,7 +190,7 @@ public class BarrageServiceImpl implements BarrageService {
                     innerPromise.complete();
                 }, res -> {
                     videoStatusService.updateVideoStatus(barrage.getVid(), "barrage", false, 1);
-                    redisUtil.delMember("barrage_bidSet:" + barrage.getVid(), bid);
+                    redisUtil.deleteSetMember("barrage_bidSet:" + barrage.getVid(), bid);
                     promise.complete(new ResponseResult(200, "删除成功", null));
                 });
 

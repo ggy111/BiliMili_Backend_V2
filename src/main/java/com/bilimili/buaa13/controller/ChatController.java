@@ -56,7 +56,7 @@ public class ChatController {
         Map<String, Object> map = new HashMap<>();
         map.put("list", chatService.getChatDataList(uid, offset));
         // 检查是否还有更多
-        if (offset + 10 < redisUtil.zCard("chat_zset:" + uid)) {
+        if (offset + 10 < redisUtil.getZSetNumber("chat_zset:" + uid)) {
             map.put("more", true);
         } else {
             map.put("more", false);

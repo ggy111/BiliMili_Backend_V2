@@ -239,10 +239,10 @@ public class VideoServiceImpl implements VideoService {
                 // 更新成功
                 esUtil.updateVideo(video);  // 更新ES视频文档
                 //1注释Redis
-                redisUtil.delMember("video_status:" + lastStatus, vid);     // 从旧状态移除
-                redisUtil.addMember("video_status:1", vid);     // 加入新状态
-                redisUtil.zset("user_video_upload:" + video.getUid(), video.getVid());
-                redisUtil.delValue("video:" + vid);     // 删除旧的视频信息
+                redisUtil.deleteSetMember("video_status:" + lastStatus, vid);     // 从旧状态移除
+                redisUtil.addSetMember("video_status:1", vid);     // 加入新状态
+                redisUtil.storeZSet("user_video_upload:" + video.getUid(), video.getVid());
+                redisUtil.deleteValue("video:" + vid);     // 删除旧的视频信息
                 if(status==2){
                     //添加不通过的原因
                     responseResult.setMessage("审核不通过");
@@ -268,12 +268,12 @@ public class VideoServiceImpl implements VideoService {
                 if (flag > 0) {
                     // 更新成功
                     esUtil.deleteVideo(vid);
-                    redisUtil.delValue("barrage_bidSet:" + vid);   // 删除该视频的弹幕
+                    redisUtil.deleteValue("barrage_bidSet:" + vid);   // 删除该视频的弹幕
                     //1注释redis
-                    redisUtil.delMember("video_status:" + lastStatus, vid);     // 从旧状态移除
-                    redisUtil.delValue("video:" + vid);     // 删除旧的视频信息
+                    redisUtil.deleteSetMember("video_status:" + lastStatus, vid);     // 从旧状态移除
+                    redisUtil.deleteValue("video:" + vid);     // 删除旧的视频信息
 
-                    redisUtil.zsetDelMember("user_video_upload:" + video.getUid(), video.getVid());
+                    redisUtil.deleteZSetMember("user_video_upload:" + video.getUid(), video.getVid());
                     // 搞个异步线程去删除OSS的源文件
                     //注释异步线程
                     CompletableFuture.runAsync(() -> ossUtil.deleteFiles(videoName), taskExecutor);
@@ -283,7 +283,7 @@ public class VideoServiceImpl implements VideoService {
                     // 批量删除该视频下的全部评论缓存
                     //1注释Redis
                     CompletableFuture.runAsync(() -> {
-                        Set<Object> set = redisUtil.zReverange("comment_video:" + vid, 0, -1);
+                        Set<Object> set = redisUtil.reverseRange("comment_video:" + vid, 0, -1);
                         List<String> list = new ArrayList<>();
                         set.forEach(cid -> list.add("comment_reply:" + cid));
                         list.add("comment_video:" + vid);

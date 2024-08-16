@@ -18,7 +18,6 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 @Service
@@ -60,7 +59,7 @@ public class SearchServiceImpl implements SearchService {
                 redisTemplate.opsForZSet().incrementScore("search_word", formattedString, 1);
             } else {
                 // 否则添加成员到redis和ES
-                redisUtil.zsetWithScore("search_word", formattedString, 1);
+                Boolean.TRUE.equals(redisTemplate.opsForZSet().add("search_word", formattedString, 1));
                 esUtil.addSearchWord(formattedString);
             }
             QueryWrapper<HotSearch> hotSearchQueryWrapper = new QueryWrapper<>();
@@ -98,9 +97,9 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public List<HotSearch> getHotSearch() {
         //1注释Redis
-        List<RedisUtil.ZObjScore> curr = redisUtil.zReverangeWithScores("search_word", 0, 9);
+        List<RedisUtil.ZSetScore> curr = redisUtil.reverseRangeWithScores("search_word", 0, 9);
         List<HotSearch> list = new ArrayList<>();
-        for (RedisUtil.ZObjScore o : curr) {
+        for (RedisUtil.ZSetScore o : curr) {
             HotSearch word = new HotSearch();
             word.setContent(o.getMember().toString());
             word.setHot(o.getScore());
@@ -161,9 +160,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Nullable
     private Double findScoreByName(Object name) {
-        for (RedisUtil.ZObjScore zObjScore : EventListenerService.hotSearchWords) {
-            if (zObjScore.getMember().equals(name)) {
-                return zObjScore.getScore();
+        for (RedisUtil.ZSetScore zSetScore : EventListenerService.hotSearchWords) {
+            if (zSetScore.getMember().equals(name)) {
+                return zSetScore.getScore();
             }
         }
         return null;

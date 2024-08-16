@@ -74,7 +74,7 @@ public class FavoriteServiceImpl implements FavoriteService {
                 // 设置收藏夹封面
                 list.stream().parallel().forEach(favorite -> {
                     if (favorite.getCover() == null) {
-                        Set<Object> set = redisUtil.zReverange("favorite_video:" + favorite.getFid(), 0, 0);    // 找到最近一个收藏的视频
+                        Set<Object> set = redisUtil.reverseRange("favorite_video:" + favorite.getFid(), 0, 0);    // 找到最近一个收藏的视频
                         if (set != null && set.size() > 0) {
                             Integer vid = (Integer) set.iterator().next();
                             Video video = videoMapper.selectById(vid);
@@ -107,7 +107,7 @@ public class FavoriteServiceImpl implements FavoriteService {
         // 懒得做字数等的合法判断了，前端做吧
         Favorite favorite = new Favorite(null, uid, 2, visible, null, title, desc, 0, null);
         favoriteMapper.insert(favorite);
-        redisUtil.delValue("favorites:" + uid);
+        redisUtil.deleteValue("favorites:" + uid);
         return favorite;
     }
 
@@ -120,7 +120,7 @@ public class FavoriteServiceImpl implements FavoriteService {
         UpdateWrapper<Favorite> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("fid", fid).set("title", title).set("description", desc).set("visible", visible);
         favoriteMapper.update(null, updateWrapper);
-        redisUtil.delValue("favorites:" + uid);
+        redisUtil.deleteValue("favorites:" + uid);
         return favorite;
     }
 

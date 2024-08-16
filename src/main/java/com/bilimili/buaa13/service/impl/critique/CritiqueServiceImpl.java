@@ -227,17 +227,17 @@ public class CritiqueServiceImpl implements CritiqueService {
 
         try {
             //1注释Redis
-            // 如果不是根级评论，则加入 redis 对应的 zset 中
+            // 如果不是根级评论，则加入 redis 对应的 storeZSet 中
             if (!rootId.equals(0)) {
-                redisUtil.zset("critique_reply:" + rootId, critique.getCriId());
+                redisUtil.storeZSet("critique_reply:" + rootId, critique.getCriId());
             } else {
-                redisUtil.zset("critique_article:"+ aid, critique.getCriId());
+                redisUtil.storeZSet("critique_article:"+ aid, critique.getCriId());
             }
             // 表示被回复的用户收到的回复评论的 criId 有序集合
             // 如果不是回复自己
             if(!critique.getAcceptId().equals(critique.getPostId())) {
                 //1注释Redis
-                redisUtil.zset("reply_zset:" + critique.getAcceptId(), critique.getCriId());
+                redisUtil.storeZSet("reply_zset:" + critique.getAcceptId(), critique.getCriId());
                 msgUnreadService.addOneUnread(critique.getAcceptId(), "reply");
 
                 // 通知未读消息
@@ -341,9 +341,9 @@ public class CritiqueServiceImpl implements CritiqueService {
         Set<Object> rootIdsSet;
         if (sortType == 1) {
             // 按热度排序就不能用时间分数查偏移量了，要全部查出来，后续在MySQL筛选
-            rootIdsSet = redisUtil.zReverange("critique_article:" + aid, 0L, -1L);
+            rootIdsSet = redisUtil.reverseRange("critique_article:" + aid, 0L, -1L);
         } else {
-            rootIdsSet = redisUtil.zReverange("critique_article:" + aid, offset, offset + 9L);
+            rootIdsSet = redisUtil.reverseRange("critique_article:" + aid, offset, offset + 9L);
         }
 
         if (rootIdsSet == null || rootIdsSet.isEmpty()) return Collections.emptyList();

@@ -20,7 +20,6 @@ import com.bilimili.buaa13.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Executor;
 
@@ -95,7 +94,7 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public ResponseResult getArticlesByPage(Integer uid, Integer page, Integer quantity) {
         ResponseResult responseResult = new ResponseResult();
-        Set<Object> set = redisUtil.getMembers("article_uid:" + uid);
+        Set<Object> set = redisUtil.getSetMembers("article_uid:" + uid);
         if(set == null || set.isEmpty()){
             QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("uid", uid);
@@ -185,10 +184,10 @@ public class ArticleServiceImpl implements ArticleService {
             int flag = articleMapper.update(null, updateWrapper);
             if (flag > 0) {
                 // 更新成功
-                redisUtil.delMember("article_status:" + lastStatus, aid);     // 从旧状态移除
-                redisUtil.addMember("article_status:1", aid);     // 加入新状态
-                redisUtil.zset("user_article_upload:" + article.getUid(), article.getAid());
-                redisUtil.delValue("article:" + aid);     // 删除旧的专栏信息
+                redisUtil.deleteSetMember("article_status:" + lastStatus, aid);     // 从旧状态移除
+                redisUtil.addSetMember("article_status:1", aid);     // 加入新状态
+                redisUtil.storeZSet("user_article_upload:" + article.getUid(), article.getAid());
+                redisUtil.deleteValue("article:" + aid);     // 删除旧的专栏信息
                 return responseResult;
             } else {
                 // 更新失败，处理错误情况
@@ -216,15 +215,15 @@ public class ArticleServiceImpl implements ArticleService {
                 int flag = articleMapper.update(null, updateWrapper);
                 if (flag > 0) {
                     // 更新成功
-                    redisUtil.delMember("article_status:" + lastStatus, aid);     // 从旧状态移除
-                    redisUtil.delValue("article:" + aid);     // 删除旧的专栏信息
-                    redisUtil.zsetDelMember("user_article_upload:" + article.getUid(), article.getVid());
+                    redisUtil.deleteSetMember("article_status:" + lastStatus, aid);     // 从旧状态移除
+                    redisUtil.deleteValue("article:" + aid);     // 删除旧的专栏信息
+                    redisUtil.deleteZSetMember("user_article_upload:" + article.getUid(), article.getVid());
                     // 搞个异步线程去删除OSS的源文件
                     CompletableFuture.runAsync(() -> ossUtil.deleteFiles(articleName), taskExecutor);
                     CompletableFuture.runAsync(() -> ossUtil.deleteFiles(coverName), taskExecutor);
                     // 批量删除该专栏下的全部评论缓存
                     CompletableFuture.runAsync(() -> {
-                        Set<Object> set = redisUtil.zReverange("comment_article:" + aid, 0, -1);
+                        Set<Object> set = redisUtil.reverseRange("comment_article:" + aid, 0, -1);
                         List<String> list = new ArrayList<>();
                         set.forEach(id -> list.add("comment_reply:" + id));
                         list.add("comment_article:" + aid);

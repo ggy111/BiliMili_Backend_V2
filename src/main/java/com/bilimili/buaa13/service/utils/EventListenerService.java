@@ -10,7 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -53,7 +55,7 @@ public class EventListenerService {
     @Autowired
     private ChatDetailedMapper chatDetailedMapper;
 
-    public static List<RedisUtil.ZObjScore> hotSearchWords = new ArrayList<>();     // 上次更新的热搜词条
+    public static List<RedisUtil.ZSetScore> hotSearchWords = new ArrayList<>();     // 上次更新的热搜词条
 
     @Autowired
     @Qualifier("taskExecutor")
@@ -65,23 +67,25 @@ public class EventListenerService {
     @Scheduled(fixedDelay = 1000 * 60 * 60)
     public void updateHotSearch() {
         CompletableFuture<?> updateFuture = CompletableFuture.runAsync(()->{
-            List<RedisUtil.ZObjScore> list = redisUtil.zReverangeWithScores("search_word", 0, -1);
+            List<RedisUtil.ZSetScore> list = redisUtil.reverseRangeWithScores("search_word", 0, -1);
             if (list == null || list.isEmpty()) return;
             int count = list.size();
             double total = 0;
             // 计算总分数
-            for (RedisUtil.ZObjScore o : list) {
+            for (RedisUtil.ZSetScore o : list) {
                 total += o.getScore();
             }
             BigDecimal bt = new BigDecimal(total);
             total = bt.setScale(2, RoundingMode.HALF_UP).doubleValue();
             double totalScore = calculateTotalScore(list);
             // 更新每个词条的分数    新分数 = (旧分数 / 总分数) * 词条数
-            List<RedisUtil.ZObjScore> updatedList = list.stream()
+            List<RedisUtil.ZSetScore> updatedList = list.stream()
                     .peek(o -> o.setScore(calculateNewScore(o.getScore(), totalScore, count)))
                     .toList();
-            // 批量更新到redis上
-            CompletableFuture<?> redisFuture = CompletableFuture.runAsync(()-> redisUtil.zsetOfCollectionByScore("search_word", list),taskExecutor);
+            // 批量更新到redis上，根据分数
+            CompletableFuture<?> redisFuture = CompletableFuture.runAsync(()->
+                            redisTemplate.opsForZSet().add("search_word", convertToTupleSetByScore(list))
+                    ,taskExecutor);
             CompletableFuture.allOf(redisFuture).join();
             // 保存新热搜
             if (list.size() < 10) {
@@ -93,9 +97,9 @@ public class EventListenerService {
         CompletableFuture.allOf(updateFuture).join();
     }
 
-    private double calculateTotalScore(List<RedisUtil.ZObjScore> list) {
+    private double calculateTotalScore(List<RedisUtil.ZSetScore> list) {
         double total = list.stream()
-                .mapToDouble(RedisUtil.ZObjScore::getScore)
+                .mapToDouble(RedisUtil.ZSetScore::getScore)
                 .sum();
         return new BigDecimal(total).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
@@ -177,7 +181,7 @@ public class EventListenerService {
             queryWrapper.eq("status", i).isNull("delete_date").select("vid");
             List<Object> vidList = videoMapper.selectObjs(queryWrapper);
             try {
-                redisUtil.delValue("video_status:" + i);   // 先将原来的删掉
+                redisUtil.deleteValue("video_status:" + i);   // 先将原来的删掉
                 if (vidList != null && !vidList.isEmpty()) {
                     //向SET中添加无过期时间的对象列表
                     redisTemplate.opsForSet().add("video_status:" + i, vidList);
@@ -198,7 +202,7 @@ public class EventListenerService {
             },taskExecutor);
             CompletableFuture<?> futureRedis = CompletableFuture.runAsync(()->{
                 try {
-                    redisUtil.delValue("video_status:" + i);
+                    redisUtil.deleteValue("video_status:" + i);
                     if (vidList.get() != null && !vidList.get().isEmpty()) {
                         //向SET中添加无过期时间的对象列表
                         redisTemplate.opsForSet().add("video_status:" + i, vidList.get());
@@ -220,7 +224,7 @@ public class EventListenerService {
             List<ChatDetailed> list = chatDetailedMapper.selectList(queryWrapper);
             // 按用户将对应的消息分类整理
             Set<Map<String, Integer>> chatSet = new HashSet<>();
-            Map<Integer, Map<Integer, Set<RedisUtil.ZObjTime>>> setMap = new HashMap<>();
+            Map<Integer, Map<Integer, Set<RedisUtil.ZSetTime>>> setMap = new HashMap<>();
             for (ChatDetailed chatDetailed : list) {
                 Integer from = chatDetailed.getPostId();    // 发送者ID
                 Integer to = chatDetailed.getAcceptId();   // 接收者ID
@@ -246,13 +250,14 @@ public class EventListenerService {
                 }
             }
 
-            // 更新redis
+            // 更新redis,根据时间
             for (Map<String, Integer> map : chatSet) {
                 Integer uid = map.get("post_id");
                 Integer aid = map.get("accept_id");
                 String key = "chat_detailed_zset:" + uid + ":" + aid;
-                redisUtil.delValue(key);
-                redisUtil.zsetOfCollectionByTime(key, setMap.get(uid).get(aid));
+                redisUtil.deleteValue(key);
+                //批量存入数据到sorted set
+                redisTemplate.opsForZSet().add(key, convertToTupleSetByTime(setMap.get(uid).get(aid)));
             }
         } catch (Exception e) {
             log.error("每天同步聊天记录时出错了：" + e);
@@ -266,7 +271,7 @@ public class EventListenerService {
                 QueryWrapper<ChatDetailed> queryWrapper = new QueryWrapper<>();
                 List<ChatDetailed> list = chatDetailedMapper.selectList(queryWrapper);
                 // 使用并行流来处理列表
-                Map<Integer, Map<Integer, Set<RedisUtil.ZObjTime>>> setMap = list.parallelStream()
+                Map<Integer, Map<Integer, Set<RedisUtil.ZSetTime>>> setMap = list.parallelStream()
                         .flatMap(chatDetailed -> {
                             Integer from = chatDetailed.getPostId();    // 发送者ID
                             Integer to = chatDetailed.getAcceptId();   // 接收者ID
@@ -288,7 +293,7 @@ public class EventListenerService {
                         .collect(Collectors.toMap(
                                 Map.Entry::getValue,
                                 e -> {
-                                    Map<Integer, Set<RedisUtil.ZObjTime>> innerMap = new HashMap<>();
+                                    Map<Integer, Set<RedisUtil.ZSetTime>> innerMap = new HashMap<>();
                                     innerMap.put(e.getValue(), new HashSet<>());
                                     return innerMap;
                                 },
@@ -300,8 +305,9 @@ public class EventListenerService {
                                 .flatMap(entry -> entry.getValue().entrySet().stream())
                                 .map(innerEntry -> CompletableFuture.runAsync(() -> {
                                     String key = "chat_detailed_zset:" + innerEntry.getKey() + ":" + innerEntry.getValue();
-                                    redisUtil.delValue(key);
-                                    redisUtil.zsetOfCollectionByTime(key, innerEntry.getValue());
+                                    redisUtil.deleteValue(key);
+                                    //批量存入数据到sorted set
+                                    redisTemplate.opsForZSet().add(key, convertToTupleSetByTime(innerEntry.getValue()));
                                 }))
                                 .toArray(CompletableFuture[]::new)
                 ).join();  // 等待所有异步操作完成
@@ -311,29 +317,43 @@ public class EventListenerService {
         });
     }
 
-    private void addOrderlySet(Map<Integer, Map<Integer, Set<RedisUtil.ZObjTime>>> setMap, ChatDetailed chatDetailed, Integer from, Integer to) {
+    private void addOrderlySet(Map<Integer, Map<Integer, Set<RedisUtil.ZSetTime>>> setMap, ChatDetailed chatDetailed, Integer from, Integer to) {
         if (setMap.get(from) == null) {
-            Map<Integer, Set<RedisUtil.ZObjTime>> map = new HashMap<>();
-            Set<RedisUtil.ZObjTime> set = new HashSet<>();
-            set.add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
+            Map<Integer, Set<RedisUtil.ZSetTime>> map = new HashMap<>();
+            Set<RedisUtil.ZSetTime> set = new HashSet<>();
+            set.add(new RedisUtil.ZSetTime(chatDetailed.getId(), chatDetailed.getTime()));
             map.put(to, set);
             setMap.put(from, map);
         } else {
             if (setMap.get(from).get(to) == null) {
-                Set<RedisUtil.ZObjTime> set = new HashSet<>();
-                set.add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
+                Set<RedisUtil.ZSetTime> set = new HashSet<>();
+                set.add(new RedisUtil.ZSetTime(chatDetailed.getId(), chatDetailed.getTime()));
                 setMap.get(from).put(to, set);
             } else {
                 setMap.get(from).get(to)
-                        .add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
+                        .add(new RedisUtil.ZSetTime(chatDetailed.getId(), chatDetailed.getTime()));
             }
         }
     }
 
-    private void addZSet(Map<Integer, Map<Integer, Set<RedisUtil.ZObjTime>>> setMap, ChatDetailed chatDetailed, Integer from, Integer to) {
+    private void addZSet(Map<Integer, Map<Integer, Set<RedisUtil.ZSetTime>>> setMap, ChatDetailed chatDetailed, Integer from, Integer to) {
         // 使用 computeIfAbsent 方法减少重复代码
         setMap.computeIfAbsent(from, k -> new HashMap<>())
                 .computeIfAbsent(to, k -> new HashSet<>())
-                .add(new RedisUtil.ZObjTime(chatDetailed.getId(), chatDetailed.getTime()));
+                .add(new RedisUtil.ZSetTime(chatDetailed.getId(), chatDetailed.getTime()));
+    }
+
+    // 将ZSetObject集合转换为Tuple集合，根据时间
+    private Set<ZSetOperations.TypedTuple<Object>> convertToTupleSetByTime(Collection<RedisUtil.ZSetTime> zSetTimes) {
+        return zSetTimes.stream()
+                .map(zSetTime -> new DefaultTypedTuple<>(zSetTime.getMember(), (double) zSetTime.getTime().getTime()))
+                .collect(Collectors.toSet());
+    }
+
+    //将ZSetObject集合转换为Tuple集合，根据分数
+    private Set<ZSetOperations.TypedTuple<Object>> convertToTupleSetByScore(Collection<RedisUtil.ZSetScore> zSetScores) {
+        return zSetScores.stream()
+                .map(zSetScore -> new DefaultTypedTuple<>(zSetScore.getMember(), zSetScore.getScore()))
+                .collect(Collectors.toSet());
     }
 }

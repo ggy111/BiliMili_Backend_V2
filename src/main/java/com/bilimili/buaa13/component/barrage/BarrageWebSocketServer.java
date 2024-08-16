@@ -115,7 +115,7 @@ public class BarrageWebSocketServer {
             );
 
             CompletableFuture<Void> addRedisMemberFuture = CompletableFuture.runAsync(() ->
-                    redisUtil.addMember("barrage_bidSet:" + vid, barrage.getBid()),taskExecutor
+                    redisUtil.addSetMember("barrage_bidSet:" + vid, barrage.getBid()),taskExecutor
             );
 
             // 等待所有异步任务完成
