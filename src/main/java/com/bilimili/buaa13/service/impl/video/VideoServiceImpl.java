@@ -18,6 +18,7 @@ import com.bilimili.buaa13.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,14 +51,19 @@ public class VideoServiceImpl implements VideoService {
 
     @Autowired
     private OssUtil ossUtil;
+
     @Autowired
     private RedisUtil redisUtil;
 
     @Autowired
     private ESUtil esUtil;
+
     @Autowired
     @Qualifier("taskExecutor")
     private Executor taskExecutor;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 根据id分页获取视频信息，包括用户和分区信息
@@ -281,7 +287,7 @@ public class VideoServiceImpl implements VideoService {
                         List<String> list = new ArrayList<>();
                         set.forEach(cid -> list.add("comment_reply:" + cid));
                         list.add("comment_video:" + vid);
-                        redisUtil.delValues(list);
+                        redisTemplate.opsForValue().getOperations().delete(list);
                     }, taskExecutor);
                 } else {
                     // 更新失败，处理错误情况
@@ -310,12 +316,12 @@ public class VideoServiceImpl implements VideoService {
         Map<String,Object> map = new HashMap<>();
         if (video.getStatus() == 3) {
             // 视频已删除
-            Video video1 = new Video();
-            video1.setVid(video.getVid());
-            video1.setUid(video.getUid());
-            video1.setStatus(video.getStatus());
-            video1.setDeleteDate(video.getDeleteDate());
-            map.put("video", video1);
+            Video videoDelete = new Video();
+            videoDelete.setVid(video.getVid());
+            videoDelete.setUid(video.getUid());
+            videoDelete.setStatus(video.getStatus());
+            videoDelete.setDeleteDate(video.getDeleteDate());
+            map.put("video", videoDelete);
         }
         else{
             try{

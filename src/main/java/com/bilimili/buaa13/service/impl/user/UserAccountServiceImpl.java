@@ -1,5 +1,6 @@
 package com.bilimili.buaa13.service.impl.user;
 
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.bilimili.buaa13.entity.*;
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -73,6 +75,9 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Qualifier("taskExecutor")
     @Autowired
     private Executor taskExecutor;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 用户注册
@@ -250,7 +255,13 @@ public class UserAccountServiceImpl implements UserAccountService {
         try {
             // 把完整的用户信息存入redis，时间跟token一样，注意单位
             // 这里缓存的user信息建议只供读取uid用，其中的状态等非静态数据可能不准，所以 redis另外存值
-            redisUtil.setExObjectValue("security:user:" + user.getUid(), user, 60L * 60 * 24 * 2, TimeUnit.SECONDS);
+            String jsonString = JSON.toJSONString(user);
+            redisTemplate.opsForValue().set(
+                    "security:user:" + user.getUid(),
+                    jsonString,
+                    60L * 60 * 24 * 2,
+                    TimeUnit.SECONDS
+            );
         } catch (Exception e) {
             log.error("存储redis数据失败");
             throw e;
@@ -296,7 +307,13 @@ public class UserAccountServiceImpl implements UserAccountService {
         //将uid封装成一个jwttoken，同时token也会被缓存到redis中
         String token = jwtUtil.createToken(user.getUid().toString(), "admin");
         try {
-            redisUtil.setExObjectValue("security:admin:" + user.getUid(), user, 60L * 60 * 24 * 2, TimeUnit.SECONDS);
+            String jsonString = JSON.toJSONString(user);
+            redisTemplate.opsForValue().set(
+                    "security:admin:" + user.getUid(),
+                    jsonString,
+                    60L * 60 * 24 * 2,
+                    TimeUnit.SECONDS
+            );
         } catch (Exception e) {
             log.error("存储redis数据失败");
             throw e;
@@ -384,7 +401,13 @@ public class UserAccountServiceImpl implements UserAccountService {
         redisUtil.delValue("token:user:" + LoginUserId);
         redisUtil.delValue("security:user:" + LoginUserId);
         redisUtil.delMember("login_member", LoginUserId);   // 从在线用户集合中移除
-        redisUtil.deleteKeysWithPrefix("message:" + LoginUserId + ":"); // 清除全部在聊天窗口的状态
+        // 清除全部在聊天窗口的状态,删除指定前缀的所有key
+        // 获取以指定前缀开头的所有键
+        Set<String> userKeys = redisTemplate.keys("message:" + LoginUserId + ":" + "*");
+        // 删除匹配的键
+        if (userKeys != null && !userKeys.isEmpty()) {
+            redisTemplate.delete(userKeys);
+        }
 
         // 断开全部该用户的channel 并从 userChannel 移除该用户
         Set<Channel> userChannels = IMServer.userChannel.get(LoginUserId);

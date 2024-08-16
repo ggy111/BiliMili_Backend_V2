@@ -16,6 +16,7 @@ import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,6 +55,9 @@ public class CritiqueServiceImpl implements CritiqueService {
     @Autowired
     @Qualifier("taskExecutor")
     private Executor taskExecutor;
+
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
 
     //----------------------------------------------------------------------------
     //基于原来思路的额外修改
@@ -111,12 +115,6 @@ public class CritiqueServiceImpl implements CritiqueService {
     }
 
     //----------------------------------------------------------------------------------
-
-
-
-
-
-
 
     /**
      * 获取评论树列表
@@ -318,7 +316,7 @@ public class CritiqueServiceImpl implements CritiqueService {
     @Override
     public List<Critique> getChildCritiquesByRootId(Integer rootId, Long start, Long end) {
         //1注释Redis
-        Set<Object> replyIds = redisUtil.zRange("critique_reply:" + rootId, start, end);
+        Set<Object> replyIds = redisTemplate.opsForZSet().range("critique_reply:" + rootId, start, end);
         if (replyIds == null || replyIds.isEmpty()) return Collections.emptyList();
         QueryWrapper<Critique> wrapper = new QueryWrapper<>();
         wrapper.in("id", replyIds).ne("is_deleted", 1);

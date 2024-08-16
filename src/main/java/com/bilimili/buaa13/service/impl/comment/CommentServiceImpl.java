@@ -17,12 +17,12 @@ import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -50,6 +50,9 @@ public class CommentServiceImpl implements CommentService {
     @Autowired
     @Qualifier("taskExecutor")
     private Executor taskExecutor;
+
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
 
     /**
      * 获取评论树列表
@@ -266,7 +269,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public List<Comment> getChildCommentsByRootId(Integer rootId, Long start, Long end) {
         //1注释Redis
-        Set<Object> replyIds = redisUtil.zRange("comment_reply:" + rootId, start, end);
+        Set<Object> replyIds = redisTemplate.opsForZSet().range("comment_reply:" + rootId, start, end);
         if (replyIds == null || replyIds.isEmpty()) return Collections.emptyList();
         QueryWrapper<Comment> wrapper = new QueryWrapper<>();
         wrapper.in("bid", replyIds).ne("is_deleted", 1);

@@ -5,6 +5,7 @@ import com.bilimili.buaa13.mapper.ArticleMapper;
 import com.bilimili.buaa13.entity.*;
 import com.bilimili.buaa13.service.article.ArticleService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -45,6 +46,8 @@ public class ArticleServiceImpl implements ArticleService {
     @Autowired
     @Qualifier("taskExecutor")
     private Executor taskExecutor;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
 
     @Override
@@ -225,7 +228,7 @@ public class ArticleServiceImpl implements ArticleService {
                         List<String> list = new ArrayList<>();
                         set.forEach(id -> list.add("comment_reply:" + id));
                         list.add("comment_article:" + aid);
-                        redisUtil.delValues(list);
+                        redisTemplate.opsForValue().getOperations().delete(list);
                     }, taskExecutor);
                     return responseResult;
                 } else {

@@ -14,6 +14,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,6 +40,8 @@ public class VideoController {
     private SqlSessionFactory sqlSessionFactory;
     @Autowired
     private VideoMapper videoMapper;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 更新视频状态，包括过审、不通过、删除，其中审核相关需要管理员权限，删除可以是管理员或者投稿用户
@@ -66,7 +69,7 @@ public class VideoController {
         ResponseResult responseResult = new ResponseResult();
         int count = 11;
         //1注释Redis
-        Set<Object> idSet = redisUtil.srandmember("video_status:1", count);
+        Set<Object> idSet = redisTemplate.opsForSet().distinctRandomMembers("video_status:1", count);
         List<Map<String, Object>> videoList = new ArrayList<>();
         List<Video> allVideos = videoMapper.selectAllVideoByStatus(1);
         count = Math.min(count, allVideos.size());

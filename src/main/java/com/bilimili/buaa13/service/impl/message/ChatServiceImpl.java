@@ -17,6 +17,7 @@ import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -49,6 +50,9 @@ public class ChatServiceImpl implements ChatService {
     @Autowired
     @Qualifier("taskExecutor")
     private Executor taskExecutor;
+
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
 
     /**
      * 创建聊天
@@ -192,7 +196,7 @@ public class ChatServiceImpl implements ChatService {
     public boolean updateOneChat(Integer postId, Integer acceptId) {
         // 查询对方是否在窗口
         String key = "message:" + acceptId + ":" + postId;  // message:用户自己:聊天对象 这里的用户自己就是对方本人 聊天对象就是在发消息的我自己
-        boolean online = redisUtil.isExist(key);
+        boolean online = Boolean.TRUE.equals(redisTemplate.hasKey(key));
         ExecutorService executorService = Executors.newFixedThreadPool(10);
         try {
             /*
@@ -275,9 +279,12 @@ public class ChatServiceImpl implements ChatService {
             Future<Executor> future = executorService.submit(()->{
                 // 更新为在线状态
                 String key = "message:" + acceptId + ":" + postId;  // message:用户自己:聊天对象
-                redisUtil.setValue(key, true);
+                /*
+                  存储简单数据类型
+                  不用更新的缓存信息
+                 */
+                redisTemplate.opsForValue().set(key, true);
                 // 清除未读
-
                 QueryWrapper<Chat> queryWrapper = new QueryWrapper<>();
                 queryWrapper.eq("post_id", postId).eq("accept_id", acceptId);
                 Chat chat = chatMapper.selectOne(queryWrapper);

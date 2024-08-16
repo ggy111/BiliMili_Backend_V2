@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +43,9 @@ public class EventListenerService {
 
     @Autowired
     private RedisUtil redisUtil;
+
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
 
     @Autowired
     private VideoMapper videoMapper;
@@ -175,7 +179,8 @@ public class EventListenerService {
             try {
                 redisUtil.delValue("video_status:" + i);   // 先将原来的删掉
                 if (vidList != null && !vidList.isEmpty()) {
-                    redisUtil.addMembers("video_status:" + i, vidList);
+                    //向SET中添加无过期时间的对象列表
+                    redisTemplate.opsForSet().add("video_status:" + i, vidList);
                 }
             } catch (Exception e) {
                 log.error("redis更新审核视频集合失败");
@@ -195,7 +200,8 @@ public class EventListenerService {
                 try {
                     redisUtil.delValue("video_status:" + i);
                     if (vidList.get() != null && !vidList.get().isEmpty()) {
-                        redisUtil.addMembers("video_status:" + i, vidList.get());
+                        //向SET中添加无过期时间的对象列表
+                        redisTemplate.opsForSet().add("video_status:" + i, vidList.get());
                     }
                 } catch (Exception e) {
                     log.error("Redis 更新审核视频集合失败：{}", e.getMessage());

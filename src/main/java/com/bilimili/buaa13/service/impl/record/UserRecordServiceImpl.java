@@ -2,19 +2,17 @@ package com.bilimili.buaa13.service.impl.record;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bilimili.buaa13.entity.ResponseResult;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.bilimili.buaa13.mapper.UserMapper;
-import com.bilimili.buaa13.mapper.UserRecordStringMapper;
 import com.bilimili.buaa13.entity.UserRecord;
 import com.bilimili.buaa13.entity.UserRecordString;
+import com.bilimili.buaa13.mapper.UserMapper;
+import com.bilimili.buaa13.mapper.UserRecordStringMapper;
 import com.bilimili.buaa13.service.record.UserRecordService;
 import com.bilimili.buaa13.utils.JsonUtil;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Scheduled;
-
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +20,6 @@ import java.util.List;
 @Slf4j
 @Service
 public class UserRecordServiceImpl implements UserRecordService {
-    @Autowired
-    private RedisUtil redisUtil;
     @Autowired
     private UserMapper userMapper;
     @Autowired
@@ -115,33 +111,19 @@ public class UserRecordServiceImpl implements UserRecordService {
      */
     @Override
     public UserRecord getUserRecordByUid(Integer uid) {
-        //String key = "userRecord:" + uid;
         UserRecord userRecord = null;
         try{
-            //Set<Object> userRecordSet = redisUtil.zRange(key,0,-1);
-//            if(userRecordSet!=null && !userRecordSet.isEmpty()){
-//                userRecord = (UserRecord) userRecordSet.iterator().next();
-//            }
             QueryWrapper<UserRecordString> queryWrapperUserRecordString = new QueryWrapper<>();
             queryWrapperUserRecordString.eq("uid", uid);
             UserRecordString userRecordString = userRecordStringMapper.selectOne(queryWrapperUserRecordString);
             if(userRecordString != null){
                 System.out.println("breakpoint 0");
                 userRecord = findUserRecordByString(userRecordString);
-                //redisUtil.zset(key,userRecord);
             }
         }catch (Exception e){
             e.printStackTrace();
             new ResponseResult(404,"未找到记录",null);
         }
-        /*if(userRecord == null){
-            try{
-                Exception e = new Exception("点赞量为空");
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            return null;
-        }*/
         return userRecord;
     }
 
@@ -159,9 +141,7 @@ public class UserRecordServiceImpl implements UserRecordService {
 
     @Override
     public void setPlayRecordByUid(Integer uid) throws JsonProcessingException {
-        //String key = "userRecord:" + uid;
         UserRecord userRecord = getUserRecordByUid(uid);
-        //redisUtil.zsetDelMember(key,userRecord);
         int delta = userRecord.getPlayNew();
         List<Integer> deltaWeek = new ArrayList<>();
         for(int i=1;i<7;++i){
@@ -171,7 +151,6 @@ public class UserRecordServiceImpl implements UserRecordService {
         userRecord.setPlay(deltaWeek);
         userRecord.setPlayOld(userRecord.getPlayNew());
         userRecord.setPlayNew(0);
-        //redisUtil.zset(key,userRecord);
         UserRecordString userRecordString = saveUserRecordToString(userRecord);
         saveUserRecordStringToDatabase(userRecordString);
     }
@@ -190,9 +169,7 @@ public class UserRecordServiceImpl implements UserRecordService {
 
     @Override
     public void setLoveRecordByUid(Integer uid) throws JsonProcessingException {
-        //String key = "userRecord:" + uid;
         UserRecord userRecord = getUserRecordByUid(uid);
-        //redisUtil.zsetDelMember(key,userRecord);
         int delta = userRecord.getLoveNew();
         List<Integer> deltaWeek = new ArrayList<>();
         for(int i=1;i<7;++i){
@@ -202,7 +179,6 @@ public class UserRecordServiceImpl implements UserRecordService {
         userRecord.setLove(deltaWeek);
         userRecord.setLoveOld(userRecord.getLoveNew());
         userRecord.setLoveNew(0);
-        //redisUtil.zset(key,userRecord);
         UserRecordString userRecordString = saveUserRecordToString(userRecord);
         saveUserRecordStringToDatabase(userRecordString);
     }
@@ -221,9 +197,7 @@ public class UserRecordServiceImpl implements UserRecordService {
 
     @Override
     public void setCollectRecordByUid(Integer uid) throws JsonProcessingException {
-        //String key = "userRecord:" + uid;
         UserRecord userRecord = getUserRecordByUid(uid);
-        //redisUtil.zsetDelMember(key,userRecord);
         int delta = userRecord.getCollectNew();
         List<Integer> deltaWeek = new ArrayList<>();
         for(int i=1;i<7;++i){
@@ -233,7 +207,6 @@ public class UserRecordServiceImpl implements UserRecordService {
         userRecord.setCollect(deltaWeek);
         userRecord.setCollectOld(userRecord.getCollectNew());
         userRecord.setCollectNew(0);
-        //redisUtil.zset(key,userRecord);
         UserRecordString userRecordString = saveUserRecordToString(userRecord);
         saveUserRecordStringToDatabase(userRecordString);
     }
@@ -252,9 +225,7 @@ public class UserRecordServiceImpl implements UserRecordService {
 
     @Override
     public void setFansRecordByUid(Integer uid) throws JsonProcessingException {
-        //String key = "userRecord:" + uid;
         UserRecord userRecord = getUserRecordByUid(uid);
-        //redisUtil.zsetDelMember(key,userRecord);
         int delta = userRecord.getFansNew();
         List<Integer> deltaWeek = new ArrayList<>();
         for(int i=1;i<7;++i){
@@ -264,7 +235,6 @@ public class UserRecordServiceImpl implements UserRecordService {
         userRecord.setFans(deltaWeek);
         userRecord.setFansOld(userRecord.getFansNew());
         userRecord.setFansNew(0);
-        //redisUtil.zset(key,userRecord);
         UserRecordString userRecordString = saveUserRecordToString(userRecord);
         saveUserRecordStringToDatabase(userRecordString);
     }

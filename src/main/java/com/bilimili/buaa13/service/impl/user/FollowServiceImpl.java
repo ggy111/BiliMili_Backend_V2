@@ -2,17 +2,18 @@ package com.bilimili.buaa13.service.impl.user;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.bilimili.buaa13.mapper.FollowMapper;
-import com.bilimili.buaa13.mapper.UserRecordStringMapper;
 import com.bilimili.buaa13.entity.Follow;
 import com.bilimili.buaa13.entity.UserRecord;
 import com.bilimili.buaa13.entity.UserRecordString;
+import com.bilimili.buaa13.mapper.FollowMapper;
+import com.bilimili.buaa13.mapper.UserRecordStringMapper;
 import com.bilimili.buaa13.service.record.UserRecordService;
 import com.bilimili.buaa13.service.user.FollowService;
 import com.bilimili.buaa13.utils.RedisUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -37,6 +38,8 @@ public class FollowServiceImpl implements FollowService {
     private UserRecordStringMapper userRecordStringMapper;
     @Autowired
     private UserRecordService userRecordService;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 根据是否用户本人获取全部可见的关注列表
@@ -47,8 +50,12 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public List<Integer> getUidFollow(Integer uid, boolean isOwner){
         String key = "fans:" + uid;   // uid用户的关注列表，所以uid用户是粉丝
-        Set<Object>following = redisUtil.zRange(key, 0, -1);
-        List<Integer> list = following.stream().map(obj -> Integer.parseInt(obj.toString())).collect(Collectors.toList());
+        Set<Object>following = redisTemplate.opsForZSet().range(key, 0, -1);
+        List<Integer> list = null;
+        if (following != null) {
+            list = following.stream().map(obj -> Integer.parseInt(obj.toString())).collect(Collectors.toList());
+        }
+        else return Collections.emptyList();
         if (!list.isEmpty())   {
             if (!isOwner) {
                 List<Integer> list1 = new ArrayList<>();
@@ -80,19 +87,8 @@ public class FollowServiceImpl implements FollowService {
      */
     @Override
     public List<Integer> getUidFans(Integer uid, boolean isOwner){
-        /*String key = "follow:" + uid;   // uid用户的粉丝列表，uid是up
-        Set<Object>fans = redisUtil.zRange(key, 0, -1);
-        List<Integer> list = fans.stream().map(obj -> Integer.parseInt(obj.toString())).collect(Collectors.toList());
-        if (!list.isEmpty())   {
-            *//*待实现是否根据用户本人来看*//*
-            return list;
-        }*/
         List<Integer>list = followMapper.getUidFansByUid(uid);
-        List<Integer> finalList = list;
         if(list!=null&& !list.isEmpty()){
-            /*CompletableFuture.runAsync(() -> {
-                redisUtil.setExObjectValue(key, finalList);
-            }, taskExecutor);*/
             return list;
         }
         return Collections.emptyList();
@@ -102,15 +98,12 @@ public class FollowServiceImpl implements FollowService {
         QueryWrapper<Follow> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("uid_follow", uid);
         List<Follow> followList = followMapper.selectList(queryWrapper);
-
         // 创建一个 integer 的 list，用于存储查询结果中的 cid 值
         List<Integer> idList = new ArrayList<>();
-
         // 遍历查询结果集，将 cid 值添加到 list 中
         for (Follow follow : followList) {
             idList.add(follow.getUidFans());
         }
-
         // 返回结果
         return idList;
     }
@@ -132,7 +125,7 @@ public class FollowServiceImpl implements FollowService {
         redisUtil.zset(key2,uidFollow);
         String key3 = "userRecord:" + uidFollow;
         UserRecord userRecord = null;
-        Set<Object> userRecordSet = redisUtil.zRange(key3, 0, 0);
+        Set<Object> userRecordSet = redisTemplate.opsForZSet().range(key3, 0, 0);
         if(userRecordSet!=null&& !userRecordSet.isEmpty()){
             userRecord = (UserRecord) userRecordSet.iterator().next();
             redisUtil.zsetDelMember(key3,userRecord);//注意这里
@@ -165,18 +158,7 @@ public class FollowServiceImpl implements FollowService {
         Follow follow = followMapper.selectOne(queryWrapper);
         if(follow==null) return;
         else followMapper.delete(queryWrapper);
-    /*String key = "follow:" + uidFollow;
-    redisUtil.zsetDelMember(key,uidFans);
-    String key2 = "fans:" + uidFans;
-    redisUtil.zsetDelMember(key2,uidFollow);
-    String key3 = "userRecord:" + uidFollow;*/
         UserRecord userRecord = null;
-        //Set<Object> userRecordSet = redisUtil.zRange(key3, 0, 0);
-        //注意这里
-    /*if(userRecordSet!=null&& !userRecordSet.isEmpty()){
-        userRecord = (UserRecord) userRecordSet.iterator().next();
-        redisUtil.zsetDelMember(key3,userRecord);//注意这里
-    }*/
         QueryWrapper<UserRecordString> queryWrapper1 = new QueryWrapper<>();
         queryWrapper.eq("uid",uidFollow);
         UserRecordString userRecordString = userRecordStringMapper.selectList(queryWrapper1).get(0);
@@ -189,37 +171,6 @@ public class FollowServiceImpl implements FollowService {
             userRecordString = userRecordService.saveUserRecordToString(userRecord);
             userRecordService.saveUserRecordStringToDatabase(userRecordString);
         }
-        /*QueryWrapper<Follow> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("uidFollow", uidFollow).eq("uidFans", uidFans);
-        Follow follow = followMapper.selectOne(queryWrapper);
-        if(follow==null) return;
-        else followMapper.delete(queryWrapper);
-        String key = "follow:" + uidFollow;
-        redisUtil.zsetDelMember(key,uidFans);
-        String key2 = "fans:" + uidFans;
-        redisUtil.zsetDelMember(key2,uidFollow);
-        String key3 = "userRecord:" + uidFollow;
-        UserRecord userRecord = null;
-        Set<Object> userRecordSet = redisUtil.zRange(key3, 0, 0);
-        //注意这里
-        if(userRecordSet!=null&& !userRecordSet.isEmpty()){
-            userRecord = (UserRecord) userRecordSet.iterator().next();
-            redisUtil.zsetDelMember(key3,userRecord);//注意这里
-        }
-        else{
-            QueryWrapper<UserRecordString> queryWrapper1 = new QueryWrapper<>();
-            queryWrapper.eq("uid",uidFollow);
-            UserRecordString userRecordString = userRecordStringMapper.selectOne(queryWrapper1);
-            if(userRecordString!=null){
-                userRecord = userRecordService.findUserRecordByString(userRecordString);
-            }
-        }
-        if (userRecord != null) {
-            userRecord.setFansNew(userRecord.getFansNew()-1);
-            redisUtil.zset(key3,userRecord);
-            UserRecordString userRecordString = userRecordService.saveUserRecordToString(userRecord);
-            userRecordService.saveUserRecordStringToDatabase(userRecordString);
-        }*/
     }
     /**
      * 更新其他人是否可以查看关注列表

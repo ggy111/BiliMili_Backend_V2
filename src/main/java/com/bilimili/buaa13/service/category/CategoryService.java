@@ -16,7 +16,7 @@ public interface CategoryService {
      * 获取某个分区数据
      * @return 响应对象
      */
-    Category getOne(Integer mainCategoryId,Integer subCategoryId);
+    ResponseResult getOne(Integer mainCategoryId,Integer subCategoryId);
 
 
     Category getOne(String mainCategoryId, String subCategoryId);

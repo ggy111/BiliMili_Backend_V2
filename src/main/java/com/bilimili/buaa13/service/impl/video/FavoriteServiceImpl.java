@@ -14,6 +14,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -35,13 +36,16 @@ public class FavoriteServiceImpl implements FavoriteService {
     private SqlSessionFactory sqlSessionFactory;
 
     @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
     @Qualifier("taskExecutor")
     private Executor taskExecutor;
 
     @Override
     public List<Favorite> getFavorites(Integer uid, boolean isOwner) {
         String key = "favorites:" + uid;   // uid用户的收藏夹列表
-        String string = redisUtil.getObjectString(key);
+        String string = (String) redisTemplate.opsForValue().get(key);
         List<Favorite> list = JSONArray.parseArray(string, Favorite.class);
         if (list != null) {
             for(int i=0;i<list.size();i++) {

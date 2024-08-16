@@ -1,5 +1,6 @@
 package com.bilimili.buaa13.service.impl.category;
 
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bilimili.buaa13.mapper.CategoryMapper;
 import com.bilimili.buaa13.entity.ResponseResult;
@@ -10,11 +11,13 @@ import com.bilimili.buaa13.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -29,6 +32,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Autowired
     @Qualifier("taskExecutor")
     private Executor taskExecutor;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 获取全部分区数据
@@ -41,7 +46,22 @@ public class CategoryServiceImpl implements CategoryService {
 
         // 尝试从redis中获取数据
         try {
-            sortedCategories = redisUtil.getAllList("categoryList", CategoryDTO.class);
+            List<Object> allList = redisTemplate.opsForList().range("categoryList", 0, -1);
+            // 使用流和异步处理
+            List<CompletableFuture<CategoryDTO>> futureList;
+            if (allList != null) {
+                futureList = allList.stream()
+                        .map(obj -> CompletableFuture.supplyAsync(() -> JSON.parseObject((String) obj, CategoryDTO.class)))
+                        .toList();
+                // 等待所有异步任务完成，并收集结果
+                sortedCategories = CompletableFuture.allOf(futureList.toArray(new CompletableFuture[0]))
+                        .thenApply(v -> futureList.stream()
+                                .map(CompletableFuture::join)
+                                .collect(Collectors.toList())
+                        ).join();
+            } else {
+                futureList = null;
+            }
             if (!sortedCategories.isEmpty()) {
                 responseResult.setData(sortedCategories);
                 return responseResult;
@@ -104,7 +124,16 @@ public class CategoryServiceImpl implements CategoryService {
         // 将分类添加到redis缓存中
         try {
             redisUtil.delValue("categoryList");
-            redisUtil.setAllList("categoryList", sortedCategories);
+            List<CompletableFuture<String>> futureList = sortedCategories.stream()
+                    .map(sortedCategory -> CompletableFuture.supplyAsync(() -> JSON.toJSONString(sortedCategory)))
+                    .toList();
+            // 等待所有异步任务完成，并获取结果
+            List<String> dataList = CompletableFuture.allOf(futureList.toArray(new CompletableFuture[0]))
+                    .thenApply(v -> futureList.stream()
+                            .map(CompletableFuture::join)
+                            .collect(Collectors.toList())
+                    ).get();
+            redisTemplate.opsForList().rightPushAll("categoryList", dataList);
         } catch (Exception e) {
             log.error("存储redis分类列表失败");
         }

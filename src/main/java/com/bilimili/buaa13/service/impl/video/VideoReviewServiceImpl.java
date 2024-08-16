@@ -8,6 +8,7 @@ import com.bilimili.buaa13.service.video.VideoReviewService;
 import com.bilimili.buaa13.service.video.VideoService;
 import com.bilimili.buaa13.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -25,6 +26,8 @@ public class VideoReviewServiceImpl implements VideoReviewService {
     private VideoMapper videoMapper;
     @Autowired
     private RedisUtil redisUtil;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 查询对应状态的视频数量
@@ -40,7 +43,7 @@ public class VideoReviewServiceImpl implements VideoReviewService {
             return responseResult;
         }
         //1注释Redis
-        Long total = redisUtil.scard("video_status:" + status);
+        Long total = redisTemplate.opsForSet().size("video_status:" + status);
         List<Video> videosByStatus = videoMapper.selectAllVideoByStatus(status);
         responseResult.setData(videosByStatus.size());
         return responseResult;

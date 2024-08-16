@@ -1,32 +1,25 @@
 package com.bilimili.buaa13.service.impl.video;
-import com.bilimili.buaa13.service.critique.CritiqueService;
-import org.springframework.stereotype.Service;
 
-
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bilimili.buaa13.entity.*;
-import com.bilimili.buaa13.im.IMServer;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.bilimili.buaa13.entity.Article;
+import com.bilimili.buaa13.entity.Critique;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.mapper.ArticleMapper;
 import com.bilimili.buaa13.mapper.CritiqueMapper;
-import com.bilimili.buaa13.utils.RedisUtil;
-
-import java.util.*;
-import java.util.stream.Stream;
-import java.util.stream.Collectors;
-import java.util.concurrent.Executor;
-
-
-import com.bilimili.buaa13.service.*;
-import io.netty.channel.Channel;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.bilimili.buaa13.service.article.ArticleStatusService;
+import com.bilimili.buaa13.service.message.MsgUnreadService;
+import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.video.VideoDenounceService;
+import com.bilimili.buaa13.utils.RedisUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.concurrent.Executor;
+@Service
 public class VideoDenounceImpl implements VideoDenounceService {
 
 
@@ -40,7 +33,7 @@ public class VideoDenounceImpl implements VideoDenounceService {
     private ArticleMapper articleMapper;
 
     @Autowired
-    private ArticleStatsService articleStatsService;
+    private ArticleStatusService articleStatusService;
 
     @Autowired
     private UserService userService;
