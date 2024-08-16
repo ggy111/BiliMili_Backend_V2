@@ -18,6 +18,8 @@ public interface CategoryService {
     Category getOne(Integer mainCategoryId,Integer subCategoryId);
 
 
+    Category getOne(String mainCategoryId, String subCategoryId);
+
     /**
      * 根据id查询对应分区信息
      * @param mcId 主分区ID

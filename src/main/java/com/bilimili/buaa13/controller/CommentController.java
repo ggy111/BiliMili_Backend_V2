@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 
 @RestController
-public class CritiqueController {
+public class CommentController {
     @Autowired
     private CritiqueService commentService;
     @Autowired

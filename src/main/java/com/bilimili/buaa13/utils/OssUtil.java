@@ -285,7 +285,7 @@ public class OssUtil {
             do {
                 ListObjectsRequest listObjectsRequest = new ListObjectsRequest(OSS_BUCKET).withPrefix(prefix).withMarker(nextMarker);
                 objectListing = ossClient.listObjects(listObjectsRequest);
-                if (objectListing.getObjectSummaries().size() > 0) {
+                if (objectListing.getObjectSummaries——().size() > 0) {
                     List<String> keys = new ArrayList<>();
                     for (OSSObjectSummary s : objectListing.getObjectSummaries()) {
 //                        System.out.println("key name: " + s.getKey());
