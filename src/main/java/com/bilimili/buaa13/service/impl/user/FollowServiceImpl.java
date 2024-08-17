@@ -9,7 +9,7 @@ import com.bilimili.buaa13.mapper.FollowMapper;
 import com.bilimili.buaa13.mapper.UserRecordStringMapper;
 import com.bilimili.buaa13.service.record.UserRecordService;
 import com.bilimili.buaa13.service.user.FollowService;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,7 +29,7 @@ public class FollowServiceImpl implements FollowService {
     @Autowired
     private FollowMapper followMapper;
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
     @Autowired
     @Qualifier("taskExecutor")
     private Executor taskExecutor;//同步或异步执行器
@@ -73,7 +73,7 @@ public class FollowServiceImpl implements FollowService {
         List<Integer> finalList = list;
         if(list!=null&& !list.isEmpty()){
             CompletableFuture.runAsync(() -> {
-                redisUtil.setExObjectValue(key, finalList);
+                redisTool.setExObjectValue(key, finalList);
             }, taskExecutor);
             return list;
         }
@@ -120,15 +120,15 @@ public class FollowServiceImpl implements FollowService {
         Follow newFollow = new Follow(uidFollow,uidFans,1);
         followMapper.insert(newFollow);
         String key = "follow:" + uidFollow;
-        redisUtil.storeZSet(key,uidFans);
+        redisTool.storeZSet(key,uidFans);
         String key2 = "fans:" + uidFans;
-        redisUtil.storeZSet(key2,uidFollow);
+        redisTool.storeZSet(key2,uidFollow);
         String key3 = "userRecord:" + uidFollow;
         UserRecord userRecord = null;
         Set<Object> userRecordSet = redisTemplate.opsForZSet().range(key3, 0, 0);
         if(userRecordSet!=null&& !userRecordSet.isEmpty()){
             userRecord = (UserRecord) userRecordSet.iterator().next();
-            redisUtil.deleteZSetMember(key3,userRecord);//注意这里
+            redisTool.deleteZSetMember(key3,userRecord);//注意这里
         }
         else{
             QueryWrapper<UserRecordString> queryWrapper = new QueryWrapper<>();
@@ -140,7 +140,7 @@ public class FollowServiceImpl implements FollowService {
         }
         if (userRecord != null) {
             userRecord.setFansNew(userRecord.getFansNew()+1);
-            redisUtil.storeZSet(key3,userRecord);
+            redisTool.storeZSet(key3,userRecord);
             UserRecordString userRecordString = userRecordService.saveUserRecordToString(userRecord);
             userRecordService.saveUserRecordStringToDatabase(userRecordString);
         }

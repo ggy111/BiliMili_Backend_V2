@@ -11,9 +11,9 @@ import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.entity.*;
 import com.bilimili.buaa13.service.video.VideoStatusService;
-import com.bilimili.buaa13.utils.ESUtil;
-import com.bilimili.buaa13.utils.OssUtil;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.ESTool;
+import com.bilimili.buaa13.tools.OssTool;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,7 +42,7 @@ class ApplicationTests {
     private RedisTemplate redisTemplate;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
     private VideoMapper videoMapper;
@@ -54,13 +54,13 @@ class ApplicationTests {
     private VideoStatusService videoStatusService;
 
     @Autowired
-    private OssUtil ossUtil;
+    private OssTool ossTool;
 
     @Autowired
     private ElasticsearchClient client;
 
     @Autowired
-    private ESUtil esUtil;
+    private ESTool esTool;
 
     @Test
     void contextLoads() throws SQLException {
@@ -80,17 +80,17 @@ class ApplicationTests {
 
     @Test
     void redis() {
-        List<RedisUtil.ZSetScore> list = redisUtil.reverseRangeWithScores("search_word", 0L, -1L);
+        List<RedisTool.ZSetScore> list = redisTool.reverseRangeWithScores("search_word", 0L, -1L);
         int count = list.size();
         double total = 0;
-        for (RedisUtil.ZSetScore o : list) {
+        for (RedisTool.ZSetScore o : list) {
             System.out.println(o.getMember() + " " + o.getScore());
             total += o.getScore();
         }
         BigDecimal bt = new BigDecimal(total);
         total = bt.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
         System.out.println("count " + count + " total " + total);
-        for (RedisUtil.ZSetScore o : list) {
+        for (RedisTool.ZSetScore o : list) {
             BigDecimal b = new BigDecimal((o.getScore() / total) * count);
             double score = b.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
             o.setScore(score);
@@ -100,7 +100,7 @@ class ApplicationTests {
 
     @Test
     void redisGetMembers() {
-        Set<Object> set = redisUtil.getSetMembers("video_status:0");
+        Set<Object> set = redisTool.getSetMembers("video_status:0");
         System.out.println(set);
     }
 
@@ -114,18 +114,18 @@ class ApplicationTests {
         FileInputStream fileInputStream = new FileInputStream(file);
         MultipartFile multipartFile = new MockMultipartFile(file.getName(), file.getName(),
                 "application/sql", fileInputStream);
-        String url = ossUtil.uploadImage(multipartFile, "cover");
+        String url = ossTool.uploadImage(multipartFile, "cover");
         System.out.println(url);
     }
 
     @Test
     void ossCountFiles() {
-        System.out.println(ossUtil.countFiles("img/cover/1696"));
+        System.out.println(ossTool.countFiles("img/cover/1696"));
     }
 
     @Test
     void ossdeleteFiles() {
-        ossUtil.deleteFiles("img/cover/1696");
+        ossTool.deleteFiles("img/cover/1696");
     }
 
     @Test
@@ -188,7 +188,7 @@ class ApplicationTests {
         User user = new User();
         user.setUid(13);
         user.setNickname("迷鹿");
-        esUtil.updateUser(user);
+        esTool.updateUser(user);
     }
 
     // 删除文档
@@ -201,13 +201,13 @@ class ApplicationTests {
     @Test
     void searchCount() throws IOException {
 
-        System.out.println(esUtil.getVideoCount("原神", true));
+        System.out.println(esTool.getVideoCount("原神", true));
     }
 
     // 模糊匹配，分页查询
     @Test
     void searchMatch() throws IOException {
-        List<Integer> list = esUtil.searchVideosByKeyword("原神", 1, 30, true);
+        List<Integer> list = esTool.searchVideosByKeyword("原神", 1, 30, true);
         for (Integer i : list) {
             System.out.print(i + " ");
         }

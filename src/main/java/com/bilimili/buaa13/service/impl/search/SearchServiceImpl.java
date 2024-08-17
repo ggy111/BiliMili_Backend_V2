@@ -6,8 +6,8 @@ import com.bilimili.buaa13.entity.HotSearch;
 import com.bilimili.buaa13.mapper.HotSearchMapper;
 import com.bilimili.buaa13.service.search.SearchService;
 import com.bilimili.buaa13.service.utils.EventListenerService;
-import com.bilimili.buaa13.utils.ESUtil;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.ESTool;
+import com.bilimili.buaa13.tools.RedisTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,10 +25,10 @@ import java.util.concurrent.Executor;
 public class SearchServiceImpl implements SearchService {
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
-    private ESUtil esUtil;
+    private ESTool esTool;
 
     @Autowired
     private HotSearchMapper hotSearchMapper;
@@ -60,7 +60,7 @@ public class SearchServiceImpl implements SearchService {
             } else {
                 // 否则添加成员到redis和ES
                 Boolean.TRUE.equals(redisTemplate.opsForZSet().add("search_word", formattedString, 1));
-                esUtil.addSearchWord(formattedString);
+                esTool.addSearchWord(formattedString);
             }
             QueryWrapper<HotSearch> hotSearchQueryWrapper = new QueryWrapper<>();
             hotSearchQueryWrapper.eq("content", formattedString);
@@ -72,7 +72,7 @@ public class SearchServiceImpl implements SearchService {
                 newHotSearch.setHot(1D);
                 newHotSearch.setType(1);//设为新词条
                 hotSearchMapper.insert(newHotSearch);
-                esUtil.addSearchWord(formattedString);
+                esTool.addSearchWord(formattedString);
             }
             else {
                 //更新热度+1
@@ -91,15 +91,15 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public List<String> getKeyWord(String keyword) {
-        return esUtil.getMatchingWord(keyword);
+        return esTool.getMatchingWord(keyword);
     }
 
     @Override
     public List<HotSearch> getHotSearch() {
         //1注释Redis
-        List<RedisUtil.ZSetScore> curr = redisUtil.reverseRangeWithScores("search_word", 0, 9);
+        List<RedisTool.ZSetScore> curr = redisTool.reverseRangeWithScores("search_word", 0, 9);
         List<HotSearch> list = new ArrayList<>();
-        for (RedisUtil.ZSetScore o : curr) {
+        for (RedisTool.ZSetScore o : curr) {
             HotSearch word = new HotSearch();
             word.setContent(o.getMember().toString());
             word.setHot(o.getScore());
@@ -122,10 +122,10 @@ public class SearchServiceImpl implements SearchService {
         List<Long> result = new ArrayList<>();
         try {
             // 获取视频数量
-            Long videoCount = esUtil.getVideoCount(keyword, true);
+            Long videoCount = esTool.getVideoCount(keyword, true);
             result.add(videoCount);
             // 获取用户数量
-            Long userCount = esUtil.getUserCount(keyword);
+            Long userCount = esTool.getUserCount(keyword);
             result.add(userCount);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -160,7 +160,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Nullable
     private Double findScoreByName(Object name) {
-        for (RedisUtil.ZSetScore zSetScore : EventListenerService.hotSearchWords) {
+        for (RedisTool.ZSetScore zSetScore : EventListenerService.hotSearchWords) {
             if (zSetScore.getMember().equals(name)) {
                 return zSetScore.getScore();
             }

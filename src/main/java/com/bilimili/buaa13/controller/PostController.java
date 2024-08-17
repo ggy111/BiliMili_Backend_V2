@@ -8,7 +8,7 @@ import com.bilimili.buaa13.entity.PostTree;
 import com.bilimili.buaa13.service.article.ArticleUploadService;
 import com.bilimili.buaa13.service.post.PostService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
-import com.bilimili.buaa13.utils.OssUtil;
+import com.bilimili.buaa13.tools.OssTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +25,7 @@ public class PostController {
     @Autowired
     private ArticleUploadService articleUploadService;
     @Autowired
-    private OssUtil ossUtil;
+    private OssTool ossTool;
 
 
     @Autowired

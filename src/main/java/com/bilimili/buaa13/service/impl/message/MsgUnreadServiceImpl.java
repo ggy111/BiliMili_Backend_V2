@@ -9,7 +9,7 @@ import com.bilimili.buaa13.im.IMServer;
 import com.bilimili.buaa13.mapper.ChatMapper;
 import com.bilimili.buaa13.mapper.MsgUnreadMapper;
 import com.bilimili.buaa13.service.message.MsgUnreadService;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
     private ChatMapper chatMapper;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
     @Qualifier("taskExecutor")
@@ -81,7 +81,7 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
                 UpdateWrapper<MsgUnread> updateWrapper = new UpdateWrapper<>();
                 updateWrapper.eq("uid", uid).setSql(column + " = " + column + " + 1");
                 msgUnreadMapper.update(null, updateWrapper);
-                redisUtil.deleteValue("msg_unread:" + uid);
+                redisTool.deleteValue("msg_unread:" + uid);
             },taskExecutor);
             addFuture.get();
         }catch (Exception e){
@@ -112,7 +112,7 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
         UpdateWrapper<MsgUnread> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("uid", uid).set(column, 0);
         msgUnreadMapper.update(null, updateWrapper);
-        redisUtil.deleteValue("msg_unread:" + uid);
+        redisTool.deleteValue("msg_unread:" + uid);
 
         // 通知用户的全部channel 更新该消息类型未读数为0
         Map<String, Object> map = new HashMap<>();
@@ -131,7 +131,7 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
      */
     @Override
     public void subUnreadWhisper(Integer uid, Integer count) {
-        redisUtil.deleteValue("msg_unread:" + uid);
+        redisTool.deleteValue("msg_unread:" + uid);
         String sql = "UPDATE msg_unread " +
                 "SET message = IF(message - ? < 0, 0, message - ?) " +
                 "WHERE uid = ?";
@@ -147,14 +147,14 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
     @Override
     public MsgUnread getUnreadByUid(Integer uid) {
         executorService = Executors.newFixedThreadPool(10);
-        MsgUnread msgUnread = redisUtil.getObject("msg_unread:" + uid, MsgUnread.class);
+        MsgUnread msgUnread = redisTool.getObject("msg_unread:" + uid, MsgUnread.class);
         if (msgUnread == null) {
             msgUnread = msgUnreadMapper.selectById(uid);
             if (msgUnread != null) {
                 MsgUnread finalMsgUnread = msgUnread;
                 try{
                     Future<?> updateMsgRedis = executorService.submit(()->{
-                        redisUtil.setExObjectValue("msg_unread:" + uid, finalMsgUnread);    // 异步更新到redis
+                        redisTool.setExObjectValue("msg_unread:" + uid, finalMsgUnread);    // 异步更新到redis
                     },taskExecutor);
                     updateMsgRedis.get();
                 }catch (InterruptedException ie){

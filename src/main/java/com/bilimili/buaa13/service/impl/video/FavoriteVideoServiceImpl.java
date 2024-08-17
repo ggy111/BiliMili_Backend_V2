@@ -7,7 +7,7 @@ import com.bilimili.buaa13.mapper.FavoriteVideoMapper;
 import com.bilimili.buaa13.entity.Favorite;
 import com.bilimili.buaa13.entity.FavoriteVideo;
 import com.bilimili.buaa13.service.video.FavoriteVideoService;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -32,7 +32,7 @@ public class FavoriteVideoServiceImpl implements FavoriteVideoService {
     private SqlSessionFactory sqlSessionFactory;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Override
     public Set<Integer> findFidsOfCollected(Integer vid, Set<Integer> fids) {
@@ -81,9 +81,9 @@ public class FavoriteVideoServiceImpl implements FavoriteVideoService {
         // 更新 Redis 中每个 ZSet
         for (Integer fid : fids) {
             String key = "favorite_video:" + fid;
-            redisUtil.storeZSet(key, vid);
+            redisTool.storeZSet(key, vid);
         }
-        redisUtil.deleteValue("favorites:" + uid);
+        redisTool.deleteValue("favorites:" + uid);
     }
 
     @Override
@@ -102,8 +102,8 @@ public class FavoriteVideoServiceImpl implements FavoriteVideoService {
         // 更新 Redis 中每个 ZSet
         for (Integer fid : fids) {
             String key = "favorite_video:" + fid;
-            redisUtil.deleteZSetMember(key, vid);
+            redisTool.deleteZSetMember(key, vid);
         }
-        redisUtil.deleteValue("favorites:" + uid);
+        redisTool.deleteValue("favorites:" + uid);
     }
 }

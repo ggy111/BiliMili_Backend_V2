@@ -5,8 +5,8 @@ import com.bilimili.buaa13.im.IMServer;
 import com.bilimili.buaa13.entity.Command;
 import com.bilimili.buaa13.entity.IMResponse;
 import com.bilimili.buaa13.entity.User;
-import com.bilimili.buaa13.utils.JwtUtil;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.JwtTool;
+import com.bilimili.buaa13.tools.RedisTool;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -29,14 +29,14 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
 
 
     private final Boolean commandLegal = true;
-    private static JwtUtil jwtUtil;
-    private static RedisUtil redisUtil;
+    private static JwtTool jwtTool;
+    private static RedisTool redisTool;
     private UUserService userService = new UUserService();
     private CChannelService channelService = new CChannelService();
     @Autowired
-    public void setDependencies(JwtUtil jwtUtilEntity, RedisUtil redisUtilEntity) {
-        TokenValidationHandler.redisUtil = redisUtilEntity;
-        TokenValidationHandler.jwtUtil = jwtUtilEntity;
+    public void setDependencies(JwtTool jwtToolEntity, RedisTool redisToolEntity) {
+        TokenValidationHandler.redisTool = redisToolEntity;
+        TokenValidationHandler.jwtTool = jwtToolEntity;
     }
 
     public TokenValidationHandler() {
@@ -48,10 +48,10 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
     //-------------------------------------------------------
     //修改于2024.08.09；方法重构
 
-    public TokenValidationHandler(UUserService userService, CChannelService channelService, RedisUtil redisUtil) {
+    public TokenValidationHandler(UUserService userService, CChannelService channelService, RedisTool redisTool) {
         this.userService = userService;
         this.channelService = channelService;
-        TokenValidationHandler.redisUtil = redisUtil;
+        TokenValidationHandler.redisTool = redisTool;
     }
 
     protected void channelRead1(ChannelHandlerContext ctx, TextWebSocketFrame tx) {
@@ -63,7 +63,7 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
         if (optionalUid.isPresent()) {
             Integer uid = optionalUid.get();
             channelService.bindUserToChannel(uid, ctx.channel());
-            redisUtil.addSetMember("login_member", uid);
+            redisTool.addSetMember("login_member", uid);
             ctx.pipeline().remove(this);
             tx.retain();
             ctx.fireChannelRead(tx);
@@ -100,7 +100,7 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
             } else {
                 IMServer.userChannel.get(uid).add(ctx.channel());
             }
-            redisUtil.addSetMember("login_member", uid);   // 将用户添加到在线用户集合
+            redisTool.addSetMember("login_member", uid);   // 将用户添加到在线用户集合
 //            System.out.println("该用户的全部连接状态：" + IMServer.userChannel.get(uid));
 //            System.out.println("当前在线人数：" + IMServer.userChannel.size());
             // 移除token验证处理器，以便以后使用无需判断
@@ -128,14 +128,14 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
         token = token.substring(7);
 
         // 解析token
-        boolean verifyToken = jwtUtil.verifyToken(token);
+        boolean verifyToken = jwtTool.verifyToken(token);
         if (!verifyToken) {
             log.error("当前token已过期");
             return null;
         }
-        String userId = JwtUtil.getSubjectFromToken(token);
-        String role = JwtUtil.getClaimFromToken(token, "role");
-        User user = redisUtil.getObject("security:" + role + ":" + userId, User.class);
+        String userId = JwtTool.getSubjectFromToken(token);
+        String role = JwtTool.getClaimFromToken(token, "role");
+        User user = redisTool.getObject("security:" + role + ":" + userId, User.class);
 
         if (user == null) {
             log.error("用户未登录");

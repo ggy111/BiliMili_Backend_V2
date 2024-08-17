@@ -1,4 +1,4 @@
-package com.bilimili.buaa13.utils;
+package com.bilimili.buaa13.tools;
 
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
@@ -16,9 +16,9 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
-public class JwtUtil {
+public class JwtTool {
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -34,7 +34,7 @@ public class JwtUtil {
      * @return 加密后的token密钥
      */
     private static SecretKey getTokenSecret() {
-        byte[] encodeKey = Base64.getDecoder().decode(JwtUtil.JWT_KEY);
+        byte[] encodeKey = Base64.getDecoder().decode(JwtTool.JWT_KEY);
         return new SecretKeySpec(encodeKey, 0, encodeKey.length, "HmacSHA256");
     }
 
@@ -50,7 +50,7 @@ public class JwtUtil {
         SecretKey secretKey = getTokenSecret();
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
-        long expMillis = nowMillis + JwtUtil.JWT_TTL;
+        long expMillis = nowMillis + JwtTool.JWT_TTL;
         Date expDate = new Date(expMillis);
 
         String token = Jwts.builder()
@@ -65,7 +65,7 @@ public class JwtUtil {
         try {
             //缓存token信息，管理员和用户之间不要冲突
             //使用 指定有效期 和 指定时间单位 存储简单数据类型
-            redisTemplate.opsForValue().set("token:" + role + ":" + uid, token, JwtUtil.JWT_TTL, TimeUnit.MILLISECONDS);
+            redisTemplate.opsForValue().set("token:" + role + ":" + uid, token, JwtTool.JWT_TTL, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             log.error("存储redis数据异常", e);
         }

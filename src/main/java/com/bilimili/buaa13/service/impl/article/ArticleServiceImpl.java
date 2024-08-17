@@ -15,8 +15,8 @@ import java.util.concurrent.CompletableFuture;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
-import com.bilimili.buaa13.utils.OssUtil;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.OssTool;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -37,10 +37,10 @@ public class ArticleServiceImpl implements ArticleService {
     private ArticleMapper articleMapper;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
-    private OssUtil ossUtil;
+    private OssTool ossTool;
 
     @Autowired
     @Qualifier("taskExecutor")
@@ -53,7 +53,7 @@ public class ArticleServiceImpl implements ArticleService {
     public Map<String, Object> getArticleWithDataById(Integer aid) {
         Map<String, Object> map = new HashMap<>();
         // 先查询 redis
-        Article article = redisUtil.getObject("article:" + aid, Article.class);
+        Article article = redisTool.getObject("article:" + aid, Article.class);
         if (article == null) {
             // redis 查不到再查数据库
             QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
@@ -62,7 +62,7 @@ public class ArticleServiceImpl implements ArticleService {
             if (article != null) {
                 Article article1 = article;
                 CompletableFuture.runAsync(() -> {
-                    redisUtil.setExObjectValue("article" + aid, article1);    // 异步更新到redis
+                    redisTool.setExObjectValue("article" + aid, article1);    // 异步更新到redis
                 }, taskExecutor);
             } else  {
                 return null;
@@ -94,7 +94,7 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public ResponseResult getArticlesByPage(Integer uid, Integer page, Integer quantity) {
         ResponseResult responseResult = new ResponseResult();
-        Set<Object> set = redisUtil.getSetMembers("article_uid:" + uid);
+        Set<Object> set = redisTool.getSetMembers("article_uid:" + uid);
         if(set == null || set.isEmpty()){
             QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("uid", uid);
@@ -184,10 +184,10 @@ public class ArticleServiceImpl implements ArticleService {
             int flag = articleMapper.update(null, updateWrapper);
             if (flag > 0) {
                 // 更新成功
-                redisUtil.deleteSetMember("article_status:" + lastStatus, aid);     // 从旧状态移除
-                redisUtil.addSetMember("article_status:1", aid);     // 加入新状态
-                redisUtil.storeZSet("user_article_upload:" + article.getUid(), article.getAid());
-                redisUtil.deleteValue("article:" + aid);     // 删除旧的专栏信息
+                redisTool.deleteSetMember("article_status:" + lastStatus, aid);     // 从旧状态移除
+                redisTool.addSetMember("article_status:1", aid);     // 加入新状态
+                redisTool.storeZSet("user_article_upload:" + article.getUid(), article.getAid());
+                redisTool.deleteValue("article:" + aid);     // 删除旧的专栏信息
                 return responseResult;
             } else {
                 // 更新失败，处理错误情况
@@ -215,15 +215,15 @@ public class ArticleServiceImpl implements ArticleService {
                 int flag = articleMapper.update(null, updateWrapper);
                 if (flag > 0) {
                     // 更新成功
-                    redisUtil.deleteSetMember("article_status:" + lastStatus, aid);     // 从旧状态移除
-                    redisUtil.deleteValue("article:" + aid);     // 删除旧的专栏信息
-                    redisUtil.deleteZSetMember("user_article_upload:" + article.getUid(), article.getVid());
+                    redisTool.deleteSetMember("article_status:" + lastStatus, aid);     // 从旧状态移除
+                    redisTool.deleteValue("article:" + aid);     // 删除旧的专栏信息
+                    redisTool.deleteZSetMember("user_article_upload:" + article.getUid(), article.getVid());
                     // 搞个异步线程去删除OSS的源文件
-                    CompletableFuture.runAsync(() -> ossUtil.deleteFiles(articleName), taskExecutor);
-                    CompletableFuture.runAsync(() -> ossUtil.deleteFiles(coverName), taskExecutor);
+                    CompletableFuture.runAsync(() -> ossTool.deleteFiles(articleName), taskExecutor);
+                    CompletableFuture.runAsync(() -> ossTool.deleteFiles(coverName), taskExecutor);
                     // 批量删除该专栏下的全部评论缓存
                     CompletableFuture.runAsync(() -> {
-                        Set<Object> set = redisUtil.reverseRange("comment_article:" + aid, 0, -1);
+                        Set<Object> set = redisTool.reverseRange("comment_article:" + aid, 0, -1);
                         List<String> list = new ArrayList<>();
                         set.forEach(id -> list.add("comment_reply:" + id));
                         list.add("comment_article:" + aid);

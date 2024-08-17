@@ -1,4 +1,4 @@
-package com.bilimili.buaa13.utils;
+package com.bilimili.buaa13.tools;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
-public class RedisUtil {
+public class RedisTool {
 
     @Autowired
     private RedisTemplate<String,Object> redisTemplate;

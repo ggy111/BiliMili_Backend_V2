@@ -1,4 +1,4 @@
-package com.bilimili.buaa13.utils;
+package com.bilimili.buaa13.tools;
 
 import java.security.MessageDigest;
 import java.net.URLDecoder;

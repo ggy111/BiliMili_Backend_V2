@@ -12,7 +12,7 @@ import com.bilimili.buaa13.service.comment.CommentService;
 import com.bilimili.buaa13.service.message.MsgUnreadService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.video.VideoStatusService;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 @Service
 public class CommentServiceImpl implements CommentService {
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
     private CommentMapper commentMapper;
@@ -167,15 +167,15 @@ public class CommentServiceImpl implements CommentService {
             //1注释Redis
             // 如果不是根级评论，则加入 redis 对应的 storeZSet 中
             if (!rootId.equals(0)) {
-                redisUtil.storeZSet("comment_reply:" + rootId, comment.getCid());
+                redisTool.storeZSet("comment_reply:" + rootId, comment.getCid());
             } else {
-                redisUtil.storeZSet("comment_video:"+ vid, comment.getCid());
+                redisTool.storeZSet("comment_video:"+ vid, comment.getCid());
             }
             // 表示被回复的用户收到的回复评论的 cid 有序集合
             // 如果不是回复自己
             if(!comment.getToUserId().equals(comment.getUid())) {
                 //1注释Redis
-                redisUtil.storeZSet("reply_zset:" + comment.getToUserId(), comment.getCid());
+                redisTool.storeZSet("reply_zset:" + comment.getToUserId(), comment.getCid());
                 msgUnreadService.addOneUnread(comment.getToUserId(), "reply");
 
                 // 通知未读消息
@@ -242,13 +242,13 @@ public class CommentServiceImpl implements CommentService {
              */
             if (comment.getRootId()==0) {
                 // 查询总共要减少多少评论数
-                int count = Math.toIntExact(redisUtil.getZSetNumber("comment_reply:" + comment.getCid()));
+                int count = Math.toIntExact(redisTool.getZSetNumber("comment_reply:" + comment.getCid()));
                 videoStatusService.updateVideoStatus(comment.getVid(), "comment", false, count + 1);
-                redisUtil.deleteZSetMember("comment_video:" + comment.getVid(), comment.getCid());
-                redisUtil.deleteValue("comment_reply:" + comment.getCid());
+                redisTool.deleteZSetMember("comment_video:" + comment.getVid(), comment.getCid());
+                redisTool.deleteValue("comment_reply:" + comment.getCid());
             } else {
                 videoStatusService.updateVideoStatus(comment.getVid(), "comment", false, 1);
-                redisUtil.deleteZSetMember("comment_reply:" + comment.getRootId(), comment.getCid());
+                redisTool.deleteZSetMember("comment_reply:" + comment.getRootId(), comment.getCid());
             }
 
             responseResult.setCode(200);
@@ -294,9 +294,9 @@ public class CommentServiceImpl implements CommentService {
         Set<Object> rootIdsSet;
         if (sortType == 1) {
             // 按热度排序就不能用时间分数查偏移量了，要全部查出来，后续在MySQL筛选
-            rootIdsSet = redisUtil.reverseRange("comment_video:" + vid, 0L, -1L);
+            rootIdsSet = redisTool.reverseRange("comment_video:" + vid, 0L, -1L);
         } else {
-            rootIdsSet = redisUtil.reverseRange("comment_video:" + vid, offset, offset + 9L);
+            rootIdsSet = redisTool.reverseRange("comment_video:" + vid, offset, offset + 9L);
         }
 
         if (rootIdsSet == null || rootIdsSet.isEmpty()) return Collections.emptyList();

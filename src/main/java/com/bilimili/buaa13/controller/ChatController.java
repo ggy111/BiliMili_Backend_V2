@@ -3,7 +3,7 @@ package com.bilimili.buaa13.controller;
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.message.ChatService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,7 +23,7 @@ public class ChatController {
     private CurrentUser currentUser;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     /**
      * 新建一个聊天，与其他用户首次聊天时调用
@@ -56,7 +56,7 @@ public class ChatController {
         Map<String, Object> map = new HashMap<>();
         map.put("list", chatService.getChatDataList(uid, offset));
         // 检查是否还有更多
-        if (offset + 10 < redisUtil.getZSetNumber("chat_zset:" + uid)) {
+        if (offset + 10 < redisTool.getZSetNumber("chat_zset:" + uid)) {
             map.put("more", true);
         } else {
             map.put("more", false);

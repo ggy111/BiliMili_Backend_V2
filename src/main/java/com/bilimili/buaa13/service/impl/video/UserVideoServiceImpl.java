@@ -11,7 +11,7 @@ import com.bilimili.buaa13.entity.Video;
 import com.bilimili.buaa13.service.message.MsgUnreadService;
 import com.bilimili.buaa13.service.video.UserVideoService;
 import com.bilimili.buaa13.service.video.VideoStatusService;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import io.netty.channel.Channel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -37,7 +37,7 @@ public class UserVideoServiceImpl implements UserVideoService {
     private VideoMapper videoMapper;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
     @Qualifier("taskExecutor")
@@ -68,7 +68,7 @@ public class UserVideoServiceImpl implements UserVideoService {
         }
         // 异步线程更新video表和redis
         CompletableFuture.runAsync(() -> {
-            redisUtil.storeZSet("user_video_history:" + uid, vid);   // 添加到/更新观看历史记录
+            redisTool.storeZSet("user_video_history:" + uid, vid);   // 添加到/更新观看历史记录
             videoStatusService.updateVideoStatus(vid, "play", true, 1);
         }, taskExecutor);
         return userVideo;
@@ -113,7 +113,7 @@ public class UserVideoServiceImpl implements UserVideoService {
                     videoStatusService.updateVideoStatus(vid, "good", true, 1);
                 }, taskExecutor);
             }
-            redisUtil.storeZSet(key, vid);   // 添加点赞记录
+            redisTool.storeZSet(key, vid);   // 添加点赞记录
             userVideoMapper.update(null, updateWrapper);
             // 通知up主视频被赞了
             CompletableFuture.runAsync(() -> {
@@ -121,7 +121,7 @@ public class UserVideoServiceImpl implements UserVideoService {
                 Video video = videoMapper.selectById(vid);
                 if(!Objects.equals(video.getUid(), uid)) {
                     // 更新最新被点赞的视频
-                    redisUtil.storeZSet("be_loved_zset:" + video.getUid(), vid);
+                    redisTool.storeZSet("be_loved_zset:" + video.getUid(), vid);
                     msgUnreadService.addOneUnread(video.getUid(), "up_vote");
                     // netty 通知未读消息
                     Map<String, Object> map = new HashMap<>();
@@ -146,7 +146,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             updateWrapper.eq("uid", uid).eq("vid", vid);
             updateWrapper.setSql("up_vote = 0");
             userVideoMapper.update(null, updateWrapper);
-            redisUtil.deleteZSetMember(key, vid);  // 移除点赞记录
+            redisTool.deleteZSetMember(key, vid);  // 移除点赞记录
             CompletableFuture.runAsync(() -> {
                 videoStatusService.updateVideoStatus(vid, "good", false, 1);
             }, taskExecutor);
@@ -165,7 +165,7 @@ public class UserVideoServiceImpl implements UserVideoService {
                 // 原本点了赞，要取消赞
                 userVideo.setLove(0);
                 updateWrapper.setSql("up_vote = 0");
-                redisUtil.deleteZSetMember(key, vid);  // 移除点赞记录
+                redisTool.deleteZSetMember(key, vid);  // 移除点赞记录
                 CompletableFuture.runAsync(() -> {
                     videoStatusService.updateGoodAndBad(vid, false);
                 }, taskExecutor);

@@ -1,4 +1,4 @@
-package com.bilimili.buaa13.utils;
+package com.bilimili.buaa13.tools;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class JsonUtil {
+public class JsonTool {
     @Autowired
     private static final ObjectMapper objectMapper = new ObjectMapper();
     public static String ObjectToJson(Object obj) throws JsonProcessingException {

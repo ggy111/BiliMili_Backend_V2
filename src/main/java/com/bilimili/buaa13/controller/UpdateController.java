@@ -5,7 +5,7 @@ import com.bilimili.buaa13.entity.CommentTree;
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.comment.CommentService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +16,7 @@ public class UpdateController {
     @Autowired
     private CurrentUser currentUser;
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     /**
      * 发表动态

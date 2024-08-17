@@ -1,4 +1,4 @@
-package com.bilimili.buaa13.utils;
+package com.bilimili.buaa13.tools;
 
 import com.aliyun.oss.ClientException;
 import com.aliyun.oss.OSS;
@@ -24,7 +24,7 @@ import java.util.UUID;
 
 @Slf4j
 @Component
-public class OssUtil {
+public class OssTool {
     @Value("${oss.bucket}")
     private String OSS_BUCKET;
 

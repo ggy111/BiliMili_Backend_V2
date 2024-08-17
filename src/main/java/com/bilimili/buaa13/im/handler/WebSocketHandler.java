@@ -5,7 +5,7 @@ import com.bilimili.buaa13.entity.Command;
 import com.bilimili.buaa13.entity.CommandType;
 import com.bilimili.buaa13.entity.IMResponse;
 import com.bilimili.buaa13.im.IMServer;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -25,11 +25,11 @@ import java.util.Set;
 @Component
 public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
 
-    private static RedisUtil redisUtil;
+    private static RedisTool redisTool;
     private static RedisTemplate<String, Object> redisTemplate;
     @Autowired
-    public void setDependencies(RedisUtil redisUtil, RedisTemplate<String, Object> redisTemplate) {
-        WebSocketHandler.redisUtil = redisUtil;
+    public void setDependencies(RedisTool redisTool, RedisTemplate<String, Object> redisTemplate) {
+        WebSocketHandler.redisTool = redisTool;
         WebSocketHandler.redisTemplate = redisTemplate;
     }
 
@@ -86,7 +86,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
                 if (channelKeys != null && !channelKeys.isEmpty()) {
                     redisTemplate.delete(channelKeys);
                 }
-                redisUtil.deleteSetMember("login_member", uid);   // 从在线用户集合中移除
+                redisTool.deleteSetMember("login_member", uid);   // 从在线用户集合中移除
             }
         }
         // 继续处理后续逻辑

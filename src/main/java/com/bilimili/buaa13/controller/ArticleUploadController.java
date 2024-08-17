@@ -9,7 +9,7 @@ import com.bilimili.buaa13.entity.Video;
 import com.bilimili.buaa13.entity.dto.ArticleUploadDTO;
 import com.bilimili.buaa13.service.article.ArticleUploadService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
-import com.bilimili.buaa13.utils.OssUtil;
+import com.bilimili.buaa13.tools.OssTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +25,7 @@ public class ArticleUploadController {
     @Autowired
     private ArticleUploadService articleUploadService;
     @Autowired
-    private OssUtil ossUtil;
+    private OssTool ossTool;
 
     @Autowired
     private VideoMapper videoMapper;
@@ -44,7 +44,7 @@ public class ArticleUploadController {
 
     ){
         try {
-            String url = ossUtil.uploadImage(image,"articleArtwork");
+            String url = ossTool.uploadImage(image,"articleArtwork");
             System.out.println(url);
             return new ResponseResult(200,"图片上传成功",url);
         } catch (Exception e) {
@@ -103,8 +103,8 @@ public class ArticleUploadController {
             }
 
             //return articleUploadService.addArticle(articleUploadDTO);
-            String url = ossUtil.uploadArticle(content);
-            String url2 = ossUtil.uploadImage(cover,"articleCover");
+            String url = ossTool.uploadArticle(content);
+            String url2 = ossTool.uploadImage(cover,"articleCover");
             Article article = new Article();
             article.setTitle(title);
             article.setVid(vid);

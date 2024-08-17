@@ -12,9 +12,9 @@ import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.VideoService;
 import com.bilimili.buaa13.service.video.VideoStatusService;
-import com.bilimili.buaa13.utils.ESUtil;
-import com.bilimili.buaa13.utils.OssUtil;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.ESTool;
+import com.bilimili.buaa13.tools.OssTool;
+import com.bilimili.buaa13.tools.RedisTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -50,13 +50,13 @@ public class VideoServiceImpl implements VideoService {
     private CurrentUser currentUser;
 
     @Autowired
-    private OssUtil ossUtil;
+    private OssTool ossTool;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
-    private ESUtil esUtil;
+    private ESTool esTool;
 
     @Autowired
     @Qualifier("taskExecutor")
@@ -167,7 +167,7 @@ public class VideoServiceImpl implements VideoService {
         //1注释Redis
         if (video != null) {
             CompletableFuture.runAsync(() -> {
-                redisUtil.setExObjectValue("video:" + vid, video);    // 异步更新到redis
+                redisTool.setExObjectValue("video:" + vid, video);    // 异步更新到redis
             }, taskExecutor);
         } else  {
             return null;
@@ -237,12 +237,12 @@ public class VideoServiceImpl implements VideoService {
             int flag = videoMapper.update(null, updateWrapper);
             if (flag > 0) {
                 // 更新成功
-                esUtil.updateVideo(video);  // 更新ES视频文档
+                esTool.updateVideo(video);  // 更新ES视频文档
                 //1注释Redis
-                redisUtil.deleteSetMember("video_status:" + lastStatus, vid);     // 从旧状态移除
-                redisUtil.addSetMember("video_status:1", vid);     // 加入新状态
-                redisUtil.storeZSet("user_video_upload:" + video.getUid(), video.getVid());
-                redisUtil.deleteValue("video:" + vid);     // 删除旧的视频信息
+                redisTool.deleteSetMember("video_status:" + lastStatus, vid);     // 从旧状态移除
+                redisTool.addSetMember("video_status:1", vid);     // 加入新状态
+                redisTool.storeZSet("user_video_upload:" + video.getUid(), video.getVid());
+                redisTool.deleteValue("video:" + vid);     // 删除旧的视频信息
                 if(status==2){
                     //添加不通过的原因
                     responseResult.setMessage("审核不通过");
@@ -267,23 +267,23 @@ public class VideoServiceImpl implements VideoService {
                 int flag = videoMapper.update(null, updateWrapper);
                 if (flag > 0) {
                     // 更新成功
-                    esUtil.deleteVideo(vid);
-                    redisUtil.deleteValue("barrage_bidSet:" + vid);   // 删除该视频的弹幕
+                    esTool.deleteVideo(vid);
+                    redisTool.deleteValue("barrage_bidSet:" + vid);   // 删除该视频的弹幕
                     //1注释redis
-                    redisUtil.deleteSetMember("video_status:" + lastStatus, vid);     // 从旧状态移除
-                    redisUtil.deleteValue("video:" + vid);     // 删除旧的视频信息
+                    redisTool.deleteSetMember("video_status:" + lastStatus, vid);     // 从旧状态移除
+                    redisTool.deleteValue("video:" + vid);     // 删除旧的视频信息
 
-                    redisUtil.deleteZSetMember("user_video_upload:" + video.getUid(), video.getVid());
+                    redisTool.deleteZSetMember("user_video_upload:" + video.getUid(), video.getVid());
                     // 搞个异步线程去删除OSS的源文件
                     //注释异步线程
-                    CompletableFuture.runAsync(() -> ossUtil.deleteFiles(videoName), taskExecutor);
-                    CompletableFuture.runAsync(() -> ossUtil.deleteFiles(coverName), taskExecutor);
-                    ossUtil.deleteFiles(videoName);
-                    ossUtil.deleteFiles(coverName);
+                    CompletableFuture.runAsync(() -> ossTool.deleteFiles(videoName), taskExecutor);
+                    CompletableFuture.runAsync(() -> ossTool.deleteFiles(coverName), taskExecutor);
+                    ossTool.deleteFiles(videoName);
+                    ossTool.deleteFiles(coverName);
                     // 批量删除该视频下的全部评论缓存
                     //1注释Redis
                     CompletableFuture.runAsync(() -> {
-                        Set<Object> set = redisUtil.reverseRange("comment_video:" + vid, 0, -1);
+                        Set<Object> set = redisTool.reverseRange("comment_video:" + vid, 0, -1);
                         List<String> list = new ArrayList<>();
                         set.forEach(cid -> list.add("comment_reply:" + cid));
                         list.add("comment_video:" + vid);

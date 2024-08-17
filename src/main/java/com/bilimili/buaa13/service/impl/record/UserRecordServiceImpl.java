@@ -7,7 +7,7 @@ import com.bilimili.buaa13.entity.UserRecordString;
 import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.mapper.UserRecordStringMapper;
 import com.bilimili.buaa13.service.record.UserRecordService;
-import com.bilimili.buaa13.utils.JsonUtil;
+import com.bilimili.buaa13.tools.JsonTool;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,13 +33,13 @@ public class UserRecordServiceImpl implements UserRecordService {
     @Override
     public UserRecordString saveUserRecordToString(UserRecord userRecord) throws JsonProcessingException {
         List<Integer> plays = userRecord.getPlay();
-        String playJson = JsonUtil.ObjectToJson(plays);
+        String playJson = JsonTool.ObjectToJson(plays);
         List<Integer> loves = userRecord.getLove();
-        String lovesJson = JsonUtil.ObjectToJson(loves);
+        String lovesJson = JsonTool.ObjectToJson(loves);
         List<Integer> collects = userRecord.getCollect();
-        String collectJson = JsonUtil.ObjectToJson(collects);
+        String collectJson = JsonTool.ObjectToJson(collects);
         List<Integer> fans = userRecord.getFans();
-        String fansJson = JsonUtil.ObjectToJson(fans);
+        String fansJson = JsonTool.ObjectToJson(fans);
         return new UserRecordString(
                 userRecord.getUid(),
                 playJson,
@@ -65,10 +65,10 @@ public class UserRecordServiceImpl implements UserRecordService {
      */
     @Override
     public UserRecord findUserRecordByString(UserRecordString userRecordString) throws JsonProcessingException {
-        List<Integer> plays = JsonUtil.JsonToObject(userRecordString.getPlayJson(),List.class);
-        List<Integer> loves = JsonUtil.JsonToObject(userRecordString.getLoveJson(),List.class);
-        List<Integer> collects = JsonUtil.JsonToObject(userRecordString.getCollectJson(),List.class);
-        List<Integer> fans = JsonUtil.JsonToObject(userRecordString.getFanJson(),List.class);
+        List<Integer> plays = JsonTool.JsonToObject(userRecordString.getPlayJson(),List.class);
+        List<Integer> loves = JsonTool.JsonToObject(userRecordString.getLoveJson(),List.class);
+        List<Integer> collects = JsonTool.JsonToObject(userRecordString.getCollectJson(),List.class);
+        List<Integer> fans = JsonTool.JsonToObject(userRecordString.getFanJson(),List.class);
         return new UserRecord(
                 userRecordString.getUid(),
                 plays,

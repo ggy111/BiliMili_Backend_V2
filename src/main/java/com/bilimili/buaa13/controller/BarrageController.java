@@ -4,7 +4,7 @@ import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Barrage;
 import com.bilimili.buaa13.service.barrage.BarrageService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +17,7 @@ public class BarrageController {
     private BarrageService barrageService;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
     private CurrentUser currentUser;
@@ -29,7 +29,7 @@ public class BarrageController {
      */
     @GetMapping("/danmu-list/{vid}")
     public ResponseResult getBarrageList(@PathVariable("vid") String vid) {
-        Set<Object> idset = redisUtil.getSetMembers("barrage_bidSet:" + vid);
+        Set<Object> idset = redisTool.getSetMembers("barrage_bidSet:" + vid);
         int vidInt = 0;
         for(int i=0;i<vid.length();++i){
             vidInt = vidInt*10 + vid.charAt(i)-'0';

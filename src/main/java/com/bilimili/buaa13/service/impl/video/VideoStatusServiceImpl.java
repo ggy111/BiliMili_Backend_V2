@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.bilimili.buaa13.entity.VideoStatus;
 import com.bilimili.buaa13.mapper.VideoStatusMapper;
 import com.bilimili.buaa13.service.video.VideoStatusService;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ public class VideoStatusServiceImpl implements VideoStatusService {
     @Autowired
     private VideoStatusMapper videoStatusMapper;
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
     @Autowired
     @Qualifier("taskExecutor")
     private Executor taskExecutor;
@@ -30,13 +30,13 @@ public class VideoStatusServiceImpl implements VideoStatusService {
     @Override
     public VideoStatus getStatusByVideoId(Integer vid) {
         //1注释Redis
-        VideoStatus videoStatus = redisUtil.getObject("videoStatus:" + vid, VideoStatus.class);
+        VideoStatus videoStatus = redisTool.getObject("videoStatus:" + vid, VideoStatus.class);
         if (videoStatus == null) {
             videoStatus = videoStatusMapper.selectById(vid);
             if (videoStatus != null) {
                 VideoStatus finalVideoStatus = videoStatus;
                 CompletableFuture.runAsync(() -> {
-                    redisUtil.setExObjectValue("videoStatus:" + vid, finalVideoStatus);    // 异步更新到redis
+                    redisTool.setExObjectValue("videoStatus:" + vid, finalVideoStatus);    // 异步更新到redis
                 }, taskExecutor);
             } else {
                 return null;
@@ -65,7 +65,7 @@ public class VideoStatusServiceImpl implements VideoStatusService {
         }
         videoStatusMapper.update(null, updateWrapper);
         //1注释Redis
-        redisUtil.deleteValue("videoStats:" + vid);
+        redisTool.deleteValue("videoStats:" + vid);
     }
 
     /**
@@ -87,6 +87,6 @@ public class VideoStatusServiceImpl implements VideoStatusService {
         }
         videoStatusMapper.update(null, updateWrapper);
         //1注释Redis
-        redisUtil.deleteValue("videoStats:" + vid);
+        redisTool.deleteValue("videoStats:" + vid);
     }
 }

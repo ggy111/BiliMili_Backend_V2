@@ -2,8 +2,8 @@ package com.bilimili.buaa13.config.filter;
 
 import com.bilimili.buaa13.entity.User;
 import com.bilimili.buaa13.service.impl.user.UserDetailsImpl;
-import com.bilimili.buaa13.utils.JwtUtil;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.JwtTool;
+import com.bilimili.buaa13.tools.RedisTool;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +24,10 @@ import java.io.IOException;
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtTool jwtTool;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     /**
      * token 认证过滤器，任何请求访问服务器都会先被这里拦截验证token合法性
@@ -50,7 +50,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         token = token.substring(7);
 
         // 解析token
-        boolean verifyToken = jwtUtil.verifyToken(token);
+        boolean verifyToken = jwtTool.verifyToken(token);
         if (!verifyToken) {
 //            log.error("当前token已过期");
             response.addHeader("message", "not login"); // 设置响应头信息，给前端判断用
@@ -58,11 +58,11 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 //            throw new AuthenticationException("当前token已过期");
             return;
         }
-        String userId = JwtUtil.getSubjectFromToken(token);
-        String role = JwtUtil.getClaimFromToken(token, "role");
+        String userId = JwtTool.getSubjectFromToken(token);
+        String role = JwtTool.getClaimFromToken(token, "role");
 
         // 从redis中获取用户信息
-        User user = redisUtil.getObject("security:" + role + ":" + userId, User.class);
+        User user = redisTool.getObject("security:" + role + ":" + userId, User.class);
 
         if (user == null) {
 //            log.error("用户未登录");

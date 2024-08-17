@@ -13,9 +13,9 @@ import com.bilimili.buaa13.service.record.UserRecordService;
 import com.bilimili.buaa13.service.user.UserAccountService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
-import com.bilimili.buaa13.utils.ESUtil;
-import com.bilimili.buaa13.utils.JwtUtil;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.ESTool;
+import com.bilimili.buaa13.tools.JwtTool;
+import com.bilimili.buaa13.tools.RedisTool;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -55,13 +55,13 @@ public class UserAccountServiceImpl implements UserAccountService {
     private FavoriteMapper favoriteMapper;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtTool jwtTool;
 
     @Autowired
-    private ESUtil esUtil;
+    private ESTool esTool;
 
     @Autowired
     private CurrentUser currentUser;
@@ -164,7 +164,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         );
         UserRecordString userRecordString = userRecordService.saveUserRecordToString(userRecord);
         userRecordService.saveUserRecordStringToDatabase(userRecordString);
-        esUtil.addUser(newUser);
+        esTool.addUser(newUser);
         responseResult.setMessage("注册成功！欢迎加入BiliMili");
         return responseResult;
     }
@@ -239,7 +239,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         // 更新redis中的数据
         //1注释Redis
-        redisUtil.setExObjectValue("user:" + user.getUid(), user);  // 默认存活1小时
+        redisTool.setExObjectValue("user:" + user.getUid(), user);  // 默认存活1小时
 
         // 检查账号状态，1 表示封禁中，不允许登录
         if (user.getState() == 1) {
@@ -249,7 +249,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
 
         //将uid封装成一个jwttoken，同时token也会被缓存到redis中
-        String token = jwtUtil.createToken(user.getUid().toString(), "user");
+        String token = jwtTool.createToken(user.getUid().toString(), "user");
 
         //1注释Redis
         try {
@@ -296,7 +296,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         //1注释Redis
         // 顺便更新redis中的数据
-        redisUtil.setExObjectValue("user:" + user.getUid(), user);  // 默认存活1小时
+        redisTool.setExObjectValue("user:" + user.getUid(), user);  // 默认存活1小时
         // 检查账号状态，1 表示封禁中，不允许登录
         if (user.getState() == 1) {
             responseResult.setCode(403);
@@ -305,7 +305,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         //1注释Redis
         //将uid封装成一个jwttoken，同时token也会被缓存到redis中
-        String token = jwtUtil.createToken(user.getUid().toString(), "admin");
+        String token = jwtTool.createToken(user.getUid().toString(), "admin");
         try {
             String jsonString = JSON.toJSONString(user);
             redisTemplate.opsForValue().set(
@@ -353,13 +353,13 @@ public class UserAccountServiceImpl implements UserAccountService {
         User user = userMapper.selectById(LoginUserId);
         //1注释Redis
         // 从redis中获取最新数据
-        user = redisUtil.getObject("user:" + LoginUserId, User.class);
+        user = redisTool.getObject("user:" + LoginUserId, User.class);
         // 如果redis中没有user数据，就从mysql中获取并更新到redis
         if (user == null) {
             user = userMapper.selectById(LoginUserId);
             User finalUser = user;
             CompletableFuture.runAsync(() -> {
-                redisUtil.setExObjectValue("user:" + finalUser.getUid(), finalUser);  // 默认存活1小时
+                redisTool.setExObjectValue("user:" + finalUser.getUid(), finalUser);  // 默认存活1小时
             }, taskExecutor);
         }
 
@@ -398,9 +398,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         Integer LoginUserId = currentUser.getUserId();
         // 清除redis中该用户的登录认证数据
         //1注释Redis
-        redisUtil.deleteValue("token:user:" + LoginUserId);
-        redisUtil.deleteValue("security:user:" + LoginUserId);
-        redisUtil.deleteSetMember("login_member", LoginUserId);   // 从在线用户集合中移除
+        redisTool.deleteValue("token:user:" + LoginUserId);
+        redisTool.deleteValue("security:user:" + LoginUserId);
+        redisTool.deleteSetMember("login_member", LoginUserId);   // 从在线用户集合中移除
         // 清除全部在聊天窗口的状态,删除指定前缀的所有key
         // 获取以指定前缀开头的所有键
         Set<String> userKeys = redisTemplate.keys("message:" + LoginUserId + ":" + "*");
@@ -433,8 +433,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         Integer LoginUserId = currentUser.getUserId();
         // 清除redis中该用户的登录认证数据
         //1注释Redis
-        redisUtil.deleteValue("token:admin:" + LoginUserId);
-        redisUtil.deleteValue("security:admin:" + LoginUserId);
+        redisTool.deleteValue("token:admin:" + LoginUserId);
+        redisTool.deleteValue("security:admin:" + LoginUserId);
     }
 
     @Override

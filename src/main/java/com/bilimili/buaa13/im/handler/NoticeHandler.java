@@ -12,7 +12,7 @@ import com.bilimili.buaa13.entity.User;
 import com.bilimili.buaa13.service.message.ChatService;
 import com.bilimili.buaa13.service.user.FollowService;
 import com.bilimili.buaa13.service.user.UserService;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -36,7 +36,7 @@ public class NoticeHandler {
     private static ChatService chatService;
     private static ChatDetailedMapper chatDetailedMapper;
     private static UserService userService;
-    private static RedisUtil redisUtil;
+    private static RedisTool redisTool;
     public static Executor taskExecutor;
     private static UserService userServiceService;
 
@@ -51,7 +51,7 @@ public class NoticeHandler {
     private void setDependencies(ChatService chatService,
                                  ChatDetailedMapper chatDetailedMapper,
                                  UserService userService,
-                                 RedisUtil redisUtil,
+                                 RedisTool redisTool,
                                  ChatMapper chatMapper,
                                  FollowService followService,
                                  ArticleMapper articleMapper,
@@ -70,7 +70,7 @@ public class NoticeHandler {
         NoticeHandler.chatService = chatService;
         NoticeHandler.chatDetailedMapper = chatDetailedMapper;
         NoticeHandler.userService = userService;
-        NoticeHandler.redisUtil = redisUtil;
+        NoticeHandler.redisTool = redisTool;
         NoticeHandler.taskExecutor = taskExecutor;
         NoticeHandler.followService = followService;
         NoticeHandler.chatMapper = chatMapper;
@@ -116,8 +116,8 @@ public class NoticeHandler {
                 System.out.println("接收到聊天消息：" + chatDetailed);
                 chatDetailedMapper.insert(chatDetailed);
                 // "chat_detailed_zset:对方:自己"
-                redisUtil.storeZSet("chat_detailed_zset:" + user_id + ":" + chatDetailed.getAcceptId(), chatDetailed.getId());
-                redisUtil.storeZSet("chat _detailed_zset:" + chatDetailed.getAcceptId() + ":" + user_id, chatDetailed.getId());
+                redisTool.storeZSet("chat_detailed_zset:" + user_id + ":" + chatDetailed.getAcceptId(), chatDetailed.getId());
+                redisTool.storeZSet("chat _detailed_zset:" + chatDetailed.getAcceptId() + ":" + user_id, chatDetailed.getId());
                 boolean online = chatService.updateOneChat(user_id, chatDetailed.getAcceptId());
 
                 // 转发到发送者和接收者的全部channel
@@ -208,8 +208,8 @@ public class NoticeHandler {
                 System.out.println("接收到聊天消息：" + chatDetailed);
                 chatDetailedMapper.insert(chatDetailed);
                 // "chat_detailed_zset:对方:自己"
-                redisUtil.storeZSet("chat_detailed_zset:" + user_id + ":" + chatDetailed.getAcceptId(), chatDetailed.getId());
-                redisUtil.storeZSet("chat_detailed_zset:" + chatDetailed.getAcceptId() + ":" + user_id, chatDetailed.getId());
+                redisTool.storeZSet("chat_detailed_zset:" + user_id + ":" + chatDetailed.getAcceptId(), chatDetailed.getId());
+                redisTool.storeZSet("chat_detailed_zset:" + chatDetailed.getAcceptId() + ":" + user_id, chatDetailed.getId());
                 boolean online = chatService.updateOneChat(user_id, chatDetailed.getAcceptId());
 
                 // 转发到发送者和接收者的全部channel
@@ -317,8 +317,8 @@ public class NoticeHandler {
         String userChatKey = "chat_detailed_zset:" + upId + ":" + chatDetailed.getAcceptId();
         String fanChatKey = "chat_detailed_zset:" + chatDetailed.getAcceptId() + ":" + upId;
 
-        redisUtil.storeZSet(userChatKey, chatDetailed.getId());
-        redisUtil.storeZSet(fanChatKey, chatDetailed.getId());
+        redisTool.storeZSet(userChatKey, chatDetailed.getId());
+        redisTool.storeZSet(fanChatKey, chatDetailed.getId());
     }
 
     private static Map<String, Object> prepareChatResponse(ChatDetailed chatDetailed, Integer upId, Integer fanId) {

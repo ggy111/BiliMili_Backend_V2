@@ -2,7 +2,7 @@ package com.bilimili.buaa13.service.impl.comment;
 
 import com.bilimili.buaa13.service.comment.CommentService;
 import com.bilimili.buaa13.service.comment.UserCommentService;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -16,7 +16,7 @@ import java.util.concurrent.Executor;
 @Slf4j
 public class UserCommentServiceImpl implements UserCommentService {
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
     private CommentService commentService;
@@ -32,8 +32,8 @@ public class UserCommentServiceImpl implements UserCommentService {
     @Override
     public Map<String, Object> getUserUpVoteAndDownVote(Integer uid) {
         Map<String, Object> map = new HashMap<>();
-        Set<Object> userLike = redisUtil.getSetMembers("upVote:" + uid);
-        Set<Object> userDislike = redisUtil.getSetMembers("downVote:" + uid);
+        Set<Object> userLike = redisTool.getSetMembers("upVote:" + uid);
+        Set<Object> userDislike = redisTool.getSetMembers("downVote:" + uid);
         map.put("userLike", userLike==null?new ArrayList<>():userLike);
         map.put("userDislike", userDislike==null?new ArrayList<>():userDislike);
         //1注释Redis
@@ -60,8 +60,8 @@ public class UserCommentServiceImpl implements UserCommentService {
      */
     @Override
     public void setUserUpVoteOrDownVote(Integer uid, Integer cid, boolean isLike, boolean isCancel) {
-        Boolean likeExist = redisUtil.isSetMember("upVote:" + uid, cid);
-        Boolean dislikeExist = redisUtil.isSetMember("downVote:" + uid, cid);
+        Boolean likeExist = redisTool.isSetMember("upVote:" + uid, cid);
+        Boolean dislikeExist = redisTool.isSetMember("downVote:" + uid, cid);
         //理论上，likeExist和disLikeExist不能同时存在,所以相加不等于2
         if(boolChangeBinary(likeExist) + boolChangeBinary(dislikeExist) == 1 ){
             //以likeExist为基准，要么like要么dislike
@@ -73,7 +73,7 @@ public class UserCommentServiceImpl implements UserCommentService {
             else if(judgeNumber == 7){
                 //已经点赞，现在需要取消
                 // 移除点赞记录
-                redisUtil.deleteSetMember("upVote:" + uid, cid);
+                redisTool.deleteSetMember("upVote:" + uid, cid);
                 // 更新评论点赞数
                 commentService.updateComment(cid, "up_vote", false, 1);
             }
@@ -84,9 +84,9 @@ public class UserCommentServiceImpl implements UserCommentService {
             else if(judgeNumber == 4){
                 //以前点了赞，现在需要点踩
                 // 更新用户点踩记录
-                redisUtil.addSetMember("downVote:" + uid, cid);
+                redisTool.addSetMember("downVote:" + uid, cid);
                 // 原本点了赞，要取消赞
-                redisUtil.deleteSetMember("upVote:" + uid, cid);
+                redisTool.deleteSetMember("upVote:" + uid, cid);
                 // 更新评论点赞点踩的记录
                 commentService.updateLikeAndDisLike(cid, false);
             }
@@ -97,17 +97,17 @@ public class UserCommentServiceImpl implements UserCommentService {
             else if(judgeNumber == 2){
                 //原本点了踩，现在需要点赞
                 // 添加点赞记录
-                redisUtil.addSetMember("upVote:" + uid, cid);
+                redisTool.addSetMember("upVote:" + uid, cid);
                 // 原本点了踩，就要取消踩
                 // 1.redis中删除点踩记录
-                redisUtil.deleteSetMember("downVote:" + uid, cid);
+                redisTool.deleteSetMember("downVote:" + uid, cid);
                 // 2. 数据库中更改评论的点赞点踩数
                 commentService.updateLikeAndDisLike(cid, true);
             }
             else if(judgeNumber == 1){
                 //原本点了踩，现在需要取消踩
                 // 取消用户点踩记录
-                redisUtil.deleteSetMember("downVote:" + uid, cid);
+                redisTool.deleteSetMember("downVote:" + uid, cid);
                 // 更新评论点踩数量
                 commentService.updateComment(cid, "down_vote", false, 1);
             }
@@ -129,7 +129,7 @@ public class UserCommentServiceImpl implements UserCommentService {
                     //选中点踩
                     // 原本没有点赞，直接点踩，更新评论点踩数量
                     // 添加点踩记录
-                    redisUtil.addSetMember("downVote:" + uid, cid);
+                    redisTool.addSetMember("downVote:" + uid, cid);
                     commentService.updateComment(cid, "down_vote", true, 1);
                     break;
                 case 1:
@@ -138,7 +138,7 @@ public class UserCommentServiceImpl implements UserCommentService {
                 case 2:
                     //点赞,但是原本没有点赞
                     // 添加点赞记录
-                    redisUtil.addSetMember("upVote:" + uid, cid);
+                    redisTool.addSetMember("upVote:" + uid, cid);
                     // 原来没点踩，只需要点赞, 这里只更新评论的点赞数
                     commentService.updateComment(cid, "up_vote", true, 1);
                     break;

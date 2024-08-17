@@ -8,9 +8,9 @@ import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.mapper.VideoStatusMapper;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.VideoUploadService;
-import com.bilimili.buaa13.utils.ESUtil;
-import com.bilimili.buaa13.utils.OssUtil;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.ESTool;
+import com.bilimili.buaa13.tools.OssTool;
+import com.bilimili.buaa13.tools.RedisTool;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,16 +52,16 @@ public class VideoUploadServiceImpl implements VideoUploadService {
     private CurrentUser currentUser;
 
     @Autowired
-    private OssUtil ossUtil;
+    private OssTool ossTool;
 
     @Autowired
-    private ESUtil esUtil;
+    private ESTool esTool;
     @Qualifier("taskExecutor")
     @Autowired
     private Executor taskExecutor;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     /**
      * 获取视频下一个还没上传的分片序号
@@ -167,7 +167,7 @@ public class VideoUploadServiceImpl implements VideoUploadService {
         }
 
         // 保存封面到OSS，返回URL
-        String coverUrl = ossUtil.uploadImage(cover, "cover");
+        String coverUrl = ossTool.uploadImage(cover, "cover");
 
         // 将投稿信息封装
         videoUploadInfoDTO.setCoverUrl(coverUrl);
@@ -189,7 +189,7 @@ public class VideoUploadServiceImpl implements VideoUploadService {
     @Override
     @Transactional
     public void mergeFragments(VideoUploadInfoDTO videoUploadInfoDTO) throws IOException {
-        String url = ossUtil.appendUploadVideo(videoUploadInfoDTO.getHash()); // 视频最终的URL
+        String url = ossTool.appendUploadVideo(videoUploadInfoDTO.getHash()); // 视频最终的URL
         if (url == null) {
             log.warn("OSS URL 为空，合并操作终止");
             return;
@@ -199,11 +199,11 @@ public class VideoUploadServiceImpl implements VideoUploadService {
         videoMapper.insert(video);
         VideoStatus videoStatus = new VideoStatus(video.getVid(),0,0,0,0,0,0,0,0);
         videoStatusMapper.insert(videoStatus);
-        esUtil.addVideo(video);
+        esTool.addVideo(video);
         //1注释Redis
-        CompletableFuture.runAsync(() -> redisUtil.setExObjectValue("video:" + video.getVid(), video), taskExecutor);
-        CompletableFuture.runAsync(() -> redisUtil.addSetMember("video_status:0", video.getVid()), taskExecutor);
-        CompletableFuture.runAsync(() -> redisUtil.setExObjectValue("videoStatus:" + video.getVid(), videoStatus), taskExecutor);
+        CompletableFuture.runAsync(() -> redisTool.setExObjectValue("video:" + video.getVid(), video), taskExecutor);
+        CompletableFuture.runAsync(() -> redisTool.addSetMember("video_status:0", video.getVid()), taskExecutor);
+        CompletableFuture.runAsync(() -> redisTool.setExObjectValue("videoStatus:" + video.getVid(), videoStatus), taskExecutor);
     }
 
     /**

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.bilimili.buaa13.entity.ChatDetailed;
 import com.bilimili.buaa13.mapper.ChatDetailedMapper;
 import com.bilimili.buaa13.service.message.ChatDetailedService;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
     @Autowired
     private ChatDetailedMapper chatDetailedMapper;
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     /**
      * 获取当前聊天的10条消息
@@ -35,12 +35,12 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
         Map<String, Object> map = new HashMap<>();
         //1注释Redis
         String key = "chat_detailed_zset:" + post_id + ":" + accept_id;
-        if (offset + 10 < redisUtil.getZSetNumber(key)) {
+        if (offset + 10 < redisTool.getZSetNumber(key)) {
             map.put("more", true);
         } else {
             map.put("more", false);
         }
-        Set<Object> set = redisUtil.reverseRange(key, offset, offset + 9);
+        Set<Object> set = redisTool.reverseRange(key, offset, offset + 9);
         // 没有数据则返回空列表
         if (set == null || set.isEmpty()) {
             map.put("list", Collections.emptyList());
@@ -91,7 +91,7 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
                 chatDetailedMapper.update(null, updateWrapper);
                 //1注释Redis
                 String key = "chat_detailed_zset:" + chatDetailed.getAcceptId() + ":" + uid;
-                redisUtil.deleteZSetMember(key, id);
+                redisTool.deleteZSetMember(key, id);
                 return true;
             } else if (chatDetailed.getAcceptId().equals(uid)) {
                 // 如果自己是接收方
@@ -99,7 +99,7 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
                 chatDetailedMapper.update(null, updateWrapper);
                 //1注释Redis
                 String key = "chat_detailed_zset:" + chatDetailed.getPostId() + ":" + uid;
-                redisUtil.deleteZSetMember(key, id);
+                redisTool.deleteZSetMember(key, id);
                 return true;
             } else return false;
         } catch (Exception e) {

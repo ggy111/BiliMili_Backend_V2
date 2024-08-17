@@ -1,4 +1,4 @@
-package com.bilimili.buaa13.utils;
+package com.bilimili.buaa13.tools;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
@@ -20,7 +20,7 @@ import java.util.List;
 
 @Component
 @Slf4j
-public class ESUtil {
+public class ESTool {
     @Autowired
     private ElasticsearchClient client;
 

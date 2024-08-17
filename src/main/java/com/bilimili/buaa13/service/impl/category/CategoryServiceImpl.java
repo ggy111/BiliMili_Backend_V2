@@ -7,7 +7,7 @@ import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.dto.CategoryDTO;
 import com.bilimili.buaa13.entity.Category;
 import com.bilimili.buaa13.service.category.CategoryService;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,7 +27,7 @@ public class CategoryServiceImpl implements CategoryService {
     private CategoryMapper categoryMapper;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
     @Qualifier("taskExecutor")
@@ -123,7 +123,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
         // 将分类添加到redis缓存中
         try {
-            redisUtil.deleteValue("categoryList");
+            redisTool.deleteValue("categoryList");
             List<CompletableFuture<String>> futureList = sortedCategories.stream()
                     .map(sortedCategory -> CompletableFuture.supplyAsync(() -> JSON.toJSONString(sortedCategory)))
                     .toList();
@@ -151,7 +151,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public ResponseResult getOne(Integer mainCategoryId, Integer subCategoryId) {
         String redisKey = String.format("category:%s:%s", mainCategoryId.toString(), subCategoryId.toString());
-        Optional<Category> cachedCategory = Optional.ofNullable(redisUtil.getObject(redisKey, Category.class));
+        Optional<Category> cachedCategory = Optional.ofNullable(redisTool.getObject(redisKey, Category.class));
         ResponseResult responseResult = new ResponseResult();
         // 如果在Redis中找到数据，直接返回
         if (cachedCategory.isPresent()) {
@@ -164,7 +164,7 @@ public class CategoryServiceImpl implements CategoryService {
             return responseResult;
         }
         // 使用异步操作将数据存储到Redis中
-        taskExecutor.execute(() -> redisUtil.setExObjectValue(redisKey, category));
+        taskExecutor.execute(() -> redisTool.setExObjectValue(redisKey, category));
         return responseResult;
     }
 
@@ -183,7 +183,7 @@ public class CategoryServiceImpl implements CategoryService {
         String redisKey = String.format("category:%s:%s", mainCategoryId, subCategoryId);
 
         // 使用Optional避免NullPointerException
-        Optional<Category> cachedCategory = Optional.ofNullable(redisUtil.getObject(redisKey, Category.class));
+        Optional<Category> cachedCategory = Optional.ofNullable(redisTool.getObject(redisKey, Category.class));
 
         // 如果在Redis中找到数据，直接返回
         if (cachedCategory.isPresent()) {
@@ -199,7 +199,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         // 使用异步操作将数据存储到Redis中
-        taskExecutor.execute(() -> redisUtil.setExObjectValue(redisKey, category));
+        taskExecutor.execute(() -> redisTool.setExObjectValue(redisKey, category));
 
         return category;
     }
@@ -213,7 +213,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Category getCategoryById(String mcId, String scId) {
         // 从redis中获取最新数据
-        Category category = redisUtil.getObject("category:" + mcId + ":" + scId, Category.class);
+        Category category = redisTool.getObject("category:" + mcId + ":" + scId, Category.class);
         // 如果redis中没有数据，就从mysql中获取并更新到redis
         if (category == null) {
             QueryWrapper<Category> queryWrapper = new QueryWrapper<>();
@@ -225,7 +225,7 @@ public class CategoryServiceImpl implements CategoryService {
 
             Category finalCategory = category;
             CompletableFuture.runAsync(() -> {
-                redisUtil.setExObjectValue("category:" + mcId + ":" + scId, finalCategory);  // 默认存活1小时
+                redisTool.setExObjectValue("category:" + mcId + ":" + scId, finalCategory);  // 默认存活1小时
             }, taskExecutor);
         }
         return category;

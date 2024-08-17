@@ -11,7 +11,7 @@ import com.bilimili.buaa13.service.article.ArticleStatusService;
 import com.bilimili.buaa13.service.message.MsgUnreadService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.video.VideoDenounceService;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ public class VideoDenounceImpl implements VideoDenounceService {
 
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
     private CritiqueMapper critiqueMapper;

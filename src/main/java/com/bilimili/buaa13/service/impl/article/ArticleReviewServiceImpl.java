@@ -7,7 +7,7 @@ import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.article.ArticleReviewService;
 import com.bilimili.buaa13.service.article.ArticleService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,7 @@ public class ArticleReviewServiceImpl implements ArticleReviewService {
     @Autowired
     private ArticleMapper articleMapper;
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
     /**
      * 查询对应状态的专栏数量
      *
@@ -61,7 +61,7 @@ public class ArticleReviewServiceImpl implements ArticleReviewService {
         }
         // 从 redis 获取待审核的专栏id集合，为了提升效率就不遍历数据库了，前提得保证 Redis 没崩，数据一致性采用定时同步或者中间件来保证
         //1注释Redis
-        Set<Object> set = redisUtil.getSetMembers("article_status:" + status);
+        Set<Object> set = redisTool.getSetMembers("article_status:" + status);
         if(set == null || set.isEmpty()){
             QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("status", status);

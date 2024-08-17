@@ -6,8 +6,8 @@ import com.bilimili.buaa13.mapper.BarrageMapper;
 import com.bilimili.buaa13.entity.Barrage;
 import com.bilimili.buaa13.entity.User;
 import com.bilimili.buaa13.service.video.VideoStatusService;
-import com.bilimili.buaa13.utils.JwtUtil;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.JwtTool;
+import com.bilimili.buaa13.tools.RedisTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,15 +29,15 @@ import java.util.concurrent.Executor;
 public class BarrageWebSocketServer {
 
     // 由于每个连接都不是共享一个WebSocketServer，所以要静态注入
-    private static JwtUtil jwtUtil;
-    private static RedisUtil redisUtil;
+    private static JwtTool jwtTool;
+    private static RedisTool redisTool;
     private static BarrageMapper barrageMapper;
     private static VideoStatusService videoStatusService;
 
     @Autowired
-    public void setDependencies(JwtUtil jwtUtil, RedisUtil redisUtil, BarrageMapper barrageMapper, VideoStatusService videoStatusService) {
-        BarrageWebSocketServer.jwtUtil = jwtUtil;
-        BarrageWebSocketServer.redisUtil = redisUtil;
+    public void setDependencies(JwtTool jwtTool, RedisTool redisTool, BarrageMapper barrageMapper, VideoStatusService videoStatusService) {
+        BarrageWebSocketServer.jwtTool = jwtTool;
+        BarrageWebSocketServer.redisTool = redisTool;
         BarrageWebSocketServer.barrageMapper = barrageMapper;
         BarrageWebSocketServer.videoStatusService = videoStatusService;
     }
@@ -78,15 +78,15 @@ public class BarrageWebSocketServer {
             JSONObject jsonMessage = JSON.parseObject(message);
             // token鉴权
             String token = jsonMessage.getString("token");
-            boolean verifyTokenMessage = jwtUtil.verifyToken(token.substring(7));
+            boolean verifyTokenMessage = jwtTool.verifyToken(token.substring(7));
             if (!StringUtils.hasText(token) || !token.startsWith("Bearer ") || !verifyTokenMessage) {
                 session.getBasicRemote().sendText("登录已过期");
                 return;
             }
             token = token.substring(7);
-            String userId = JwtUtil.getSubjectFromToken(token);
-            String role = JwtUtil.getClaimFromToken(token, "role");
-            User user = redisUtil.getObject("security:" + role + ":" + userId, User.class);
+            String userId = JwtTool.getSubjectFromToken(token);
+            String role = JwtTool.getClaimFromToken(token, "role");
+            User user = redisTool.getObject("security:" + role + ":" + userId, User.class);
             if (user == null) {
                 session.getBasicRemote().sendText("登录已过期");
                 return;
@@ -115,7 +115,7 @@ public class BarrageWebSocketServer {
             );
 
             CompletableFuture<Void> addRedisMemberFuture = CompletableFuture.runAsync(() ->
-                    redisUtil.addSetMember("barrage_bidSet:" + vid, barrage.getBid()),taskExecutor
+                    redisTool.addSetMember("barrage_bidSet:" + vid, barrage.getBid()),taskExecutor
             );
 
             // 等待所有异步任务完成

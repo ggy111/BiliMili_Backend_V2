@@ -4,7 +4,7 @@ import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.search.SearchService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.video.VideoService;
-import com.bilimili.buaa13.utils.ESUtil;
+import com.bilimili.buaa13.tools.ESTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +22,7 @@ public class SearchController {
     private SearchService searchService;
 
     @Autowired
-    private ESUtil esUtil;
+    private ESTool esTool;
 
     @Autowired
     private VideoService videoService;
@@ -94,7 +94,7 @@ public class SearchController {
     public ResponseResult getMatchingVideo(@RequestParam("keyword") String keyword, @RequestParam("page") Integer page) throws UnsupportedEncodingException {
         keyword = URLDecoder.decode(keyword, "UTF-8");  // 解码经过url传输的字符串
         ResponseResult responseResult = new ResponseResult();
-        List<Integer> vids = esUtil.searchVideosByKeyword(keyword, page, 30, true);
+        List<Integer> vids = esTool.searchVideosByKeyword(keyword, page, 30, true);
         responseResult.setData(videoService.getVideosWithDataByVideoIdList(vids));
         return responseResult;
     }
@@ -103,7 +103,7 @@ public class SearchController {
     public ResponseResult getMatchingUser(@RequestParam("keyword") String keyword, @RequestParam("page") Integer page) throws UnsupportedEncodingException {
         keyword = URLDecoder.decode(keyword, "UTF-8");  // 解码经过url传输的字符串
         ResponseResult responseResult = new ResponseResult();
-        List<Integer> uids = esUtil.searchUsersByKeyword(keyword, page, 30);
+        List<Integer> uids = esTool.searchUsersByKeyword(keyword, page, 30);
         responseResult.setData(userService.getUserByUIdList(uids));
         return responseResult;
     }

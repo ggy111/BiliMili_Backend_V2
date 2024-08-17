@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.bilimili.buaa13.entity.ArticleStatus;
 import com.bilimili.buaa13.mapper.ArticleStatusMapper;
 import com.bilimili.buaa13.service.article.ArticleStatusService;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ public class ArticleStatusServiceImpl implements ArticleStatusService {
     @Autowired
     private ArticleStatusMapper articleStatusMapper;
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
     @Autowired
     @Qualifier("taskExecutor")
     private Executor taskExecutor;
@@ -31,13 +31,13 @@ public class ArticleStatusServiceImpl implements ArticleStatusService {
     @Override
     public ArticleStatus getStatusByArticleId(Integer aid) {
         //1注释Redis
-        ArticleStatus articleStatus = redisUtil.getObject("articleStatus:" + aid, ArticleStatus.class);
+        ArticleStatus articleStatus = redisTool.getObject("articleStatus:" + aid, ArticleStatus.class);
         if (articleStatus == null) {
             articleStatus = articleStatusMapper.selectById(aid);
             if (articleStatus != null) {
                 ArticleStatus finalArticleStatus = articleStatus;
                 CompletableFuture.runAsync(() -> {
-                    redisUtil.setExObjectValue("articleStatus:" + aid, finalArticleStatus);    // 异步更新到redis
+                    redisTool.setExObjectValue("articleStatus:" + aid, finalArticleStatus);    // 异步更新到redis
                 }, taskExecutor);
             } else {
                 return null;
@@ -67,7 +67,7 @@ public class ArticleStatusServiceImpl implements ArticleStatusService {
         }
         articleStatusMapper.update(null, updateWrapper);
         //1注释Redis
-        redisUtil.deleteValue("articleStats:" + aid);
+        redisTool.deleteValue("articleStats:" + aid);
     }
 
     /**
@@ -90,6 +90,6 @@ public class ArticleStatusServiceImpl implements ArticleStatusService {
         }
         articleStatusMapper.update(null, updateWrapper);
         //1注释Redis
-        redisUtil.deleteValue("articleStats:" + aid);
+        redisTool.deleteValue("articleStats:" + aid);
     }
 }

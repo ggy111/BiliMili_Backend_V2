@@ -4,7 +4,7 @@ import com.bilimili.buaa13.entity.CritiqueTree;
 import com.bilimili.buaa13.service.critique.CritiqueService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.HashMap;
 
@@ -24,7 +24,7 @@ public class CritiqueController {
     @Autowired
     private CurrentUser currentUser;
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     /**
      * 获取评论树列表，每次查十条
@@ -38,7 +38,7 @@ public class CritiqueController {
                                               @RequestParam("offset") Long offset,
                                               @RequestParam("sortType") Integer sortType) {
         ResponseResult responseResult = new ResponseResult();
-        long count = redisUtil.getZSetNumber("comment_video:" + aid);
+        long count = redisTool.getZSetNumber("comment_video:" + aid);
         Map<String, Object> map = new HashMap<>();
         if (offset >= count) {
             // 表示前端已经获取到全部根评论了，没必要继续

@@ -4,7 +4,7 @@ import com.bilimili.buaa13.entity.CommentTree;
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.comment.CommentService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +22,7 @@ public class CommentController {
     @Autowired
     private CurrentUser currentUser;
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     /**
      * 获取评论树列表，每次查十条
@@ -36,7 +36,7 @@ public class CommentController {
                                               @RequestParam("offset") Long offset,
                                               @RequestParam("sortType") Integer sortType) {
         ResponseResult responseResult = new ResponseResult();
-        long count = redisUtil.getZSetNumber("comment_video:" + vid);
+        long count = redisTool.getZSetNumber("comment_video:" + vid);
         Map<String, Object> map = new HashMap<>();
         if (offset >= count) {
             // 表示前端已经获取到全部根评论了，没必要继续

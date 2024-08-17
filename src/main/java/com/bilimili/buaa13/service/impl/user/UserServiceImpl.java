@@ -12,9 +12,9 @@ import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.service.user.UserAccountService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.video.VideoStatusService;
-import com.bilimili.buaa13.utils.ESUtil;
-import com.bilimili.buaa13.utils.OssUtil;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.ESTool;
+import com.bilimili.buaa13.tools.OssTool;
+import com.bilimili.buaa13.tools.RedisTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -42,13 +42,13 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private FollowMapper followMapper;
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
-    private ESUtil esUtil;
+    private ESTool esTool;
 
     @Autowired
-    private OssUtil ossUtil;
+    private OssTool ossTool;
 
     @Value("${oss.bucketUrl}")
     private String OSS_BUCKET_URL;
@@ -79,7 +79,7 @@ public class UserServiceImpl implements UserService {
         //获取用户对应的视频列表
         //"user_video_upload:" + user.getUid()是完整的键值，可以取出内容。
         //1注释Redis
-        Set<Object> set = redisUtil.reverseRange("user_video_upload:" + user.getUid(), 0L, -1L);
+        Set<Object> set = redisTool.reverseRange("user_video_upload:" + user.getUid(), 0L, -1L);
         if (set == null || set.isEmpty()) {
             userDTO.setVideoCount(0);
             userDTO.setLoveCount(0);
@@ -155,7 +155,7 @@ public class UserServiceImpl implements UserService {
                     user.getState(),
                     0,0,0,0,0
             );
-            Set<Object> set = redisUtil.reverseRange("user_video_upload:" + user.getUid(), 0L, -1L);
+            Set<Object> set = redisTool.reverseRange("user_video_upload:" + user.getUid(), 0L, -1L);
 
             if (set == null || set.isEmpty()) {
                 userDTOList.add(userDTO);
@@ -225,9 +225,9 @@ public class UserServiceImpl implements UserService {
         User new_user = new User();
         new_user.setUid(uid);
         new_user.setNickname(nickname);
-        esUtil.updateUser(new_user);
+        esTool.updateUser(new_user);
         //1注释Redis
-        redisUtil.deleteValue("user:" + uid);
+        redisTool.deleteValue("user:" + uid);
         return responseResult;
     }
 
@@ -235,7 +235,7 @@ public class UserServiceImpl implements UserService {
     public ResponseResult updateUserHeadPortrait(Integer uid, MultipartFile file) throws IOException {
         ResponseResult responseResult = new ResponseResult();
         // 保存封面到OSS，返回URL
-        String headPortrait_url = ossUtil.uploadImage(file, "headPortrait");
+        String headPortrait_url = ossTool.uploadImage(file, "headPortrait");
         // 查旧的头像地址
         User user = userMapper.selectById(uid);
         // 先更新数据库
@@ -244,11 +244,11 @@ public class UserServiceImpl implements UserService {
         userMapper.update(null, updateWrapper);
         CompletableFuture.runAsync(() -> {
             //1注释Redis
-            redisUtil.deleteValue("user:" + uid);  // 删除redis缓存
+            redisTool.deleteValue("user:" + uid);  // 删除redis缓存
             // 如果就头像不是初始头像就去删除OSS的源文件
             if (user.getHeadPortrait().startsWith(OSS_BUCKET_URL)) {
                 String filename = user.getHeadPortrait().substring(OSS_BUCKET_URL.length());
-                ossUtil.deleteFiles(filename);
+                ossTool.deleteFiles(filename);
             }
         }, taskExecutor);
         responseResult.setData(headPortrait_url);
