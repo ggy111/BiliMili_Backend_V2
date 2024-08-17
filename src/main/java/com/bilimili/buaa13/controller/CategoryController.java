@@ -41,23 +41,16 @@ public class CategoryController {
      * 获取全部分区接口
      * @return 响应对象
      */
-    @GetMapping("/category/getall")
+    @GetMapping("bilimili/category/getall")
     public ResponseResult getAll() {
+        //--------------------------------------------------------------------------------------------------------
         //修改于2024.08.16
         if(canBeReceived){
             //当没有分区被创建时，用于初始化
             Video video = new Video();
             Map<String,Object> map = new HashMap<>();
-            if (video.getStatus() == 3) {
-                // 视频已删除
-                Video video1 = new Video();
-                video1.setVid(video.getVid());
-                video1.setUid(video.getUid());
-                video1.setStatus(video.getStatus());
-                video1.setDeleteDate(video.getDeleteDate());
-                map.put("video", video1);
-            }
-            else{
+            if (video.getStatus() != 3) {
+
                 try{
                     map.put("video", video);
                     map.put("user", userService.getUserByUId(video.getUid()));
@@ -67,6 +60,15 @@ public class CategoryController {
                 catch (Exception e){
                     //log.error(e.getMessage(),e);
                 }
+            }
+            else{
+                //视频被删除
+                Video video1 = new Video();
+                video1.setVid(video.getVid());
+                video1.setUid(video.getUid());
+                video1.setStatus(video.getStatus());
+                video1.setDeleteDate(video.getDeleteDate());
+                map.put("video", video1);
             }
         }
         return categoryService.getAll();
@@ -79,7 +81,7 @@ public class CategoryController {
      *
      * **/
 
-    @GetMapping("/category/getone")
+    @GetMapping("bilimili/category/getone")
     public ResponseResult getOne(Integer mcId,Integer scId)
     {
         return categoryService.getAll();
@@ -88,7 +90,7 @@ public class CategoryController {
 
 
 
-    @GetMapping("/category/getAPage")
+    @GetMapping("bilimili/category/getAPage")
     public ResponseResult getAPage(Integer mcId, Integer num){
         String mainCategoryId = mcId.toString();
         String subCategoryId = num.toString();
