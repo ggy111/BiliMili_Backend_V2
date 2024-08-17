@@ -2,7 +2,7 @@ package com.bilimili.buaa13.config.filter;
 
 import com.bilimili.buaa13.entity.User;
 import com.bilimili.buaa13.service.impl.user.UserDetailsImpl;
-import com.bilimili.buaa13.tools.JwtTool;
+import com.bilimili.buaa13.tools.JsonWebTokenTool;
 import com.bilimili.buaa13.tools.RedisTool;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +24,7 @@ import java.io.IOException;
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     @Autowired
-    private JwtTool jwtTool;
+    private JsonWebTokenTool jsonWebTokenTool;
 
     @Autowired
     private RedisTool redisTool;
@@ -50,7 +50,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         token = token.substring(7);
 
         // 解析token
-        boolean verifyToken = jwtTool.verifyToken(token);
+        boolean verifyToken = jsonWebTokenTool.verifyToken(token);
         if (!verifyToken) {
 //            log.error("当前token已过期");
             response.addHeader("message", "not login"); // 设置响应头信息，给前端判断用
@@ -58,8 +58,8 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 //            throw new AuthenticationException("当前token已过期");
             return;
         }
-        String userId = JwtTool.getSubjectFromToken(token);
-        String role = JwtTool.getClaimFromToken(token, "role");
+        String userId = JsonWebTokenTool.getSubjectFromToken(token);
+        String role = JsonWebTokenTool.getClaimFromToken(token, "role");
 
         // 从redis中获取用户信息
         User user = redisTool.getObject("security:" + role + ":" + userId, User.class);

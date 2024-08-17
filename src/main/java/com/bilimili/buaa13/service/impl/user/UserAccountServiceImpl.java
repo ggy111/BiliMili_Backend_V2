@@ -14,7 +14,7 @@ import com.bilimili.buaa13.service.user.UserAccountService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.tools.ESTool;
-import com.bilimili.buaa13.tools.JwtTool;
+import com.bilimili.buaa13.tools.JsonWebTokenTool;
 import com.bilimili.buaa13.tools.RedisTool;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +58,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     private RedisTool redisTool;
 
     @Autowired
-    private JwtTool jwtTool;
+    private JsonWebTokenTool jsonWebTokenTool;
 
     @Autowired
     private ESTool esTool;
@@ -249,7 +249,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
 
         //将uid封装成一个jwttoken，同时token也会被缓存到redis中
-        String token = jwtTool.createToken(user.getUid().toString(), "user");
+        String token = jsonWebTokenTool.createToken(user.getUid().toString(), "user");
 
         //1注释Redis
         try {
@@ -305,7 +305,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         //1注释Redis
         //将uid封装成一个jwttoken，同时token也会被缓存到redis中
-        String token = jwtTool.createToken(user.getUid().toString(), "admin");
+        String token = jsonWebTokenTool.createToken(user.getUid().toString(), "admin");
         try {
             String jsonString = JSON.toJSONString(user);
             redisTemplate.opsForValue().set(

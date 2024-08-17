@@ -79,11 +79,11 @@ public class CategoryServiceImpl implements CategoryService {
         Map<String, CategoryDTO> categoryDTOMap = new HashMap<>();
 
         for (Category category : list) {
-            String mcId = category.getMcId();
-            String scId = category.getScId();
-            String mcName = category.getMcName();
-            String scName = category.getScName();
-            String descr = category.getDescr();
+            String mcId = category.getMainClassId();
+            String scId = category.getSubClassId();
+            String mcName = category.getMainClassName();
+            String scName = category.getSubClassName();
+            String description = category.getDescription();
             List<String> rcmTag = new ArrayList<>();
             if (category.getRcmTag() != null) {
                 String[] strings = category.getRcmTag().split("\n");    // 将每个标签切出来组成列表封装
@@ -104,7 +104,7 @@ public class CategoryServiceImpl implements CategoryService {
             scMap.put("mcId", mcId);
             scMap.put("scId", scId);
             scMap.put("scName", scName);
-            scMap.put("descr", descr);
+            scMap.put("descr", description);
             scMap.put("rcmTag", rcmTag);
             categoryDTOMap.get(mcId).getScList().add(scMap);
 

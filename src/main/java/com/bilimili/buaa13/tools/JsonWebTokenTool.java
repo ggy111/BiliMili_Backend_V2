@@ -1,6 +1,9 @@
 package com.bilimili.buaa13.tools;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
@@ -16,15 +20,13 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
-public class JwtTool {
-    @Autowired
-    private RedisTool redisTool;
+public class JsonWebTokenTool {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
     // 有效期2天，记得修改 UserAccountServiceImpl 的 login 中redis的时间，注意单位，这里是毫秒
-    private static final long JWT_TTL = 1000L * 60 * 60 * 24 * 2;
-    private static final String JWT_KEY = "bEn2xiAnG0mU2BILIMILI0YOu5HzH0hE1CwJ1GOnG1tOnG6kAifAwAnchEnG";
+    private static final String JsonWebToken_KEY = "bEn2xiAnG0mU2BILIMILI0YOu5HzH0hE1CwJ1GOnG1tOnG6kAifAwAnchEnG";
+    private static final long JsonWebToken_Validity = 1000L * 60 * 60 * 24 * 2;
     private static String getUUID() {
         return UUID.randomUUID().toString().replaceAll("-", "");
     }
@@ -34,7 +36,7 @@ public class JwtTool {
      * @return 加密后的token密钥
      */
     private static SecretKey getTokenSecret() {
-        byte[] encodeKey = Base64.getDecoder().decode(JwtTool.JWT_KEY);
+        byte[] encodeKey = Base64.getDecoder().decode(JsonWebTokenTool.JsonWebToken_KEY);
         return new SecretKeySpec(encodeKey, 0, encodeKey.length, "HmacSHA256");
     }
 
@@ -50,7 +52,7 @@ public class JwtTool {
         SecretKey secretKey = getTokenSecret();
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
-        long expMillis = nowMillis + JwtTool.JWT_TTL;
+        long expMillis = nowMillis + JsonWebTokenTool.JsonWebToken_Validity;
         Date expDate = new Date(expMillis);
 
         String token = Jwts.builder()
@@ -65,7 +67,7 @@ public class JwtTool {
         try {
             //缓存token信息，管理员和用户之间不要冲突
             //使用 指定有效期 和 指定时间单位 存储简单数据类型
-            redisTemplate.opsForValue().set("token:" + role + ":" + uid, token, JwtTool.JWT_TTL, TimeUnit.MILLISECONDS);
+            redisTemplate.opsForValue().set("token:" + role + ":" + uid, token, JsonWebTokenTool.JsonWebToken_Validity, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             log.error("存储redis数据异常", e);
         }
@@ -158,5 +160,13 @@ public class JwtTool {
             log.error("获取不到缓存的token", e);
         }
         return StringUtils.equals(token, cacheToken);
+    }
+
+    public static void main(String[] args) {
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] keyBytes = new byte[64]; // 256-bit key
+        secureRandom.nextBytes(keyBytes);
+        String jwtKey = Base64.getEncoder().encodeToString(keyBytes);
+        System.out.println("Generated JWT Key: " + jwtKey);
     }
 }

@@ -5,7 +5,7 @@ import com.bilimili.buaa13.im.IMServer;
 import com.bilimili.buaa13.entity.Command;
 import com.bilimili.buaa13.entity.IMResponse;
 import com.bilimili.buaa13.entity.User;
-import com.bilimili.buaa13.tools.JwtTool;
+import com.bilimili.buaa13.tools.JsonWebTokenTool;
 import com.bilimili.buaa13.tools.RedisTool;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -29,14 +29,14 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
 
 
     private final Boolean commandLegal = true;
-    private static JwtTool jwtTool;
+    private static JsonWebTokenTool jsonWebTokenTool;
     private static RedisTool redisTool;
     private UUserService userService = new UUserService();
     private CChannelService channelService = new CChannelService();
     @Autowired
-    public void setDependencies(JwtTool jwtToolEntity, RedisTool redisToolEntity) {
+    public void setDependencies(JsonWebTokenTool jsonWebTokenToolEntity, RedisTool redisToolEntity) {
         TokenValidationHandler.redisTool = redisToolEntity;
-        TokenValidationHandler.jwtTool = jwtToolEntity;
+        TokenValidationHandler.jsonWebTokenTool = jsonWebTokenToolEntity;
     }
 
     public TokenValidationHandler() {
@@ -128,13 +128,13 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
         token = token.substring(7);
 
         // 解析token
-        boolean verifyToken = jwtTool.verifyToken(token);
+        boolean verifyToken = jsonWebTokenTool.verifyToken(token);
         if (!verifyToken) {
             log.error("当前token已过期");
             return null;
         }
-        String userId = JwtTool.getSubjectFromToken(token);
-        String role = JwtTool.getClaimFromToken(token, "role");
+        String userId = JsonWebTokenTool.getSubjectFromToken(token);
+        String role = JsonWebTokenTool.getClaimFromToken(token, "role");
         User user = redisTool.getObject("security:" + role + ":" + userId, User.class);
 
         if (user == null) {

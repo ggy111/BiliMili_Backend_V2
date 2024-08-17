@@ -6,7 +6,7 @@ import com.bilimili.buaa13.mapper.BarrageMapper;
 import com.bilimili.buaa13.entity.Barrage;
 import com.bilimili.buaa13.entity.User;
 import com.bilimili.buaa13.service.video.VideoStatusService;
-import com.bilimili.buaa13.tools.JwtTool;
+import com.bilimili.buaa13.tools.JsonWebTokenTool;
 import com.bilimili.buaa13.tools.RedisTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,14 +29,14 @@ import java.util.concurrent.Executor;
 public class BarrageWebSocketServer {
 
     // 由于每个连接都不是共享一个WebSocketServer，所以要静态注入
-    private static JwtTool jwtTool;
+    private static JsonWebTokenTool jsonWebTokenTool;
     private static RedisTool redisTool;
     private static BarrageMapper barrageMapper;
     private static VideoStatusService videoStatusService;
 
     @Autowired
-    public void setDependencies(JwtTool jwtTool, RedisTool redisTool, BarrageMapper barrageMapper, VideoStatusService videoStatusService) {
-        BarrageWebSocketServer.jwtTool = jwtTool;
+    public void setDependencies(JsonWebTokenTool jsonWebTokenTool, RedisTool redisTool, BarrageMapper barrageMapper, VideoStatusService videoStatusService) {
+        BarrageWebSocketServer.jsonWebTokenTool = jsonWebTokenTool;
         BarrageWebSocketServer.redisTool = redisTool;
         BarrageWebSocketServer.barrageMapper = barrageMapper;
         BarrageWebSocketServer.videoStatusService = videoStatusService;
@@ -78,14 +78,14 @@ public class BarrageWebSocketServer {
             JSONObject jsonMessage = JSON.parseObject(message);
             // token鉴权
             String token = jsonMessage.getString("token");
-            boolean verifyTokenMessage = jwtTool.verifyToken(token.substring(7));
+            boolean verifyTokenMessage = jsonWebTokenTool.verifyToken(token.substring(7));
             if (!StringUtils.hasText(token) || !token.startsWith("Bearer ") || !verifyTokenMessage) {
                 session.getBasicRemote().sendText("登录已过期");
                 return;
             }
             token = token.substring(7);
-            String userId = JwtTool.getSubjectFromToken(token);
-            String role = JwtTool.getClaimFromToken(token, "role");
+            String userId = JsonWebTokenTool.getSubjectFromToken(token);
+            String role = JsonWebTokenTool.getClaimFromToken(token, "role");
             User user = redisTool.getObject("security:" + role + ":" + userId, User.class);
             if (user == null) {
                 session.getBasicRemote().sendText("登录已过期");
