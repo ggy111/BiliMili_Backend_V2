@@ -97,7 +97,7 @@ public class ArticleController {
      * @param status 要修改的状态，1通过 2不通过 3删除
      * @return 无data返回 仅返回响应
      */
-    @PostMapping("/article/change/status")
+    @PostMapping("bilimili/article/change/status")
     public ResponseResult updateStatus(@RequestParam("aid") Integer aid,
                                        @RequestParam("status") Integer status) {
         try {
@@ -157,7 +157,7 @@ public class ArticleController {
      *
      *
      * */
-    @GetMapping("/article/get")
+    @GetMapping("bilimili/article/get")
 
     public ResponseResult getArticleById(@RequestParam("aid") Integer aid
                                               ) {
@@ -190,7 +190,7 @@ public class ArticleController {
      *
      *
      * */
-    @GetMapping("/column/markdown")
+    @GetMapping("bilimili/column/markdown")
     public ResponseResult getArticleContentByVid(@RequestParam("aid") Integer aid) {
         ResponseResult responseResult = new ResponseResult();
         Article article = null;
@@ -243,7 +243,7 @@ public class ArticleController {
      * @return  文件
      * */
 
-    @GetMapping("/column/favoriteVideo")
+    @GetMapping("bilimili/column/favoriteVideo")
     public ResponseResult favoriteRelatedVideo(@RequestParam("aid") Integer aid,
                                                @RequestParam("uid") Integer uid
     ) {
@@ -312,7 +312,7 @@ public class ArticleController {
      * @param quantity  每页的数量
      * @return
      */
-    @GetMapping("/article/user-works")
+    @GetMapping("bilimili/article/user-works")
     public ResponseResult getArticlesByUid(@RequestParam("uid") Integer uid,
                                            @RequestParam(value = "page", defaultValue = "1") Integer page,
                                            @RequestParam(value = "quantity", defaultValue = "10") Integer quantity) {

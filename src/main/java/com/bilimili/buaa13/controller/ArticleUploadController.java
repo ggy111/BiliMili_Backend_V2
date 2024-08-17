@@ -37,7 +37,7 @@ public class ArticleUploadController {
 
 
 
-    @PostMapping("/image/add")
+    @PostMapping("bilimili/image/add")
     @Transactional
     public ResponseResult addImage(
             @RequestParam("image") MultipartFile image
@@ -62,7 +62,7 @@ public class ArticleUploadController {
      * @param content  文章内容的markdown文件
      * @return  响应对象
      */
-    @PostMapping("/article/add/all")
+    @PostMapping("bilimili/article/add/all")
     public ResponseResult addAllArticle(
             @RequestParam("cover") MultipartFile cover,
             //@RequestParam("cover") MultipartFile cover,
