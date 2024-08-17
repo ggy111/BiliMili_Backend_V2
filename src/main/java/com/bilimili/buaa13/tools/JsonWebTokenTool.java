@@ -18,6 +18,8 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static javax.crypto.Cipher.SECRET_KEY;
+
 @Component
 @Slf4j
 public class JsonWebTokenTool {
@@ -25,7 +27,7 @@ public class JsonWebTokenTool {
     private RedisTemplate<String, Object> redisTemplate;
 
     // 有效期2天，记得修改 UserAccountServiceImpl 的 login 中redis的时间，注意单位，这里是毫秒
-    private static final String JsonWebToken_KEY = "bEn2xiAnG0mU2BILIMILI0YOu5HzH0hE1CwJ1GOnG1tOnG6kAifAwAnchEnG";
+    private static final String JsonWebToken_KEY = "CqcF+Jka+C+CFiOMTMz16JsT+/jzNVETa2g9iTvOi/TwpKR3R0YGUVoHjB6j6HDwYgTdbvnl4NKZ/j+6BSmEKg==";
     private static final long JsonWebToken_Validity = 1000L * 60 * 60 * 24 * 2;
     private static String getUUID() {
         return UUID.randomUUID().toString().replaceAll("-", "");
@@ -35,7 +37,7 @@ public class JsonWebTokenTool {
      * 获取token密钥
      * @return 加密后的token密钥
      */
-    private static SecretKey getTokenSecret() {
+    private static SecretKey getSecretToken() {
         byte[] encodeKey = Base64.getDecoder().decode(JsonWebTokenTool.JsonWebToken_KEY);
         return new SecretKeySpec(encodeKey, 0, encodeKey.length, "HmacSHA256");
     }
@@ -49,19 +51,19 @@ public class JsonWebTokenTool {
     public String createToken(String uid, String role) {
         String uuid = getUUID();
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-        SecretKey secretKey = getTokenSecret();
-        long nowMillis = System.currentTimeMillis();
-        Date now = new Date(nowMillis);
-        long expMillis = nowMillis + JsonWebTokenTool.JsonWebToken_Validity;
-        Date expDate = new Date(expMillis);
+        SecretKey secretKey = getSecretToken();
+        long currentMillis = System.currentTimeMillis();
+        Date current = new Date(currentMillis);
+        long expirationMillis = currentMillis + JsonWebTokenTool.JsonWebToken_Validity;
+        Date expirationDate = new Date(expirationMillis);
 
         String token = Jwts.builder()
                 .setId(uuid)    // 随机id，用于生成无规则token
                 .setSubject(uid)    // 加密主体
                 .claim("role", role)    // token角色参数 user/admin 用于区分普通用户和管理员
                 .signWith(secretKey, signatureAlgorithm)
-                .setIssuedAt(now)
-                .setExpiration(expDate)
+                .setIssuedAt(current)
+                .setExpiration(expirationDate)
                 .compact();
 
         try {
@@ -86,7 +88,7 @@ public class JsonWebTokenTool {
         Claims claims;
         try {
             claims = Jwts.parserBuilder()
-                    .setSigningKey(getTokenSecret())
+                    .setSigningKey(getSecretToken())
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
@@ -101,21 +103,21 @@ public class JsonWebTokenTool {
     }
 
     /**
-     * 获取token主题，即uid
+     * 获取token的uid，uid就是主题
      * @param token token
      * @return uid的字符串类型
      */
-    public static String getSubjectFromToken(String token) {
-        String subject = null;
+    public static String getUidFromToken(String token) {
+        String uid = null;
         try {
             Claims claims = getAllClaimsFromToken(token);
             if (claims != null) {
-                subject = claims.getSubject();
+                uid = claims.getSubject();
             }
         } catch (Exception e) {
             log.error("从token里获取不到主题", e);
         }
-        return subject;
+        return uid;
     }
 
     /**
@@ -126,13 +128,10 @@ public class JsonWebTokenTool {
      */
     public static String getClaimFromToken(String token, String param) {
         Claims claims = getAllClaimsFromToken(token);
-        if (null == claims) {
+        if (claims == null || !claims.containsKey(param)) {
             return "";
         }
-        if (claims.containsKey(param)) {
-            return claims.get(param).toString();
-        }
-        return "";
+        return claims.get(param).toString();
     }
 
     /**
@@ -141,25 +140,21 @@ public class JsonWebTokenTool {
      * @return true/false
      */
     public boolean verifyToken(String token) {
+        if (token == null || StringUtils.isEmpty(token)) { return false;}
         Claims claims = getAllClaimsFromToken(token);
-        if (null == claims) {
+        if (claims == null) {
             return false;
         }
-        String uid = claims.getSubject();
-        String role;
-        if (claims.containsKey("role")) {
-            role = claims.get("role").toString();
-        } else {
-            role = "";
-        }
+        String uid = getUidFromToken(token);
+        String role = getClaimFromToken(token,"role");
         String cacheToken;
         try {
             cacheToken = String.valueOf(redisTemplate.opsForValue().get("token:" + role + ":" + uid));
         } catch (Exception e) {
-            cacheToken = null;
             log.error("获取不到缓存的token", e);
+            return false;
         }
-        return StringUtils.equals(token, cacheToken);
+        return token.equals(cacheToken);
     }
 
     public static void main(String[] args) {
@@ -169,4 +164,72 @@ public class JsonWebTokenTool {
         String jwtKey = Base64.getEncoder().encodeToString(keyBytes);
         System.out.println("Generated JWT Key: " + jwtKey);
     }
+
+    private void UUIDTest(){
+        // 生成一个随机 UUID
+        UUID randomUUID = UUID.randomUUID();
+        System.out.println("Random UUID: " + randomUUID);
+        // 根据字节数组生成 UUID
+        byte[] bytes = "example".getBytes();
+        UUID nameUUID = UUID.nameUUIDFromBytes(bytes);
+        System.out.println("Name-based UUID: " + nameUUID);
+        // 获取 UUID 的各部分
+        String uuidString = randomUUID.toString();
+        String[] parts = uuidString.split("-");
+        System.out.println("Part 1: " + parts[0]); // 8 characters
+        System.out.println("Part 2: " + parts[1]); // 4 characters
+        System.out.println("Part 3: " + parts[2]); // 4 characters
+        System.out.println("Part 4: " + parts[3]); // 4 characters
+        System.out.println("Part 5: " + parts[4]); // 12 characters
+    }
+
+    private static SecretKey getSecretKey() {
+        byte[] decodedKey = Base64.getDecoder().decode(String.valueOf(SECRET_KEY));
+        return new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA256");
+    }
+
+    public static boolean checkToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSecretKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims != null;
+        } catch (ExpiredJwtException e) {
+            System.out.println("Token expired: " + e.getMessage());
+            return false;
+        } catch (Exception e) {
+            System.out.println("Token invalid: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private static Claims parseToken(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSecretKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            System.out.println("Failed to parse token: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static String getUserIdFromToken(String token) {
+        Claims claims = parseToken(token);
+        return (claims != null) ? claims.getSubject() : null;
+    }
+
+    public static boolean isTokenExpired(String token) {
+        Claims claims = parseToken(token);
+        if (claims == null) {
+            return true;
+        }
+        Date expiration = claims.getExpiration();
+        return expiration.before(new Date());
+    }
+
 }

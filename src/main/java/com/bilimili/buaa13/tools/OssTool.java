@@ -1,9 +1,9 @@
 package com.bilimili.buaa13.tools;
 
-import com.aliyun.oss.ClientException;
-import com.aliyun.oss.OSS;
-import com.aliyun.oss.OSSException;
+import com.aliyun.oss.*;
+import com.aliyun.oss.common.auth.CredentialsProviderFactory;
 import com.aliyun.oss.model.*;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -11,6 +11,8 @@ import org.apache.http.entity.ContentType;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,6 +40,121 @@ public class OssTool {
 
     @Autowired
     private OSS ossClient;
+
+    private static final int VISIT_URL_EXPIRATION = 365*10;
+
+    private final static String ossAccessDomainUrl;
+    private final static String ossBucketName;
+    private final static OSSClient client;
+
+    static {
+        Environment environment = new Environment() {
+            @NotNull
+            @Override
+            public String[] getActiveProfiles() {
+                return new String[0];
+            }
+
+            @NotNull
+            @Override
+            public String[] getDefaultProfiles() {
+                return new String[0];
+            }
+
+            @Override
+            public boolean acceptsProfiles(@NotNull String... profiles) {
+                return false;
+            }
+
+            @Override
+            public boolean acceptsProfiles(@NotNull Profiles profiles) {
+                return false;
+            }
+
+            @Override
+            public boolean containsProperty(@NotNull String key) {
+                return false;
+            }
+
+            @Override
+            public String getProperty(@NotNull String key) {
+                return "";
+            }
+
+            @NotNull
+            @Override
+            public String getProperty(@NotNull String key, @NotNull String defaultValue) {
+                return "";
+            }
+
+            @Override
+            public <T> T getProperty(@NotNull String key, @NotNull Class<T> targetType) {
+                return null;
+            }
+
+            @Override
+            public <T> T getProperty(@NotNull String key, @NotNull Class<T> targetType, @NotNull T defaultValue) {
+                return null;
+            }
+
+            @NotNull
+            @Override
+            public String getRequiredProperty(@NotNull String key) throws IllegalStateException {
+                return "";
+            }
+
+            @Override
+            public <T> T getRequiredProperty(@NotNull String key, @NotNull Class<T> targetType) throws IllegalStateException {
+                return null;
+            }
+
+            @NotNull
+            @Override
+            public String resolvePlaceholders(@NotNull String text) {
+                return "";
+            }
+
+            @NotNull
+            @Override
+            public String resolveRequiredPlaceholders(@NotNull String text) throws IllegalArgumentException {
+                return "";
+            }
+        };
+        String endpointUrl = environment.getProperty("aliyun.oss.endpoint");
+        ossBucketName = environment.getProperty("aliyun.oss.bucket-name");
+        String keyId = environment.getProperty("aliyun.appid");
+        String keySecret = environment.getProperty("aliyun.appsecret");
+        ossAccessDomainUrl = environment.getProperty("aliyun.oss.domain");
+        client = new OSSClient(endpointUrl, CredentialsProviderFactory.newDefaultCredentialProvider(keyId, keySecret),
+                new ClientConfiguration());
+    }
+
+    private static String getRealFileName(String saveFolder, String fileName) {
+        return StringUtils.isNotEmpty(saveFolder) ? saveFolder + "/" + fileName : fileName;
+    }
+
+    public static String upload(String saveFolder, String contentType, String fileName, InputStream input) {
+        if (StringUtils.isEmpty(fileName) || StringUtils.isEmpty(contentType) || null == input) {
+            return null;
+        }
+        ObjectMetadata objectMeta = new ObjectMetadata();
+        objectMeta.setContentType(contentType);
+        String filePath = getRealFileName(saveFolder, fileName);
+        try {
+            client.putObject(ossBucketName, filePath, input, objectMeta);
+            return ossAccessDomainUrl + filePath;
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return null;
+        } finally {
+            try {
+                input.close();
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+            }
+        }
+    }
+
 
     /**
      * 往阿里云对象存储上传单张图片
@@ -110,8 +227,6 @@ public class OssTool {
     }
 
     public String uploadArticle(@NonNull String content) throws IOException {
-        //String originalFilename = file.getOriginalFilename();
-        //String ext = "." + FilenameUtils.getExtension(originalFilename);
         String fileName = System.currentTimeMillis() + UUID.randomUUID().toString().replace("-", "");
         String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date()).replace("-", "");
         String filePathName = date + "/article/" + fileName;
@@ -120,13 +235,13 @@ public class OssTool {
             writer.write(content);
             writer.flush();
         }catch (IOException e){
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
         MultipartFile file = null;
         try(FileInputStream fileInputStream = new FileInputStream(file1)){
             file = new MockMultipartFile(file1.getName(),file1.getName(), ContentType.APPLICATION_OCTET_STREAM.toString(), fileInputStream);
         }catch (IOException e){
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
         try{
             if (file != null) {
@@ -162,21 +277,21 @@ public class OssTool {
         ObjectMetadata meta = new ObjectMetadata();
         // 设置内容类型为MP4视频
         meta.setContentType("video/mp4");
-        int chunkIndex = 0;
+        int fragmentIndex = 0;
         long position = 0; // 追加位置
         while (true) {
-            File chunkFile = new File(CHUNK_DIRECTORY + hash + "-" + chunkIndex);
-            if (!chunkFile.exists()) {
-                if (chunkIndex == 0) {
+            File fragmentFile = new File(CHUNK_DIRECTORY + hash + "-" + fragmentIndex);
+            if (!fragmentFile.exists()) {
+                if (fragmentIndex == 0) {
                     log.error("没找到任何相关分片文件");
                     return null;
                 }
                 break;
             }
             // 读取分片数据
-            FileInputStream fis = new FileInputStream(chunkFile);
-            byte[] buffer = new byte[(int) chunkFile.length()];
-            fis.read(buffer);
+            FileInputStream fis = new FileInputStream(fragmentFile);
+            byte[] buffer = new byte[(int) fragmentFile.length()];
+            int fisNum = fis.read(buffer);
             fis.close();
             // 追加上传分片数据
             try {
@@ -191,8 +306,8 @@ public class OssTool {
                 log.error("OSS连接出错了:" + ce.getMessage());
                 throw ce;
             }
-            chunkFile.delete(); // 上传完后删除分片
-            chunkIndex++;
+            fragmentFile.delete(); // 上传完后删除分片
+            fragmentIndex++;
         }
         return OSS_BUCKET_URL + filePathName;
     }
@@ -205,7 +320,7 @@ public class OssTool {
      * @return  是否上传成功，一般返回false是因为分片已存在
      * @throws IOException
      */
-    public boolean uploadChunk(@NonNull MultipartFile file, @NonNull String name) throws IOException {
+    public boolean uploadFragment(@NonNull MultipartFile file, @NonNull String name) throws IOException {
         String fileName = "chunk/" + name;  // 分片文件在OSS的存储路径名
         boolean success = false;
         try {
@@ -268,7 +383,7 @@ public class OssTool {
                 if (!objectListing.getObjectSummaries().isEmpty()) {
                     List<String> keys = new ArrayList<>();
                     for (OSSObjectSummary s : objectListing.getObjectSummaries()) {
-//                        System.out.println("key name: " + s.getKey());
+                        System.out.println("key name: " + s.getKey());
                         keys.add(s.getKey());
                     }
                     DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(OSS_BUCKET).withKeys(keys).withEncodingType("url");
@@ -276,7 +391,7 @@ public class OssTool {
                     List<String> deletedObjects = deleteObjectsResult.getDeletedObjects();
                     for(String obj : deletedObjects) {
                         String deleteObj =  URLDecoder.decode(obj, StandardCharsets.UTF_8);
-//                            log.info("删除文件：" + deleteObj);
+                        log.info("删除文件：{}", deleteObj);
                     }
                 }
                 nextMarker = objectListing.getNextMarker();
@@ -285,6 +400,43 @@ public class OssTool {
             log.error("OSS出错了:" + oe.getErrorMessage());
         } catch (ClientException ce) {
             log.error("OSS连接出错了:" + ce.getMessage());
+        }
+    }
+
+    /**
+     * uploadFile:上传文件到Oss
+     * @param accessKeyId accessKeyId
+     * @param accessKeySecret accessKeySecret
+     * @param endpoint endpoint
+     * @param savePath 存放路径
+     * @param bucketName bucket名字
+     * @param imageName 图片名字
+     * @param fileInputStream 图片流
+     * @param fileSize fileSize 图片大小
+     * @throws Exception
+     */
+    public static void uploadFile(String accessKeyId, String accessKeySecret, String endpoint, String savePath, String bucketName,
+                                  String imageName, InputStream fileInputStream, Long fileSize) throws Exception {
+        OSS client = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+        try {
+            ObjectMetadata objectMeta = new ObjectMetadata();
+            objectMeta.setContentLength(fileSize);
+            if (!savePath.endsWith("/")) {
+                savePath = savePath + "/";
+            }
+            client.putObject(bucketName,savePath + imageName, fileInputStream, objectMeta);
+        } catch (Exception e) {
+            log.error("上传文件到oss出错", e);
+            throw new Exception("上传文件到oss出错");
+        } finally {
+            if (fileInputStream != null) {
+                try {
+                    fileInputStream.close();
+                    client.shutdown();
+                } catch (IOException e) {
+                    log.error("上传文件到oss出错", e);
+                }
+            }
         }
     }
 }

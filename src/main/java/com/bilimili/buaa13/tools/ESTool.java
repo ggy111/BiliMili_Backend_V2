@@ -111,7 +111,9 @@ public class ESTool {
             }
             SearchResponse<ESVideo> searchResponse = client.search(searchRequest, ESVideo.class);
             for (Hit<ESVideo> hit : searchResponse.hits().hits()) {
-                list.add(hit.source().getVid());
+                if (hit.source() != null) {
+                    list.add(hit.source().getVid());
+                }
             }
             return list;
         } catch (IOException e) {
@@ -193,7 +195,9 @@ public class ESTool {
             SearchRequest searchRequest = new SearchRequest.Builder().index("user").query(query).from((page - 1) * size).size(size).build();
             SearchResponse<ESUser> searchResponse = client.search(searchRequest, ESUser.class);
             for (Hit<ESUser> hit : searchResponse.hits().hits()) {
-                list.add(hit.source().getUid());
+                if (hit.source() != null) {
+                    list.add(hit.source().getUid());
+                }
             }
             return list;
         } catch (IOException e) {

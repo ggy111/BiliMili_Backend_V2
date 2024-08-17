@@ -58,7 +58,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 //            throw new AuthenticationException("当前token已过期");
             return;
         }
-        String userId = JsonWebTokenTool.getSubjectFromToken(token);
+        String userId = JsonWebTokenTool.getUidFromToken(token);
         String role = JsonWebTokenTool.getClaimFromToken(token, "role");
 
         // 从redis中获取用户信息
