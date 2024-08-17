@@ -3,9 +3,9 @@ package com.bilimili.buaa13.controller;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.model.OSSObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.bilimili.buaa13.entity.*;
 import com.bilimili.buaa13.im.handler.NoticeHandler;
 import com.bilimili.buaa13.mapper.*;
-import com.bilimili.buaa13.entity.*;
 import com.bilimili.buaa13.service.article.ArticleService;
 import com.bilimili.buaa13.service.video.FavoriteVideoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +15,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.*;
 import java.io.BufferedReader;
-import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.InputStreamReader;
+import java.util.*;
 
 @RestController
 public class ArticleController {
@@ -415,11 +413,11 @@ public class ArticleController {
             QueryWrapper<VideoStatus> videoStatsQueryWrapper = new QueryWrapper<>();
             videoStatsQueryWrapper.eq("vid", vid);
             Video video = videoMapper.selectOne(videoQueryWrapper);
-            VideoStatus videoStatus = videoStatusMapper.selectOne(videoStatsQueryWrapper);
+            VideoStatus videoStats = videoStatusMapper.selectOne(videoStatsQueryWrapper);
             titles.add(video.getTitle());
             videoTimes.add(video.getVideoTime());
             urls.add(video.getCoverUrl());
-            playCounts.add(videoStatus.getPlay());
+            playCounts.add(videoStats.getPlay());
         }
         Map<String,Object>dataMap = new HashMap<>();
         dataMap.put("vid",vids);

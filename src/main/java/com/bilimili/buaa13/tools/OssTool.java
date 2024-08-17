@@ -8,6 +8,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.entity.ContentType;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -53,6 +55,11 @@ public class OssTool {
         // 完整路径名
         String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date()).replace("-", "");
         String filePathName = date + "/img/" + type + "/" + fileName;
+        return getUrlString(file, filePathName);
+    }
+
+    @NotNull
+    private String getUrlString(@NonNull MultipartFile file, String filePathName) throws IOException {
         try {
             ossClient.putObject(
                     OSS_BUCKET, // 仓库名
@@ -84,20 +91,7 @@ public class OssTool {
         // 完整路径名
         String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date()).replace("-", "");
         String filePathName = date + "/video/" + fileName;
-        try {
-            ossClient.putObject(
-                    OSS_BUCKET, // 仓库名
-                    filePathName,   // 文件名（含路径）
-                    file.getInputStream()   // 数据流
-            );
-        } catch (OSSException oe) {
-            log.error("OSS出错了:" + oe.getErrorMessage());
-            throw oe;
-        } catch (ClientException ce) {
-            log.error("OSS连接出错了:" + ce.getMessage());
-            throw ce;
-        }
-        return OSS_BUCKET_URL + filePathName;
+        return getUrlString(file, filePathName);
     }
     /**
      * 往阿里云对象存储上传单个专栏文档
@@ -112,27 +106,13 @@ public class OssTool {
         String fileName = uuid + ext;
         String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date()).replace("-", "");
         String filePathName = date + "/article/" + fileName;
-        try{
-            ossClient.putObject(
-                    OSS_BUCKET,
-                    filePathName,
-                    file.getInputStream()
-            );
-        }catch (OSSException oe) {
-            log.error("OSS出错了:" + oe.getErrorMessage());
-            throw oe;
-        } catch (ClientException ce) {
-            log.error("OSS连接出错了:" + ce.getMessage());
-            throw ce;
-        }
-        return OSS_BUCKET_URL + filePathName;
+        return getUrlString(file, filePathName);
     }
 
     public String uploadArticle(@NonNull String content) throws IOException {
         //String originalFilename = file.getOriginalFilename();
         //String ext = "." + FilenameUtils.getExtension(originalFilename);
-        String uuid = System.currentTimeMillis() + UUID.randomUUID().toString().replace("-", "");
-        String fileName = uuid;
+        String fileName = System.currentTimeMillis() + UUID.randomUUID().toString().replace("-", "");
         String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date()).replace("-", "");
         String filePathName = date + "/article/" + fileName;
         File file1 = new File(filePathName);
@@ -252,7 +232,7 @@ public class OssTool {
      * @return  指定目录下，指定前缀的文件数量
      */
     public int countFiles(@NonNull String prefix) {
-        int count = 0;
+        int count;
         try {
             ListObjectsRequest listObjectsRequest = new ListObjectsRequest(OSS_BUCKET);
             listObjectsRequest.setPrefix(prefix);
@@ -274,7 +254,7 @@ public class OssTool {
      * @param prefix    要筛选的文件名前缀，包括目录路径，不允许为空字符串
      */
     public void deleteFiles(@NonNull String prefix) {
-        if (prefix.equals("")) {
+        if (prefix.isEmpty()) {
             log.warn("你正试图删除整个bucket，已拒绝该危险操作");
             return;
         }
@@ -285,7 +265,7 @@ public class OssTool {
             do {
                 ListObjectsRequest listObjectsRequest = new ListObjectsRequest(OSS_BUCKET).withPrefix(prefix).withMarker(nextMarker);
                 objectListing = ossClient.listObjects(listObjectsRequest);
-                if (objectListing.getObjectSummaries().size() > 0) {
+                if (!objectListing.getObjectSummaries().isEmpty()) {
                     List<String> keys = new ArrayList<>();
                     for (OSSObjectSummary s : objectListing.getObjectSummaries()) {
 //                        System.out.println("key name: " + s.getKey());
@@ -294,13 +274,9 @@ public class OssTool {
                     DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(OSS_BUCKET).withKeys(keys).withEncodingType("url");
                     DeleteObjectsResult deleteObjectsResult = ossClient.deleteObjects(deleteObjectsRequest);
                     List<String> deletedObjects = deleteObjectsResult.getDeletedObjects();
-                    try {
-                        for(String obj : deletedObjects) {
-                            String deleteObj =  URLDecoder.decode(obj, "UTF-8");
+                    for(String obj : deletedObjects) {
+                        String deleteObj =  URLDecoder.decode(obj, StandardCharsets.UTF_8);
 //                            log.info("删除文件：" + deleteObj);
-                        }
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
                     }
                 }
                 nextMarker = objectListing.getNextMarker();
