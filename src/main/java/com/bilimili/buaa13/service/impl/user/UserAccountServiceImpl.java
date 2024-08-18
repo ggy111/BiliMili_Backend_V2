@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -42,7 +43,9 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Autowired
     private UserRecordService userRecordService;
+
     @Autowired
+    @Lazy
     private UserService userService;
 
     @Autowired

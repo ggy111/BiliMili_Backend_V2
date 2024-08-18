@@ -104,10 +104,10 @@ CREATE TABLE `video` (
 -- Table structure for table `video_stats`
 --
 
-DROP TABLE IF EXISTS `video_stats`;
+DROP TABLE IF EXISTS `video_status`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `video_stats` (
+CREATE TABLE `video_status` (
                                `vid` int(11) NOT NULL COMMENT '视频ID',
                                `play` int(11) NOT NULL DEFAULT '0' COMMENT '播放量',
                                `barrage` int(11) NOT NULL DEFAULT '0' COMMENT '弹幕数',
@@ -369,10 +369,10 @@ CREATE TABLE `article` (
 -- Table structure for table `article_stats`
 --
 
-DROP TABLE IF EXISTS `article_stats`;
+DROP TABLE IF EXISTS `article_status`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `article_stats` (
+CREATE TABLE `article_status` (
                                `aid` int(11) NOT NULL COMMENT '专栏ID',
                                `view` int(11) NOT NULL DEFAULT '0' COMMENT '观看量',
                                `good` int(11) NOT NULL DEFAULT '0' COMMENT '点赞数',

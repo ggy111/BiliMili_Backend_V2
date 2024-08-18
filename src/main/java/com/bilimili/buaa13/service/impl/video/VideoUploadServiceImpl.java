@@ -40,9 +40,6 @@ public class VideoUploadServiceImpl implements VideoUploadService {
     private String Fragment_Directory;   // 分片存储目录
 
     @Autowired
-    private VideoUploadService videoUploadService;
-
-    @Autowired
     private VideoMapper videoMapper;
 
     @Autowired
@@ -174,7 +171,7 @@ public class VideoUploadServiceImpl implements VideoUploadService {
         videoUploadInfoDTO.setUid(loginUserId);
 
         try {
-            videoUploadService.mergeFragments(videoUploadInfoDTO);
+            this.mergeFragments(videoUploadInfoDTO);
         } catch (IOException e) {
             VideoUploadServiceImpl.log.error("合并视频写库时出错了");
             log.error(e.getMessage());

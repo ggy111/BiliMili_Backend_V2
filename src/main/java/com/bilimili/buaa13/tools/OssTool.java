@@ -41,99 +41,34 @@ public class OssTool {
     @Autowired
     private OSS ossClient;
 
+    @Autowired
+    private Environment environment;
+
     private static final int VISIT_URL_EXPIRATION = 365*10;
 
-    private final static String ossAccessDomainUrl;
-    private final static String ossBucketName;
-    private final static OSSClient client;
+    private String ossAccessDomainUrl;
+    private String ossBucketName;
+    private OSSClient client;
 
-    static {
-        Environment environment = new Environment() {
-            @NotNull
-            @Override
-            public String[] getActiveProfiles() {
-                return new String[0];
-            }
-
-            @NotNull
-            @Override
-            public String[] getDefaultProfiles() {
-                return new String[0];
-            }
-
-            @Override
-            public boolean acceptsProfiles(@NotNull String... profiles) {
-                return false;
-            }
-
-            @Override
-            public boolean acceptsProfiles(@NotNull Profiles profiles) {
-                return false;
-            }
-
-            @Override
-            public boolean containsProperty(@NotNull String key) {
-                return false;
-            }
-
-            @Override
-            public String getProperty(@NotNull String key) {
-                return "";
-            }
-
-            @NotNull
-            @Override
-            public String getProperty(@NotNull String key, @NotNull String defaultValue) {
-                return "";
-            }
-
-            @Override
-            public <T> T getProperty(@NotNull String key, @NotNull Class<T> targetType) {
-                return null;
-            }
-
-            @Override
-            public <T> T getProperty(@NotNull String key, @NotNull Class<T> targetType, @NotNull T defaultValue) {
-                return null;
-            }
-
-            @NotNull
-            @Override
-            public String getRequiredProperty(@NotNull String key) throws IllegalStateException {
-                return "";
-            }
-
-            @Override
-            public <T> T getRequiredProperty(@NotNull String key, @NotNull Class<T> targetType) throws IllegalStateException {
-                return null;
-            }
-
-            @NotNull
-            @Override
-            public String resolvePlaceholders(@NotNull String text) {
-                return "";
-            }
-
-            @NotNull
-            @Override
-            public String resolveRequiredPlaceholders(@NotNull String text) throws IllegalArgumentException {
-                return "";
-            }
-        };
+    private void Initialize() {
         String endpointUrl = environment.getProperty("aliyun.oss.endpoint");
         ossBucketName = environment.getProperty("aliyun.oss.bucket-name");
         String keyId = environment.getProperty("aliyun.appid");
         String keySecret = environment.getProperty("aliyun.appsecret");
         ossAccessDomainUrl = environment.getProperty("aliyun.oss.domain");
-        client = new OSSClient(endpointUrl, CredentialsProviderFactory.newDefaultCredentialProvider(keyId, keySecret),
-                new ClientConfiguration());
+        if (keyId != null) {
+            if (keySecret != null) {
+                client = new OSSClient(endpointUrl, CredentialsProviderFactory.newDefaultCredentialProvider(keyId, keySecret),
+                        new ClientConfiguration());
+            }
+        }
     }
 
     private static String getRealFileName(String saveFolder, String fileName) {
         return StringUtils.isNotEmpty(saveFolder) ? saveFolder + "/" + fileName : fileName;
     }
 
-    public static String upload(String saveFolder, String contentType, String fileName, InputStream input) {
+    public String upload(String saveFolder, String contentType, String fileName, InputStream input) {
         if (StringUtils.isEmpty(fileName) || StringUtils.isEmpty(contentType) || null == input) {
             return null;
         }
