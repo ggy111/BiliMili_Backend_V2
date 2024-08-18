@@ -51,16 +51,7 @@ public class FavoriteServiceImpl implements FavoriteService {
             for(int i=0;i<list.size();i++) {
                 if(list.get(i).getFid()==(5000+uid)) list.remove(i);
             }
-            if (!isOwner) {
-                List<Favorite> list1 = new ArrayList<>();
-                for (Favorite favorite : list) {
-                    if (favorite.getVisible() == 1) {
-                        list1.add(favorite);
-                    }
-                }
-                return list1;
-            }
-            return list;
+            return getListIfNotOwner(isOwner, list);
         }
         QueryWrapper<Favorite> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("uid", uid).ne("is_delete", 1).orderByDesc("fid");
@@ -75,7 +66,7 @@ public class FavoriteServiceImpl implements FavoriteService {
                 list.stream().parallel().forEach(favorite -> {
                     if (favorite.getCover() == null) {
                         Set<Object> set = redisTool.reverseRange("favorite_video:" + favorite.getFid(), 0, 0);    // 找到最近一个收藏的视频
-                        if (set != null && set.size() > 0) {
+                        if (set != null && !set.isEmpty()) {
                             Integer vid = (Integer) set.iterator().next();
                             Video video = videoMapper.selectById(vid);
                             favorite.setCover(video.getCoverUrl());
@@ -88,18 +79,22 @@ public class FavoriteServiceImpl implements FavoriteService {
             CompletableFuture.runAsync(() -> {
                 redisTool.setExObjectValue(key, finalList);
             }, taskExecutor);
-            if (!isOwner) {
-                List<Favorite> list1 = new ArrayList<>();
-                for (Favorite favorite : list) {
-                    if (favorite.getVisible() == 1) {
-                        list1.add(favorite);
-                    }
-                }
-                return list1;
-            }
-            return list;
+            return getListIfNotOwner(isOwner, list);
         }
         return Collections.emptyList();
+    }
+
+    private List<Favorite> getListIfNotOwner(boolean isOwner, List<Favorite> list) {
+        if (!isOwner) {
+            List<Favorite> list1 = new ArrayList<>();
+            for (Favorite favorite : list) {
+                if (favorite.getVisible() == 1) {
+                    list1.add(favorite);
+                }
+            }
+            return list1;
+        }
+        return list;
     }
 
     @Override

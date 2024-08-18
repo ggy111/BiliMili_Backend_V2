@@ -7,7 +7,11 @@ import com.bilimili.buaa13.entity.*;
 import com.bilimili.buaa13.im.handler.NoticeHandler;
 import com.bilimili.buaa13.mapper.*;
 import com.bilimili.buaa13.service.article.ArticleService;
+import com.bilimili.buaa13.service.category.CategoryService;
+import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.video.FavoriteVideoService;
+import com.bilimili.buaa13.service.video.VideoReviewService;
+import com.bilimili.buaa13.service.video.VideoStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,11 +28,24 @@ public class ArticleController {
     @Autowired
     private OSS ossClient;
 
+
+    @Autowired
+    private VideoReviewService videoReviewService;
+
+
+
     @Autowired
     private UserMapper userMapper;
 
     @Autowired
     private FavoriteVideoMapper favoriteVideoMapper;
+
+
+    @Autowired
+    private CommentMapper commentMapper;
+
+    @Autowired
+    private CritiqueMapper critiqueMapper;
 
 
     @Autowired
@@ -48,6 +65,16 @@ public class ArticleController {
 
     @Autowired
     private VideoMapper videoMapper;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private VideoStatusService videoStatusService;
+
+    @Autowired
+    private CategoryService categoryService;
+
 
     @Value("${oss.bucket}")
     private String OSS_BUCKET;
@@ -69,6 +96,8 @@ public class ArticleController {
     public ResponseResult updateStatus(@RequestParam("aid") Integer aid,
                                        @RequestParam("status") Integer status) {
         try {
+            Boolean canGetArticle = false;
+
             System.out.println("controller层没问题");
             ResponseResult responseResult = articleService.updateArticleStatus(aid, status);
             System.out.println("updateArticleStatus没问题");
@@ -77,6 +106,32 @@ public class ArticleController {
                 //将发布消息发送给粉丝
                 // redis 查不到再查数据库
                 QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
+
+                //修改于2024.08.16
+                if(canGetArticle){
+                    Video video = new Video();
+                    Map<String,Object> map = new HashMap<>();
+                    if (video.getStatus() == 3) {
+                        // 视频已删除
+                        Video video1 = new Video();
+                        video1.setVid(video.getVid());
+                        video1.setUid(video.getUid());
+                        video1.setStatus(video.getStatus());
+                        video1.setDeleteDate(video.getDeleteDate());
+                        map.put("video", video1);
+                    }
+                    else{
+                        try{
+                            map.put("video", video);
+                            map.put("user", userService.getUserByUId(video.getUid()));
+                            map.put("stats", videoStatusService.getStatusByVideoId(video.getVid()));
+                            map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
+                        }
+                        catch (Exception e){
+                            //log.error(e.getMessage(),e);
+                        }
+                    }
+                }
                 queryWrapper.eq("aid", aid).ne("status", 3); //未被删除
                 Article article = articleMapper.selectOne(queryWrapper);
                 System.out.println("Article =" + article.getAid());
@@ -175,49 +230,6 @@ public class ArticleController {
         return responseResult;
     }
 
-    /*
-    @GetMapping("/column/markdown")
-    public ResponseResult getArticleContentByVid(@RequestParam("aid") Integer aid) {
-        ResponseResult customResponse = new ResponseResult();
-        Article article = null;
-        QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("aid", aid).ne("status", 3);
-        article = articleMapper.selectOne(queryWrapper);
-        if (article == null) {
-            customResponse.setCode(404);
-            customResponse.setMessage("Article not found");
-            return customResponse;
-        }
-        String contentUrl = article.getContentUrl();
-        String bucketName = OSS_BUCKET; // 请根据实际情况修改
-        String key = contentUrl.replace(OSS_BUCKET_URL, ""); // 获取对象的key
-
-        try {
-            OSSObject ossObject = ossClient.getObject(bucketName, key);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(ossObject.getObjectContent()));
-            StringBuilder content = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                content.append(line).append("\n");
-            }
-            reader.close();
-
-            Map<String, Object> map = new HashMap<>();
-            map.put("coverUrl", article.getCoverUrl());
-            map.put("content", content.toString());
-            map.put("title", article.getTitle());
-            map.put("userAvatarUrl",userService.getUserById(article.getUid()).getAvatar_url());
-            map.put("userName",userService.getUserById(article.getUid()).getNickname());
-            customResponse.setData(map);
-            customResponse.setCode(200);
-            customResponse.setMessage("Success");
-        } catch (Exception e) {
-            customResponse.setCode(500);
-            customResponse.setMessage("Failed to retrieve content from OSS");
-        }
-
-        return customResponse;
-    }*/
 
     /**
      * 接收aid，收藏这个aid下的所有关联视频
@@ -225,50 +237,7 @@ public class ArticleController {
      * @param aid   对应视频ID
      * @return  文件
      * */
-    /*
-    @GetMapping("/column/favoriteVideo")
-    public ResponseResult favoriteRelatedVideo(@RequestParam("aid") Integer aid
-    ) {
-        ResponseResult customResponse = new ResponseResult();
-        Article article = null;
-        QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("aid", aid).ne("status", 3);
-        article = articleMapper.selectOne(queryWrapper);
-        Map<String, Object> map = new HashMap<>();
-        if(article == null){
-            return new ResponseResult(500,"未找到文章对应的aid",null);
-        }
-        List<Integer> videoList = new ArrayList<>();
-        String[] videos = article.getVid().split(",");
-        for (String s : videos) {
-            try {
-                videoList.add(Integer.parseInt(s));
-            } catch (NumberFormatException e) {
-                // 处理可能的转换异常
-                System.err.println("Invalid number format: " + s);
-            }
-        }
-        //依次收藏视频
-        Integer uid = currentUser.getUserId();
-        QueryWrapper<Favorite> favoriteQueryWrapper = new QueryWrapper<>();
-        favoriteQueryWrapper.eq("uid", uid).eq("type", 1);
-        Favorite favorite = favoriteMapper.selectOne(favoriteQueryWrapper);
-        if(favorite == null){
-            customResponse.setCode(404);
-            customResponse.setMessage("Favorite not found");
-            return customResponse;
-        }
-        Set<Integer>addSet = new HashSet<>();
-        addSet.add(favorite.getFid());
-        for(Integer vid:videoList){
-            favoriteVideoService.addToFav(uid,vid,addSet);
-        }
-        map.put("coverUrl", article.getCoverUrl());
-        map.put("contentUrl",article.getContentUrl());
-        map.put("title",article.getTitle());
-        customResponse.setData(map);
-        return customResponse;
-    }*/
+
     @GetMapping("/column/favoriteVideo")
     public ResponseResult favoriteRelatedVideo(@RequestParam("aid") Integer aid,
                                                @RequestParam("uid") Integer uid
@@ -330,40 +299,7 @@ public class ArticleController {
      * @param aid   对应视频ID
      * @return  文件
      * */
-/*
-    @GetMapping("/column/favoriteVideo")
-    public ResponseResult favoriteRelatedVideo(@RequestParam("aid") Integer aid
-    ) {
-        ResponseResult customResponse = new ResponseResult();
-        Article article = null;
-        QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("aid", aid).ne("status", 3);
-        article = articleMapper.selectOne(queryWrapper);
-        Map<String, Object> map = new HashMap<>();
-        if(article == null){
-            return new ResponseResult(500,"未找到文章对应的aid",null);
-        }
-        List<Integer> videoList = new ArrayList<>();
-        String[] videos = article.getVid().split(",");
-        for (String s : videos) {
-            try {
-                videoList.add(Integer.parseInt(s));
-            } catch (NumberFormatException e) {
-                // 处理可能的转换异常
-                System.err.println("Invalid number format: " + s);
-            }
-        }
-        //依次收藏视频
-        for(Integer vid:videoList){
 
-        }
-        map.put("coverUrl", article.getCoverUrl());
-        map.put("contentUrl",article.getContentUrl());
-        map.put("title",article.getTitle());
-        customResponse.setData(map);
-        return new ResponseResult(200,"批量收藏成功",null);
-    }
-*/
     /**
      * 分页查询对应状态专栏
      * @param uid 状态 0待审核 1通过 2未通过
