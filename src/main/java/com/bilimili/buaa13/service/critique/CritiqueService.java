@@ -85,4 +85,14 @@ public interface CritiqueService {
      * @param count     更改数量
      */
     void updateCritique(Integer criId, String column, boolean increase, Integer count);
+
+
+    /**
+     * 举报评论
+     * @param id
+     * @param userId
+     * @param reason
+     * @return
+     */
+    boolean reportCritique(Integer id, Integer userId, String reason);
 }

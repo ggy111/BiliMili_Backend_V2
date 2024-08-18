@@ -42,4 +42,7 @@ public interface FavoriteService {
      */
     void delFavorite(Integer fid, Integer uid);
 
+    boolean addVideoToFavorite(Integer fid, Integer uid, Integer vid);
+
+    boolean removeVideoFromFavorite(Integer fid, Integer uid, Integer vid);
 }

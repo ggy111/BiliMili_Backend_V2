@@ -13,10 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bilimili.buaa13.dto.ChatDetailsRequest;
 import com.bilimili.buaa13.dto.ChatMessageDeleteRequest;
 import com.bilimili.buaa13.dto.ChatMessageResponse;
-import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.chat.ChatDetailsService;
 import com.bilimili.buaa13.service.chat.CurrentUserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,44 +54,32 @@ public class ChatDetailedController {
             return 0;
         }
     };
-/**
-    @Autowired
-    public ChatDetailsController(ChatDetailsService chatDetailsService, CurrentUserService currentUserService) {
-        this.chatDetailsService = chatDetailsService;
-        this.currentUserService = currentUserService;
-    }
-
-    public ChatDetailedController(ChatDetailsService chatDetailsService, CurrentUserService currentUserService) {
-        this.chatDetailsService = chatDetailsService;
-        this.currentUserService = currentUserService;
-    }**/
 
     /**
      * 获取更多历史消息
+     *
      * @param request ChatDetailsRequest 包含聊天对象的UID和偏移量
      * @return 响应对象，包含更多消息记录
      */
-    @PostMapping("/history")
-    public void getChatHistory1(@RequestBody ChatDetailsRequest request) {
+    @PostMapping("/bilimili/history")
+    public ResponseResult getChatHistory1(@RequestBody ChatDetailsRequest request) {
         Integer currentUserId = currentUserService.getCurrentUserId();
-        //List<ChatMessageResponse> messages = chatDetailsService.retrieveChatHistory(request.getUid(), currentUserId, request.getOffset());
-        //return new ResponseResult<>(HttpStatus.OK.value(), "History retrieved successfully", messages);
+        List<ChatMessageResponse> messages = chatDetailsService.retrieveChatHistory(request.getUid(), currentUserId, request.getOffset());
+        return new ResponseResult(HttpStatus.OK.value(), "History retrieved successfully", messages);
     }
 
     /**
      * 删除单条消息
+     *
      * @param request ChatMessageDeleteRequest 包含要删除的消息ID
      * @return 响应对象
      */
-    @DeleteMapping("/delete")
-    public void deleteChatMessage1(@RequestBody ChatMessageDeleteRequest request) {
+    @DeleteMapping("/bilimili/delete")
+    public ResponseResult deleteChatMessage1(@RequestBody ChatMessageDeleteRequest request) {
         Integer currentUserId = currentUserService.getCurrentUserId();
         chatDetailsService.removeMessage(request.getMessageId(), currentUserId);
-        //return new ResponseResult<>(HttpStatus.NO_CONTENT.value(), "Message deleted successfully");
+        return new ResponseResult(HttpStatus.NO_CONTENT.value(), "Message deleted successfully",null);
     }
-
-
-
 
     //-----------------------------------------------------------------------------------------
 
@@ -104,7 +90,7 @@ public class ChatDetailedController {
      * @param offset    偏移量，即已经获取过的消息数量，从哪条开始获取更多
      * @return  响应对象，包含更多消息记录的map
      */
-    @GetMapping("/msg/chat-detailed/get-more")
+    @GetMapping("/bilimili/msg/chat-detailed/get-more")
     public ResponseResult getMoreChatDetails(@RequestParam("uid") Integer uid,
                                              @RequestParam("offset") Long offset) {
         Integer loginUid = currentUser.getUserId();
@@ -118,7 +104,7 @@ public class ChatDetailedController {
      * @param id    消息ID
      * @return  响应对象
      */
-    @PostMapping("/msg/chat-detailed/delete")
+    @PostMapping("/bilimili/msg/chat-detailed/delete")
     public ResponseResult delDetail(@RequestParam("id") Integer id) {
         Integer loginUid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();

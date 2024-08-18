@@ -96,7 +96,7 @@ public class ArticleController {
     public ResponseResult updateStatus(@RequestParam("aid") Integer aid,
                                        @RequestParam("status") Integer status) {
         try {
-            Boolean canGetArticle = false;
+            boolean canGetArticle = false;
 
             System.out.println("controller层没问题");
             ResponseResult responseResult = articleService.updateArticleStatus(aid, status);
@@ -339,28 +339,8 @@ public class ArticleController {
         for(String vid : vidString){
             vids.add(Integer.parseInt(vid));
         }
-        List<String> titles = new ArrayList<>();
-        List<Double> videoTimes = new ArrayList<>();
-        List<Integer> playCounts = new ArrayList<>();
-        List<String> urls = new ArrayList<>();
-        for(Integer vid: vids){
-            QueryWrapper<Video> videoQueryWrapper = new QueryWrapper<>();
-            videoQueryWrapper.eq("vid", vid);
-            QueryWrapper<VideoStatus> videoStatsQueryWrapper = new QueryWrapper<>();
-            videoStatsQueryWrapper.eq("vid", vid);
-            Video video = videoMapper.selectOne(videoQueryWrapper);
-            VideoStatus videoStats = videoStatusMapper.selectOne(videoStatsQueryWrapper);
-            titles.add(video.getTitle());
-            videoTimes.add(video.getVideoTime());
-            urls.add(video.getCoverUrl());
-            playCounts.add(videoStats.getPlay());
-        }
-        Map<String,Object>dataMap = new HashMap<>();
-        dataMap.put("vid",vids);
-        dataMap.put("title",titles);
-        dataMap.put("duration", videoTimes);
-        dataMap.put("url",urls);
-        dataMap.put("view",playCounts);
+        Map<String, Object> dataMap = new HashMap<>();
+        HistoryController.setHistoryMap(vids, videoMapper, videoStatusMapper,dataMap);
         responseResult.setData(dataMap);
         return responseResult;
     }

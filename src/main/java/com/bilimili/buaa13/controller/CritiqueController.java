@@ -38,7 +38,7 @@ public class CritiqueController {
      * @param sortType 排序类型 1 按热度排序 2 按时间排序
      * @return 评论树列表
      */
-    @GetMapping("/critique/get")
+    @GetMapping("/bilimili/critique/get")
     public ResponseResult getCritiqueTreeByAid(@RequestParam("aid") Integer aid,
                                                @RequestParam("offset") Long offset,
                                                @RequestParam("sortType") Integer sortType) {
@@ -68,7 +68,7 @@ public class CritiqueController {
      * @param id 根评论id
      * @return 完整的一棵包含全部评论的评论树
      */
-    @GetMapping("/critique/reply/get-more")
+    @GetMapping("/bilimili/critique/reply/get-more")
     public CritiqueTree getMoreCritiqueById(@RequestParam("id") Integer id) {
         return critiqueService.getMoreCritiquesById(id);
     }
@@ -82,7 +82,7 @@ public class CritiqueController {
      * @param content 评论内容
      * @return 响应对象
      */
-    @PostMapping("/critique/add")
+    @PostMapping("/bilimili/critique/add")
     public ResponseResult addCritique(
             @RequestParam("aid") Integer aid,
             @RequestParam("root_id") Integer rootId,
@@ -106,7 +106,7 @@ public class CritiqueController {
      * @param id 评论id
      * @return 响应对象
      */
-    @PostMapping("/critique/delete")
+    @PostMapping("/bilimili/critique/delete")
     public ResponseResult delCritique(@RequestParam("id") Integer id) {
         Integer loginUid = currentUser.getUserId();
         return critiqueService.deleteCritique(id, loginUid, currentUser.isAdmin());

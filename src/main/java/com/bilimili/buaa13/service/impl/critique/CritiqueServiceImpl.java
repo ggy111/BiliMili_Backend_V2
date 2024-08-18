@@ -423,4 +423,17 @@ public class CritiqueServiceImpl implements CritiqueService {
         }
         critiqueMapper.update(null, updateWrapper);
     }
+
+    /**
+     * 举报评论
+     * @param id
+     * @param userId
+     * @param reason
+     * @return
+     */
+    @Override
+    public boolean reportCritique(Integer id, Integer userId, String reason) {
+        System.out.println("待处理的举报:"+id+"\n用户id:"+userId+"\n举报原因："+reason);
+        return true;
+    }
 }

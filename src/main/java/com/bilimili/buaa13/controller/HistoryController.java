@@ -42,12 +42,20 @@ public class HistoryController {
      * 获取历史记录
      * @param uid   用户uid
      */
-    @GetMapping("/Record/Video")
+    @GetMapping("/bilimili/Record/Video")
     public ResponseResult getRecordVideoByUid(@RequestParam("uid") Integer uid) {
         ResponseResult responseResult = new ResponseResult();
         int fid = 5000+uid;
         List<Integer> vids = favoriteVideoMapper.getVidByFid(fid);
         List<Date> times = favoriteVideoMapper.getTimeByFid(fid);
+        Map<String, Object> dataMap = new HashMap<>();
+        setHistoryMap(vids, videoMapper, videoStatusMapper, dataMap);
+        dataMap.put("time",times);
+        responseResult.setData(dataMap);
+        return responseResult;
+    }
+
+    static void setHistoryMap(List<Integer> vids, VideoMapper videoMapper, VideoStatusMapper videoStatusMapper, Map<String,Object> dataMap) {
         List<String> titles = new ArrayList<>();
         List<Double> videoTimes = new ArrayList<>();
         List<Integer> playCounts = new ArrayList<>();
@@ -64,14 +72,10 @@ public class HistoryController {
             urls.add(video.getCoverUrl());
             playCounts.add(videoStatus.getPlay());
         }
-        Map<String,Object> dataMap = new HashMap<>();
         dataMap.put("vid",vids);
         dataMap.put("title",titles);
         dataMap.put("duration", videoTimes);
         dataMap.put("url",urls);
         dataMap.put("view",playCounts);
-        dataMap.put("time",times);
-        responseResult.setData(dataMap);
-        return responseResult;
     }
 }

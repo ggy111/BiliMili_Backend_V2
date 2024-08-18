@@ -21,7 +21,7 @@ public class MsgUnreadController {
      * 获取当前用户全部消息未读数
      * @return
      */
-    @GetMapping("/msg-unread/all")
+    @GetMapping("/bilimili/msg-unread/all")
     public ResponseResult getMsgUnread() {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
@@ -33,7 +33,7 @@ public class MsgUnreadController {
      * 清除某一列的未读消息提示
      * @param column    msg_unread表列名 "reply"/"at_num"/"up_vote"/"system_message"/"message"/"dynamic"
      */
-    @PostMapping("/msg-unread/clear")
+    @PostMapping("/bilimili/msg-unread/clear")
     public void clearUnread(@RequestParam("column") String column) {
         Integer uid = currentUser.getUserId();
         msgUnreadService.clearOneUnread(uid, column);

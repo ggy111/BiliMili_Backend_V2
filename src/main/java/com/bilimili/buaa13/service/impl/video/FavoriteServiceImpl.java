@@ -123,4 +123,14 @@ public class FavoriteServiceImpl implements FavoriteService {
     public void delFavorite(Integer fid, Integer uid) {
 
     }
+
+    @Override
+    public boolean addVideoToFavorite(Integer fid, Integer uid, Integer vid) {
+        return true;
+    }
+
+    @Override
+    public boolean removeVideoFromFavorite(Integer fid, Integer uid, Integer vid) {
+        return false;
+    }
 }

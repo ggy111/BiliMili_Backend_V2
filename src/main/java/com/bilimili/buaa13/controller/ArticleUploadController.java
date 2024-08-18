@@ -37,7 +37,7 @@ public class ArticleUploadController {
 
 
 
-    @PostMapping("bilimili/image/add")
+    @PostMapping("/bilimili/image/add")
     @Transactional
     public ResponseResult addImage(
             @RequestParam("image") MultipartFile image
@@ -62,23 +62,13 @@ public class ArticleUploadController {
      * @param content  文章内容的markdown文件
      * @return  响应对象
      */
-    @PostMapping("bilimili/article/add/all")
+    @PostMapping("/bilimili/article/add/all")
     public ResponseResult addAllArticle(
             @RequestParam("cover") MultipartFile cover,
-            //@RequestParam("cover") MultipartFile cover,
-            //@RequestParam("title") String title,
             @RequestParam("title") String title,
             @RequestParam("vid") String vid,
             @RequestParam("content") MultipartFile content
-            //@RequestParam("type") Integer type,
-            //@RequestParam("author") Integer author,
-            //@RequestParam("duration") Double duration,
-            //@RequestParam("mcid") String mcid,
-            //@RequestParam("scid") String scid,
-            //@RequestParam("tags") String tags,
-            //@RequestParam("descr") String descr
     ) {
-        //ArticleUploadDTO articleUploadDTO = new ArticleUploadDTO(null, title, content,type, author, duration, mcid, scid, tags, descr, null);
         ArticleUploadDTO articleUploadDTO = new ArticleUploadDTO(null, content);
         try {
             List<Integer> videoList = new ArrayList<>();

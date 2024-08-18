@@ -39,7 +39,7 @@ public class CategoryController {
      * 获取全部分区接口
      * @return 响应对象
      */
-    @GetMapping("bilimili/category/getall")
+    @GetMapping("/bilimili/category/getall")
     public ResponseResult getAll() {
         //--------------------------------------------------------------------------------------------------------
         //修改于2024.08.16
@@ -80,7 +80,7 @@ public class CategoryController {
      *
      * **/
 
-    @GetMapping("bilimili/category/getone")
+    @GetMapping("/bilimili/category/getone")
     public ResponseResult getOne(Integer mcId,Integer scId)
     {
         return categoryService.getAll();
@@ -89,7 +89,7 @@ public class CategoryController {
 
 
 
-    @GetMapping("bilimili/category/getAPage")
+    @GetMapping("/bilimili/category/getAPage")
     public ResponseResult getAPage(Integer mcId, Integer num){
         String mainCategoryId = mcId.toString();
         String subCategoryId = num.toString();

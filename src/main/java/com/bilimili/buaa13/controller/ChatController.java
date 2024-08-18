@@ -3,7 +3,6 @@ package com.bilimili.buaa13.controller;
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.message.ChatService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
-import com.bilimili.buaa13.tools.RedisTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,8 +30,8 @@ public class ChatController {
      * @param uid  对方用户ID
      * @return  响应对象 message可能值："新创建"/"已存在"/"未知用户"
      */
-    @GetMapping("/msg/chat/create/{uid}")
-    public ResponseResult createChat(@PathVariable("uid") Integer uid) {
+    @GetMapping("/bilimili/msg/chat/create/{uid}")
+    public ResponseResult createOneChat(@PathVariable("uid") Integer uid) {
        ResponseResult responseResult = new ResponseResult();
        //获取Chat,chat的细节
        Map<String, Object> result = chatService.createOneChat(uid, currentUser.getUserId());
@@ -50,14 +49,16 @@ public class ChatController {
      * @param offset    分页偏移量（前端查询了多少个聊天）
      * @return  响应对象 包含带用户信息和最近一条消息的聊天列表以及是否还有更多数据
      */
-    @GetMapping("/msg/chat/recent-list")
-    public ResponseResult getRecentList(@RequestParam("offset") Long offset) {
+    @GetMapping("/bilimili/msg/chat/recent-list")
+    public ResponseResult getRecentChatList(@RequestParam("offset") Long offset) {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = new HashMap<>();
         map.put("list", chatService.getChatDataList(uid, offset));
+        Long chat_num = redisTemplate.opsForZSet().zCard("chat_zset:" + uid);
+        if(chat_num == null){return responseResult;}
         // 检查是否还有更多
-        if (offset + 10 < redisTemplate.opsForZSet().zCard("chat_zset:" + uid)) {
+        if (offset + 10 < chat_num) {
             map.put("more", true);
         } else {
             map.put("more", false);
@@ -71,8 +72,8 @@ public class ChatController {
      * @param uid  对方用户ID
      * @return  响应对象
      */
-    @GetMapping("/msg/chat/delete/{uid}")
-    public ResponseResult deleteChat(@PathVariable("uid") Integer uid) {
+    @GetMapping("/bilimili/msg/chat/delete/{uid}")
+    public ResponseResult deleteOneChat(@PathVariable("uid") Integer uid) {
         ResponseResult responseResult = new ResponseResult();
         chatService.deleteOneChat(uid, currentUser.getUserId());
         return responseResult;
@@ -82,8 +83,8 @@ public class ChatController {
      * 切换窗口时 更新在线状态以及清除未读
      * @param from  对方UID
      */
-    @GetMapping("/msg/chat/online")
-    public void updateWhisperOnline(@RequestParam("from") Integer from) {
+    @GetMapping("/bilimili/msg/chat/online")
+    public void updateStateOnline(@RequestParam("from") Integer from) {
         Integer uid = currentUser.getUserId();
         chatService.updateStateOnline(from, uid);
     }
@@ -92,8 +93,8 @@ public class ChatController {
      * 切换窗口时 更新为离开状态 （该接口要放开，无需验证token，防止token过期导致用户一直在线）
      * @param from  对方UID
      */
-    @GetMapping("/msg/chat/outline")
-    public void updateWhisperOutline(@RequestParam("from") Integer from, @RequestParam("to") Integer to) {
+    @GetMapping("/bilimili/msg/chat/outline")
+    public void updateStateOutline(@RequestParam("from") Integer from, @RequestParam("to") Integer to) {
         chatService.updateStateOutline(from, to);
     }
 }
