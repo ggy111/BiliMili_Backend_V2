@@ -112,6 +112,7 @@ public class VideoController {
         //Set<Object> set = redisTool.getMembers("video_status:1");
         List<Video> allVideos = videoMapper.selectAllVideoByStatus(1);
         List<Integer> allVideoIds = new ArrayList<>();
+        System.out.println("allVideo有如下内容"+allVideos);
         if (allVideos == null) {
             map.put("videos", new ArrayList<>());
             map.put("vids", new ArrayList<>());
@@ -131,7 +132,11 @@ public class VideoController {
         for (int i = 0; i < size; i++) {
             randomVid.add(allVideoIds.get(i));
         }
-
+        if(randomVid.isEmpty()) {
+            map.put("more", false);
+            responseResult.setData(map);
+            return responseResult;
+        }
         List<Map<String, Object>> videoList = new ArrayList<>();
         QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("vid", randomVid);

@@ -231,6 +231,7 @@ public class MessageUnreadController {
      */
     @GetMapping("/msg-unread/all")
     public ResponseResult getMsgUnread() {
+        //System.out.println("已进入getMsgUnread");
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
         responseResult.setData(messageUnreadService.getUnreadByUid(uid));

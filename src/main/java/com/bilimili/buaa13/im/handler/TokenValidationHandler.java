@@ -110,6 +110,7 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
             // 将消息传递给下一个处理器
             ctx.fireChannelRead(tx);
         } else {
+            System.out.println("抵达channelRead0的else处");
             ctx.channel().writeAndFlush(IMResponse.error("登录已过期"));
             ctx.close();
         }
@@ -133,7 +134,7 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
             log.error("当前token已过期");
             return null;
         }
-        String userId = JsonWebTokenTool.getUidFromToken(token);
+        String userId = JsonWebTokenTool.getSubjectFromToken(token);
         String role = JsonWebTokenTool.getClaimFromToken(token, "role");
         User user = redisTool.getObject("security:" + role + ":" + userId, User.class);
 

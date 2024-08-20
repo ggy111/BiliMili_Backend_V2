@@ -302,7 +302,7 @@ public class RedisTool {
      * @param time
      * @param timeUnit
      */
-    private void setExValue(String key, Object value, long time, TimeUnit timeUnit) {
+    void setExValue(String key, Object value, long time, TimeUnit timeUnit) {
         redisTemplate.opsForValue().set(key, value, time, timeUnit);
     }
 
@@ -315,6 +315,21 @@ public class RedisTool {
             return JSONObject.parseObject(objectString, clazz);
         }
         return null;
+    }
+
+    /**
+     * 获取list中全部数据
+     * @param key
+     * @param clazz
+     * @return
+     */
+    public <T> List<T> getAllList(String key, Class<T> clazz) {
+        List list = this.redisTemplate.opsForList().range(key, 0, -1);
+        List<T> resultList = new ArrayList<>();
+        for (Object temp : list) {
+            resultList.add(JSON.parseObject((String) temp, clazz));
+        }
+        return resultList;
     }
 
     /**

@@ -84,7 +84,7 @@ public class BarrageWebSocketServer {
                 return;
             }
             token = token.substring(7);
-            String userId = JsonWebTokenTool.getUidFromToken(token);
+            String userId = JsonWebTokenTool.getSubjectFromToken(token);
             String role = JsonWebTokenTool.getClaimFromToken(token, "role");
             User user = redisTool.getObject("security:" + role + ":" + userId, User.class);
             if (user == null) {

@@ -40,6 +40,7 @@ public class VideoUploadController {
                                       @RequestParam("hash") String hash,
                                       @RequestParam("index") Integer index) throws IOException {
         try {
+            System.out.println("进入分片上传");
             return videoUploadService.uploadFragment(fragment, hash, index);
         } catch (Exception e) {
             e.printStackTrace();
