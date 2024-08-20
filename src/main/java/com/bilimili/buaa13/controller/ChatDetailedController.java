@@ -61,7 +61,7 @@ public class ChatDetailedController {
      * @param request ChatDetailsRequest 包含聊天对象的UID和偏移量
      * @return 响应对象，包含更多消息记录
      */
-    @PostMapping("/bilimili/history")
+    @PostMapping("/history")
     public ResponseResult getChatHistory1(@RequestBody ChatDetailsRequest request) {
         Integer currentUserId = currentUserService.getCurrentUserId();
         List<ChatMessageResponse> messages = chatDetailsService.retrieveChatHistory(request.getUid(), currentUserId, request.getOffset());
@@ -74,7 +74,7 @@ public class ChatDetailedController {
      * @param request ChatMessageDeleteRequest 包含要删除的消息ID
      * @return 响应对象
      */
-    @DeleteMapping("/bilimili/delete")
+    @DeleteMapping("/delete")
     public ResponseResult deleteChatMessage1(@RequestBody ChatMessageDeleteRequest request) {
         Integer currentUserId = currentUserService.getCurrentUserId();
         chatDetailsService.removeMessage(request.getMessageId(), currentUserId);
@@ -90,7 +90,7 @@ public class ChatDetailedController {
      * @param offset    偏移量，即已经获取过的消息数量，从哪条开始获取更多
      * @return  响应对象，包含更多消息记录的map
      */
-    @GetMapping("/bilimili/msg/chat-detailed/get-more")
+    @GetMapping("/msg/chat-detailed/get-more")
     public ResponseResult getMoreChatDetails(@RequestParam("uid") Integer uid,
                                              @RequestParam("offset") Long offset) {
         Integer loginUid = currentUser.getUserId();
@@ -104,7 +104,7 @@ public class ChatDetailedController {
      * @param id    消息ID
      * @return  响应对象
      */
-    @PostMapping("/bilimili/msg/chat-detailed/delete")
+    @PostMapping("/msg/chat-detailed/delete")
     public ResponseResult delDetail(@RequestParam("id") Integer id) {
         Integer loginUid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();

@@ -6,6 +6,7 @@ import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.comment.CommentService;
 import com.bilimili.buaa13.service.critique.CritiqueService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,7 +38,7 @@ public class CommentController {
      * @param sortType  排序类型 1 按热度排序 2 按时间排序
      * @return  评论树列表
      */
-    @GetMapping("/bilimili/comment/get")
+    @GetMapping("/comment/get")
     public ResponseResult getCritiqueTreeByAid(@RequestParam("vid") Integer vid,
                                               @RequestParam("offset") Long offset,
                                               @RequestParam("sortType") Integer sortType) {
@@ -67,7 +68,7 @@ public class CommentController {
      * @param id 根评论id
      * @return 完整的一棵包含全部评论的评论树
      */
-    @GetMapping("/bilimili/comment/reply/get-more")
+    @GetMapping("/comment/reply/get-more")
     public CommentTree getMoreCritiqueById(@RequestParam("id") Integer id) {
         return commentService.getMoreCommentsById(id);
     }
@@ -81,17 +82,22 @@ public class CommentController {
      * @param content   评论内容
      * @return  响应对象
      */
-    @PostMapping("/bilimili/comment/add")
+    @PostMapping("/comment/add")
     public ResponseResult addCritique(
             @RequestParam("vid") Integer vid,
             @RequestParam("root_id") Integer rootId,
             @RequestParam("parent_id") Integer parentId,
             @RequestParam("to_user_id") Integer acceptId,
             @RequestParam("content") String content ) {
-        Integer postId = currentUser.getUserId();
+        return getCritiqueResponseResult(vid, rootId, parentId, acceptId, content, currentUser, commentService);
+    }
+
+    @NotNull
+    private ResponseResult getCritiqueResponseResult(@RequestParam("vid") Integer vid, @RequestParam("root_id") Integer rootId, @RequestParam("parent_id") Integer parentId, @RequestParam("to_user_id") Integer toUserId, @RequestParam("content") String content, CurrentUser currentUser, CommentService commentService) {
+        Integer uid = currentUser.getUserId();
 
         ResponseResult responseResult = new ResponseResult();
-        CommentTree commentTree = commentService.sendComment(vid, postId, rootId, parentId, acceptId, content);
+        CommentTree commentTree = commentService.sendComment(vid, uid, rootId, parentId, toUserId, content);
         if (commentTree == null) {
             responseResult.setCode(500);
             responseResult.setMessage("发送失败！");
@@ -105,7 +111,7 @@ public class CommentController {
      * @param id 评论id
      * @return  响应对象
      */
-    @PostMapping("/bilimili/comment/delete")
+    @PostMapping("/comment/delete")
     public ResponseResult delCritique(@RequestParam("id") Integer id) {
         Integer loginUid = currentUser.getUserId();
         return commentService.deleteComment(id, loginUid, currentUser.isAdmin());
@@ -118,7 +124,7 @@ public class CommentController {
      * @param size 每页数量
      * @return 包含评论列表的响应对象
      */
-    @GetMapping("/bilimili/comment/user/get")
+    @GetMapping("/comment/user/get")
     public ResponseResult getCommentsByUser(@RequestParam("user_id") Integer userId,
                                             @RequestParam("page") Long page,
                                             @RequestParam("size") Integer size) {
@@ -138,7 +144,7 @@ public class CommentController {
      * @param id 评论id
      * @return 响应对象
      */
-    @PostMapping("/bilimili/comment/like")
+    @PostMapping("/comment/like")
     public ResponseResult likeCritique(@RequestParam("id") Integer id) {
         Integer userId = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
@@ -159,7 +165,7 @@ public class CommentController {
      * @param reason 举报原因
      * @return 响应对象
      */
-    @PostMapping("/bilimili/comment/report")
+    @PostMapping("/comment/report")
     public ResponseResult reportCritique(@RequestParam("id") Integer id,
                                          @RequestParam("reason") String reason) {
         Integer userId = currentUser.getUserId();

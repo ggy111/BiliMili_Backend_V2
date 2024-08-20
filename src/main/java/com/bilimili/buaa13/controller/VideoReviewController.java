@@ -23,12 +23,6 @@ public class VideoReviewController {
     @Autowired
     private VideoReviewService videoReviewService;
 
-    //@Autowired
-    //private UserService userService;
-
-   // @Autowired
-    //private ArticleService articleService;
-
     @Autowired
     private VideoService videoService;
 
@@ -43,7 +37,7 @@ public class VideoReviewController {
      * @param status 状态 0待审核 1通过 2未通过
      * @return
      */
-    @GetMapping("/bilimili/review/video/total")
+    @GetMapping("/review/video/total")
     public ResponseResult getTotal(@RequestParam("vstatus") Integer status) {
 
         //----------------------------------------------------------------------------------
@@ -68,7 +62,7 @@ public class VideoReviewController {
      * @param quantity  每页的数量
      * @return
      */
-    @GetMapping("/bilimili/review/video/getpage")
+    @GetMapping("/review/video/getpage")
     public ResponseResult getVideos(@RequestParam("vstatus") Integer status,
                                     @RequestParam(value = "page", defaultValue = "1") Integer page,
                                     @RequestParam(value = "quantity", defaultValue = "10") Integer quantity) {
@@ -89,7 +83,7 @@ public class VideoReviewController {
      * @param vid 视频id
      * @return
      */
-    @GetMapping("/bilimili/review/video/getone")
+    @GetMapping("/review/video/getone")
     public ResponseResult getOneVideo(@RequestParam("vid") Integer vid) {
         ResponseResult responseResult = new ResponseResult();
         if (!currentUser.isAdmin()) {

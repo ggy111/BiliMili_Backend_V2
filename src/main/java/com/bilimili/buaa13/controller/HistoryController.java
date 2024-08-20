@@ -42,7 +42,7 @@ public class HistoryController {
      * 获取历史记录
      * @param uid   用户uid
      */
-    @GetMapping("/bilimili/Record/Video")
+    @GetMapping("/Record/Video")
     public ResponseResult getRecordVideoByUid(@RequestParam("uid") Integer uid) {
         ResponseResult responseResult = new ResponseResult();
         int fid = 5000+uid;

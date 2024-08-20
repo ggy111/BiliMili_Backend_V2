@@ -62,7 +62,7 @@ public class BarrageController {
      * @param vid   视频ID
      * @return  响应对象
      */
-    @GetMapping("/bilimili/danmu-list/{vid}")
+    @GetMapping("/danmu-list/{vid}")
     public ResponseResult getBarrageList(@PathVariable("vid") String vid) {
         Set<Object> idset = redisTemplate.opsForSet().members("barrage_idset:" + vid);
         int vidInt = 0;
@@ -89,7 +89,7 @@ public class BarrageController {
      * @param id    弹幕id
      * @return  响应对象
      */
-    @PostMapping("/bilimili/danmu/delete")
+    @PostMapping("/danmu/delete")
     public ResponseResult deleteDanmu(@RequestParam("id") Integer id) {
 
         while (!individualBarrageList.isEmpty()) {

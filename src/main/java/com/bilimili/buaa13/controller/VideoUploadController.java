@@ -29,18 +29,18 @@ public class VideoUploadController {
 
     /**
      * 上传分片
-     * @param chunk 分片的blob文件
+     * @param fragment 分片的blob文件
      * @param hash  视频的hash值
      * @param index 当前分片的序号
      * @return
      * @throws IOException
      */
     @PostMapping("/video/upload-chunk")
-    public ResponseResult uploadChunk(@RequestParam("chunk") MultipartFile chunk,
+    public ResponseResult uploadFragment(@RequestParam("fragment") MultipartFile fragment,
                                       @RequestParam("hash") String hash,
                                       @RequestParam("index") Integer index) throws IOException {
         try {
-            return videoUploadService.uploadFragment(chunk, hash, index);
+            return videoUploadService.uploadFragment(fragment, hash, index);
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseResult(500, "分片上传失败", null);
@@ -60,17 +60,18 @@ public class VideoUploadController {
 
     /**
      * 添加视频投稿
-     * @param cover 封面文件
-     * @param hash  视频的hash值
-     * @param title 投稿标题
-     * @param type  视频类型 1自制 2转载
-     * @param auth  作者声明 0不声明 1未经允许禁止转载
-     * @param duration 视频总时长
-     * @param mcid  主分区ID
-     * @param scid  子分区ID
-     * @param tags  标签
-     * @param descr 简介
-     * @return  响应对象
+     *
+     * @param cover       封面文件
+     * @param hash        视频的hash值
+     * @param title       投稿标题
+     * @param type        视频类型 1自制 2转载
+     * @param auth        作者声明 0不声明 1未经允许禁止转载
+     * @param duration    视频总时长
+     * @param mainClassId 主分区ID
+     * @param subClassId  子分区ID
+     * @param tags        标签
+     * @param description 简介
+     * @return 响应对象
      */
     @PostMapping("/video/add")
     public ResponseResult addVideo(@RequestParam("cover") MultipartFile cover,
@@ -79,11 +80,11 @@ public class VideoUploadController {
                                    @RequestParam("type") Integer type,
                                    @RequestParam("auth") Integer auth,
                                    @RequestParam("duration") Double duration,
-                                   @RequestParam("mcid") String mcid,
-                                   @RequestParam("scid") String scid,
+                                   @RequestParam("mcid") String mainClassId,
+                                   @RequestParam("scid") String subClassId,
                                    @RequestParam("tags") String tags,
-                                   @RequestParam("descr") String descr) {
-        VideoUploadInfoDTO videoUploadInfoDTO = new VideoUploadInfoDTO(null, hash, title, type, auth, duration, mcid, scid, tags, descr, null);
+                                   @RequestParam("descr") String description) {
+        VideoUploadInfoDTO videoUploadInfoDTO = new VideoUploadInfoDTO(null, hash, title, type, auth, duration, mainClassId, subClassId, tags, description, null);
         try {
             return videoUploadService.setVideoMessage(cover, videoUploadInfoDTO);
         } catch (Exception e) {

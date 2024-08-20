@@ -23,7 +23,7 @@ public class ArticleReviewController {
      * 获取所有要审核的专栏数量
      *
      */
-    @GetMapping("/bilimili/review/article/total")
+    @GetMapping("/review/article/total")
     public ResponseResult getTotalArticle(@RequestParam("astatus") Integer status) {
         return articleReviewService.getTotalNumberByStatus(status);
     }
@@ -35,7 +35,7 @@ public class ArticleReviewController {
      * @param quantity  每页的数量
      * @return
      */
-    @GetMapping("/bilimili/review/article/getpage")
+    @GetMapping("/review/article/getpage")
     public ResponseResult getArticles(@RequestParam("astatus") Integer status,
                                       @RequestParam(value = "page", defaultValue = "1") Integer page,
                                       @RequestParam(value = "quantity", defaultValue = "10") Integer quantity) {
@@ -47,7 +47,7 @@ public class ArticleReviewController {
      * @param aid 视频id
      * @return
      */
-    @GetMapping("/bilimili/review/article/getone")
+    @GetMapping("/review/article/getone")
     public ResponseResult getOneArticle(@RequestParam("aid") Integer aid) {
         ResponseResult responseResult = new ResponseResult();
         if (!currentUser.isAdmin()) {

@@ -50,7 +50,7 @@ public class VideoController {
      * @param status 要修改的状态，1通过 2不通过 3删除
      * @return 无data返回 仅返回响应
      */
-    @PostMapping("/bilimili/video/change/status")
+    @PostMapping("/video/change/status")
     public ResponseResult updateStatus(@RequestParam("vid") Integer vid,
                                        @RequestParam("status") Integer status) {
         try {
@@ -65,7 +65,7 @@ public class VideoController {
      * 游客访问时的feed流随机推荐
      * @return  返回11条随机推荐视频
      */
-    @GetMapping("/bilimili/video/random/visitor")
+    @GetMapping("/video/random/visitor")
     public ResponseResult randomVideosForVisitor() {
         ResponseResult responseResult = new ResponseResult();
         int count = 11;
@@ -91,7 +91,7 @@ public class VideoController {
      * @param vids  曾经查询过的视频id列表，用于去重
      * @return  每次返回新的10条视频，以及其id列表，并标注是否还有更多视频可以获取
      */
-    @GetMapping("/bilimili/video/cumulative/visitor")
+    @GetMapping("/video/cumulative/visitor")
     public ResponseResult cumulativeVideosForVisitor(@RequestParam("vids") String vids) {
         System.out.println("这个函数被调用了,vids的值 : " + vids);
         ResponseResult responseResult = new ResponseResult();
@@ -158,7 +158,7 @@ public class VideoController {
      * @param vid   视频vid
      * @return  视频信息
      */
-    @GetMapping("/bilimili/video/getone")
+    @GetMapping("/video/getone")
     public ResponseResult getOneVideo(@RequestParam("vid") Integer vid) {
         System.out.println(vid);
         ResponseResult responseResult = new ResponseResult();
@@ -180,7 +180,7 @@ public class VideoController {
         return responseResult;
     }
 
-    @GetMapping("/bilimili/video/user-works-count")
+    @GetMapping("/video/user-works-count")
     public ResponseResult getUserWorksCount(@RequestParam("uid") Integer uid) {
         return new ResponseResult(200, "OK", redisTemplate.opsForZSet().zCard("user_video_upload:" + uid));
     }
@@ -193,7 +193,7 @@ public class VideoController {
      * @param quantity  每页查询数量
      * @return  视频信息列表
      */
-    @GetMapping("/bilimili/video/user-works")
+    @GetMapping("/video/user-works")
     public ResponseResult getUserWorks(@RequestParam("uid") Integer uid,
                                        @RequestParam("rule") Integer rule,
                                        @RequestParam("page") Integer page,
@@ -236,7 +236,7 @@ public class VideoController {
      * @param quantity  查询数量
      * @return  视频信息列表
      */
-    @GetMapping("/bilimili/video/user-love")
+    @GetMapping("/video/user-love")
     public ResponseResult getUserLoveMovies(@RequestParam("uid") Integer uid,
                                             @RequestParam("offset") Integer offset,
                                             @RequestParam("quantity") Integer quantity) {
@@ -260,7 +260,7 @@ public class VideoController {
      * @param quantity  查询数量
      * @return  视频信息列表
      */
-    @GetMapping("/bilimili/video/user-play")
+    @GetMapping("/video/user-play")
     public ResponseResult getUserPlayMovies(@RequestParam("offset") Integer offset,
                                             @RequestParam("quantity") Integer quantity) {
         Integer uid = currentUser.getUserId();
@@ -271,9 +271,7 @@ public class VideoController {
             return responseResult;
         }
         List<Integer> list = new ArrayList<>();
-        set.forEach(vid -> {
-            list.add((Integer) vid);
-        });
+        set.forEach(vid -> list.add((Integer) vid));
         responseResult.setData(videoService.getVideosDataWithPageBySort(list, null, 1, list.size()));
         return responseResult;
     }
@@ -286,7 +284,7 @@ public class VideoController {
      * @param quantity  每页查询数量
      * @return  视频信息列表
      */
-    @GetMapping("/bilimili/video/user-collect")
+    @GetMapping("/video/user-collect")
     public ResponseResult getUserCollectVideos(@RequestParam("fid") Integer fid,
                                                @RequestParam("rule") Integer rule,
                                                @RequestParam("page") Integer page,
@@ -306,21 +304,13 @@ public class VideoController {
         set.forEach(vid -> {
             list.add((Integer) vid);
         });
-        List<Map<String, Object>> result;
-        switch (rule) {
-            case 1:
-                result = videoService.getVideosDataWithPageBySort(list, null, page, quantity);
-                break;
-            case 2:
-                result = videoService.getVideosDataWithPageBySort(list, "play", page, quantity);
-                break;
-            case 3:
-                result = videoService.getVideosDataWithPageBySort(list, "upload_date", page, quantity);
-                break;
-            default:
-                result = videoService.getVideosDataWithPageBySort(list, null, page, quantity);
-        }
-        if (result.size() == 0) {
+        List<Map<String, Object>> result = switch (rule) {
+            case 1 -> videoService.getVideosDataWithPageBySort(list, null, page, quantity);
+            case 2 -> videoService.getVideosDataWithPageBySort(list, "play", page, quantity);
+            case 3 -> videoService.getVideosDataWithPageBySort(list, "upload_date", page, quantity);
+            default -> videoService.getVideosDataWithPageBySort(list, null, page, quantity);
+        };
+        if (result.isEmpty()) {
             responseResult.setData(result);
             return responseResult;
         }

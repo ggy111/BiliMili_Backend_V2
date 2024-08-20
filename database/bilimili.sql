@@ -444,3 +444,13 @@ CREATE TABLE `user_record_string` (
                         UNIQUE KEY `id` (`uid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5000 DEFAULT CHARSET=utf8mb4 COMMENT='创作周报表';
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+Drop table if exists follow;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `follow` (
+                                      `uid_follow` int(11) NOT NULL COMMENT 'up',
+                                      `uid_fans` varchar(2000) NOT NULL COMMENT '粉丝',
+                                      `visible` int(11) NOT NULL DEFAULT '0' COMMENT '是否可见'
+) ENGINE=InnoDB AUTO_INCREMENT=5000 DEFAULT CHARSET=utf8mb4 COMMENT='关注和粉丝表';
+/*!40101 SET character_set_client = @saved_cs_client */;

@@ -30,7 +30,7 @@ public class ChatController {
      * @param uid  对方用户ID
      * @return  响应对象 message可能值："新创建"/"已存在"/"未知用户"
      */
-    @GetMapping("/bilimili/msg/chat/create/{uid}")
+    @GetMapping("/msg/chat/create/{uid}")
     public ResponseResult createOneChat(@PathVariable("uid") Integer uid) {
        ResponseResult responseResult = new ResponseResult();
        //获取Chat,chat的细节
@@ -49,7 +49,7 @@ public class ChatController {
      * @param offset    分页偏移量（前端查询了多少个聊天）
      * @return  响应对象 包含带用户信息和最近一条消息的聊天列表以及是否还有更多数据
      */
-    @GetMapping("/bilimili/msg/chat/recent-list")
+    @GetMapping("/msg/chat/recent-list")
     public ResponseResult getRecentChatList(@RequestParam("offset") Long offset) {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
@@ -72,7 +72,7 @@ public class ChatController {
      * @param uid  对方用户ID
      * @return  响应对象
      */
-    @GetMapping("/bilimili/msg/chat/delete/{uid}")
+    @GetMapping("/msg/chat/delete/{uid}")
     public ResponseResult deleteOneChat(@PathVariable("uid") Integer uid) {
         ResponseResult responseResult = new ResponseResult();
         chatService.deleteOneChat(uid, currentUser.getUserId());
@@ -83,7 +83,7 @@ public class ChatController {
      * 切换窗口时 更新在线状态以及清除未读
      * @param from  对方UID
      */
-    @GetMapping("/bilimili/msg/chat/online")
+    @GetMapping("/msg/chat/online")
     public void updateStateOnline(@RequestParam("from") Integer from) {
         Integer uid = currentUser.getUserId();
         chatService.updateStateOnline(from, uid);
@@ -93,7 +93,7 @@ public class ChatController {
      * 切换窗口时 更新为离开状态 （该接口要放开，无需验证token，防止token过期导致用户一直在线）
      * @param from  对方UID
      */
-    @GetMapping("/bilimili/msg/chat/outline")
+    @GetMapping("/msg/chat/outline")
     public void updateStateOutline(@RequestParam("from") Integer from, @RequestParam("to") Integer to) {
         chatService.updateStateOutline(from, to);
     }

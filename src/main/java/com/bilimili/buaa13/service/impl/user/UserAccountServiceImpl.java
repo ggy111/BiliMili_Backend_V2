@@ -234,6 +234,7 @@ public class UserAccountServiceImpl implements UserAccountService {
      */
     @Override
     public ResponseResult login(String account, String password) {
+        //System.out.println("已进入login函数");
         Map<String,Object> loginUserMap = getLoginUser(account, password);
         User user = (User) loginUserMap.get("loginUser");
         ResponseResult responseResult = loginUserMap.containsKey("responseResult") ? (ResponseResult) loginUserMap.get("responseResult") : null;
@@ -274,6 +275,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         Map<String, Object> UserDTOMap = getUserDTOMap(user,token);
         responseResult.setMessage("登录成功");
         responseResult.setData(UserDTOMap);
+        System.out.println("已经到login最后了 " +responseResult);
         return responseResult;
     }
 

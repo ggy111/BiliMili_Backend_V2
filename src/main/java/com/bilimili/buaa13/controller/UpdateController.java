@@ -6,6 +6,7 @@ import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.comment.CommentService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.tools.RedisTool;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,6 +35,11 @@ public class UpdateController {
             @RequestParam("parent_id") Integer parentId,
             @RequestParam("to_user_id") Integer toUserId,
             @RequestParam("content") String content ) {
+        return getUpdateResponseResult(vid, rootId, parentId, toUserId, content, currentUser, commentService);
+    }
+
+    @NotNull
+    private ResponseResult getUpdateResponseResult(@RequestParam("vid") Integer vid, @RequestParam("root_id") Integer rootId, @RequestParam("parent_id") Integer parentId, @RequestParam("to_user_id") Integer toUserId, @RequestParam("content") String content, CurrentUser currentUser, CommentService commentService) {
         Integer uid = currentUser.getUserId();
 
         ResponseResult responseResult = new ResponseResult();
@@ -45,6 +51,4 @@ public class UpdateController {
         responseResult.setData(commentTree);
         return responseResult;
     }
-
-
 }
