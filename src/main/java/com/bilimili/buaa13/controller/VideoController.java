@@ -4,29 +4,30 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bilimili.buaa13.entity.FavoriteVideo;
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Video;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.bilimili.buaa13.mapper.FavoriteVideoMapper;
-import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.VideoService;
+import org.apache.ibatis.session.SqlSession;
+import org.springframework.web.bind.annotation.RequestParam;
 import com.bilimili.buaa13.utils.RedisUtil;
 import org.apache.ibatis.session.ExecutorType;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.bilimili.buaa13.mapper.VideoMapper;
 
 import java.util.*;
 
 @RestController
 public class VideoController {
-    @Autowired
-    private VideoService videoService;
 
     @Autowired
     private FavoriteVideoMapper favoriteVideoMapper;
+
+    @Autowired
+    private VideoService videoService;
 
     @Autowired
     private RedisUtil redisUtil;
@@ -45,7 +46,7 @@ public class VideoController {
      * @param status 要修改的状态，1通过 2不通过 3删除
      * @return 无data返回 仅返回响应
      */
-    @PostMapping("/video/change/status")
+    @PostMapping("/bilimili/video/change/status")
     public ResponseResult updateStatus(@RequestParam("vid") Integer vid,
                                        @RequestParam("status") Integer status) {
         try {
@@ -60,7 +61,7 @@ public class VideoController {
      * 游客访问时的feed流随机推荐
      * @return  返回11条随机推荐视频
      */
-    @GetMapping("/video/random/visitor")
+    @GetMapping("/bilimili/video/random/visitor")
     public ResponseResult randomVideosForVisitor() {
         ResponseResult responseResult = new ResponseResult();
         int count = 11;
@@ -86,7 +87,7 @@ public class VideoController {
      * @param vids  曾经查询过的视频id列表，用于去重
      * @return  每次返回新的10条视频，以及其id列表，并标注是否还有更多视频可以获取
      */
-    @GetMapping("/video/cumulative/visitor")
+    @GetMapping("/bilimili/video/cumulative/visitor")
     public ResponseResult cumulativeVideosForVisitor(@RequestParam("vids") String vids) {
         System.out.println("这个函数被调用了,vids的值 : " + vids);
         ResponseResult responseResult = new ResponseResult();
@@ -153,7 +154,7 @@ public class VideoController {
      * @param vid   视频vid
      * @return  视频信息
      */
-    @GetMapping("/video/getone")
+    @GetMapping("/bilimili/video/getone")
     public ResponseResult getOneVideo(@RequestParam("vid") Integer vid) {
         System.out.println(vid);
         ResponseResult responseResult = new ResponseResult();
@@ -175,7 +176,7 @@ public class VideoController {
         return responseResult;
     }
 
-    @GetMapping("/video/user-works-count")
+    @GetMapping("/bilimili/video/user-works-count")
     public ResponseResult getUserWorksCount(@RequestParam("uid") Integer uid) {
         return new ResponseResult(200, "OK", redisUtil.zCard("user_video_upload:" + uid));
     }
@@ -188,7 +189,7 @@ public class VideoController {
      * @param quantity  每页查询数量
      * @return  视频信息列表
      */
-    @GetMapping("/video/user-works")
+    @GetMapping("/bilimili/video/user-works")
     public ResponseResult getUserWorks(@RequestParam("uid") Integer uid,
                                        @RequestParam("rule") Integer rule,
                                        @RequestParam("page") Integer page,
@@ -231,7 +232,7 @@ public class VideoController {
      * @param quantity  查询数量
      * @return  视频信息列表
      */
-    @GetMapping("/video/user-love")
+    @GetMapping("/bilimili/video/user-love")
     public ResponseResult getUserLoveMovies(@RequestParam("uid") Integer uid,
                                             @RequestParam("offset") Integer offset,
                                             @RequestParam("quantity") Integer quantity) {
@@ -255,7 +256,7 @@ public class VideoController {
      * @param quantity  查询数量
      * @return  视频信息列表
      */
-    @GetMapping("/video/user-play")
+    @GetMapping("/bilimili/video/user-play")
     public ResponseResult getUserPlayMovies(@RequestParam("offset") Integer offset,
                                             @RequestParam("quantity") Integer quantity) {
         Integer uid = currentUser.getUserId();
@@ -281,7 +282,7 @@ public class VideoController {
      * @param quantity  每页查询数量
      * @return  视频信息列表
      */
-    @GetMapping("/video/user-collect")
+    @GetMapping("/bilimili/video/user-collect")
     public ResponseResult getUserCollectVideos(@RequestParam("fid") Integer fid,
                                                @RequestParam("rule") Integer rule,
                                                @RequestParam("page") Integer page,

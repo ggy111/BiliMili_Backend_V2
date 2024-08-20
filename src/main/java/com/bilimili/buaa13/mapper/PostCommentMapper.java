@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Select;
 import java.util.List;
 
 @Mapper
-public interface PostCommentMapper extends BaseMapper<PostComment> {
+public interface      PostCommentMapper extends BaseMapper<PostComment> {
 //    @Select("SELECT * FROM comment WHERE root_id = #{rootId} AND vid = #{vid}")
 //    List<Comment> getChildCommentsByRootId(@Param("rootId") Integer rootId, @Param("vid") Integer vid);
 

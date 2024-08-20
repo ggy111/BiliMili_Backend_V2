@@ -1,8 +1,14 @@
 package com.bilimili.buaa13.controller;
 
 import com.bilimili.buaa13.entity.ResponseResult;
+import com.bilimili.buaa13.mapper.ArticleMapper;
+import com.bilimili.buaa13.mapper.UserMapper;
+import com.bilimili.buaa13.mapper.VideoMapper;
+import com.bilimili.buaa13.service.article.ArticleDenounceService;
+import com.bilimili.buaa13.service.article.ArticleUploadService;
 import com.bilimili.buaa13.service.search.SearchService;
 import com.bilimili.buaa13.service.user.UserService;
+import com.bilimili.buaa13.service.video.VideoReviewService;
 import com.bilimili.buaa13.service.video.VideoService;
 import com.bilimili.buaa13.utils.ESUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +24,21 @@ import java.util.List;
 
 @RestController
 public class SearchController {
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private VideoMapper videoMapper;
+
+    @Autowired
+    private VideoReviewService videoReviewService;
+
+    @Autowired
+    private ArticleMapper articleMapper;
+
+    @Autowired
+    private ArticleUploadService articleUploadService;
+
     @Autowired
     private SearchService searchService;
 
