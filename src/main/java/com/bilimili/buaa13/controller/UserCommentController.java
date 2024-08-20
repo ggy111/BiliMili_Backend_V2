@@ -19,6 +19,8 @@ public class UserCommentController {
     @Autowired
     private CurrentUser currentUser;
 
+
+
     @Autowired
     private UserCommentService userCommentService;
 

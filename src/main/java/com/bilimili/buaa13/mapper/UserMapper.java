@@ -13,3 +13,4 @@ public interface UserMapper extends BaseMapper<User> {
     @Select("select distinct uid from user ")
     List<Integer> getAllUserIds();
 }
+
