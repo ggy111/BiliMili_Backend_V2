@@ -125,6 +125,7 @@ public class VideoController {
         List<Integer> randomVid = new ArrayList<>();
         // 打乱列表
         Collections.shuffle(allVideoIds);
+        System.out.println("vids"+ allVideoIds);
         //随机获取9个vid
         int size = Math.min(allVideoIds.size(), 9);
         for (int i = 0; i < size; i++) {

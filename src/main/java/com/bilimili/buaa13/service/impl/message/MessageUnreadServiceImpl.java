@@ -81,7 +81,7 @@ public class MessageUnreadServiceImpl implements MessageUnreadService {
                 UpdateWrapper<MessageUnread> updateWrapper = new UpdateWrapper<>();
                 updateWrapper.eq("uid", uid).setSql(column + " = " + column + " + 1");
                 messageUnreadMapper.update(null, updateWrapper);
-                redisTool.deleteValue("msg_unread:" + uid);
+                redisTool.deleteValue("message_unread:" + uid);
             },taskExecutor);
             addFuture.get();
         }catch (Exception e){
@@ -112,7 +112,7 @@ public class MessageUnreadServiceImpl implements MessageUnreadService {
         UpdateWrapper<MessageUnread> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("uid", uid).set(column, 0);
         messageUnreadMapper.update(null, updateWrapper);
-        redisTool.deleteValue("msg_unread:" + uid);
+        redisTool.deleteValue("message_unread:" + uid);
 
         // 通知用户的全部channel 更新该消息类型未读数为0
         Map<String, Object> map = new HashMap<>();
@@ -131,8 +131,8 @@ public class MessageUnreadServiceImpl implements MessageUnreadService {
      */
     @Override
     public void subUnreadWhisper(Integer uid, Integer count) {
-        redisTool.deleteValue("msg_unread:" + uid);
-        String sql = "UPDATE msg_unread " +
+        redisTool.deleteValue("message_unread:" + uid);
+        String sql = "UPDATE message_unread " +
                 "SET message = IF(message - ? < 0, 0, message - ?) " +
                 "WHERE uid = ?";
         // 执行 SQL 语句
@@ -147,14 +147,14 @@ public class MessageUnreadServiceImpl implements MessageUnreadService {
     @Override
     public MessageUnread getUnreadByUid(Integer uid) {
         executorService = Executors.newFixedThreadPool(10);
-        MessageUnread messageUnread = redisTool.getObject("msg_unread:" + uid, MessageUnread.class);
+        MessageUnread messageUnread = redisTool.getObject("message_unread:" + uid, MessageUnread.class);
         if (messageUnread == null) {
             messageUnread = messageUnreadMapper.selectById(uid);
             if (messageUnread != null) {
                 MessageUnread finalMessageUnread = messageUnread;
                 try{
                     Future<?> updateMsgRedis = executorService.submit(()->{
-                        redisTool.setExObjectValue("msg_unread:" + uid, finalMessageUnread);    // 异步更新到redis
+                        redisTool.setExObjectValue("message_unread:" + uid, finalMessageUnread);    // 异步更新到redis
                     },taskExecutor);
                     updateMsgRedis.get();
                 }catch (InterruptedException ie){

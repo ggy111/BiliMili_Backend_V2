@@ -18,9 +18,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private UserMapper userMapper;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String account) throws UsernameNotFoundException {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("username", username);
+        queryWrapper.eq("account", account);
         queryWrapper.ne("state", 2);
         User user = userMapper.selectOne(queryWrapper);
         if (user == null) {
