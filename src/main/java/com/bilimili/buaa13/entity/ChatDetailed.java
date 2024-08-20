@@ -21,4 +21,5 @@ public class ChatDetailed {
     private Integer acceptDel; // 接受者者是否删除
     private Integer withdraw;   // 消息是否被撤回
     private Date time;          // 发送消息的时间
+    private Integer status;
 }

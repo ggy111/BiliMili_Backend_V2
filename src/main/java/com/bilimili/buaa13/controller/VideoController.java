@@ -4,19 +4,20 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bilimili.buaa13.entity.FavoriteVideo;
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Video;
-import org.springframework.beans.factory.annotation.Autowired;
 import com.bilimili.buaa13.mapper.FavoriteVideoMapper;
+import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.VideoService;
-import org.apache.ibatis.session.SqlSession;
-import org.springframework.web.bind.annotation.RequestParam;
-import com.bilimili.buaa13.utils.RedisUtil;
+import com.bilimili.buaa13.tools.RedisTool;
 import org.apache.ibatis.session.ExecutorType;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.bilimili.buaa13.mapper.VideoMapper;
 
 import java.util.*;
 
@@ -30,7 +31,7 @@ public class VideoController {
     private VideoService videoService;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private RedisTool redisTool;
 
     @Autowired
     private CurrentUser currentUser;
@@ -39,6 +40,9 @@ public class VideoController {
     private SqlSessionFactory sqlSessionFactory;
     @Autowired
     private VideoMapper videoMapper;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 更新视频状态，包括过审、不通过、删除，其中审核相关需要管理员权限，删除可以是管理员或者投稿用户
@@ -66,7 +70,7 @@ public class VideoController {
         ResponseResult responseResult = new ResponseResult();
         int count = 11;
         //注释Redis
-        //Set<Object> idSet = redisUtil.srandmember("video_status:1", count);
+        //Set<Object> idSet = redisTool.srandmember("video_status:1", count);
         List<Map<String, Object>> videoList = new ArrayList<>();
         List<Video> allVideos = videoMapper.selectAllVideoByStatus(1);
         count = Math.min(count, allVideos.size());
@@ -105,7 +109,7 @@ public class VideoController {
             }
         }
         //注释Redis
-        //Set<Object> set = redisUtil.getMembers("video_status:1");
+        //Set<Object> set = redisTool.getMembers("video_status:1");
         List<Video> allVideos = videoMapper.selectAllVideoByStatus(1);
         List<Integer> allVideoIds = new ArrayList<>();
         if (allVideos == null) {
@@ -178,7 +182,7 @@ public class VideoController {
 
     @GetMapping("/bilimili/video/user-works-count")
     public ResponseResult getUserWorksCount(@RequestParam("uid") Integer uid) {
-        return new ResponseResult(200, "OK", redisUtil.zCard("user_video_upload:" + uid));
+        return new ResponseResult(200, "OK", redisTemplate.opsForZSet().zCard("user_video_upload:" + uid));
     }
 
     /**
@@ -196,7 +200,7 @@ public class VideoController {
                                        @RequestParam("quantity") Integer quantity) {
         ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = new HashMap<>();
-        Set<Object> set = redisUtil.zReverange("user_video_upload:" + uid, 0, -1);
+        Set<Object> set = redisTemplate.opsForZSet().reverseRange("user_video_upload:" + uid, 0, -1);
         if (set == null || set.isEmpty()) {
             map.put("count", 0);
             map.put("list", Collections.emptyList());
@@ -237,7 +241,7 @@ public class VideoController {
                                             @RequestParam("offset") Integer offset,
                                             @RequestParam("quantity") Integer quantity) {
         ResponseResult responseResult = new ResponseResult();
-        Set<Object> set = redisUtil.zReverange("love_video:" + uid, (long) offset, (long) offset + quantity - 1);
+        Set<Object> set = redisTemplate.opsForZSet().reverseRange("love_video:" + uid, (long) offset, (long) offset + quantity - 1);
         if (set == null || set.isEmpty()) {
             responseResult.setData(Collections.emptyList());
             return responseResult;
@@ -261,7 +265,7 @@ public class VideoController {
                                             @RequestParam("quantity") Integer quantity) {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
-        Set<Object> set = redisUtil.zReverange("user_video_history:" + uid, (long) offset, (long) offset + quantity - 1);
+        Set<Object> set = redisTemplate.opsForZSet().reverseRange("user_video_history:" + uid, (long) offset, (long) offset + quantity - 1);
         if (set == null || set.isEmpty()) {
             responseResult.setData(Collections.emptyList());
             return responseResult;
@@ -290,9 +294,9 @@ public class VideoController {
         ResponseResult responseResult = new ResponseResult();
         Set<Object> set;
         if (rule == 1) {
-            set = redisUtil.zReverange("favorite_video:" + fid, (long) (page - 1) * quantity, (long) page * quantity);
+            set = redisTemplate.opsForZSet().reverseRange("favorite_video:" + fid, (long) (page - 1) * quantity, (long) page * quantity);
         } else {
-            set = redisUtil.zReverange("favorite_video:" + fid, 0, -1);
+            set = redisTemplate.opsForZSet().reverseRange("favorite_video:" + fid, 0, -1);
         }
         if (set == null || set.isEmpty()) {
             responseResult.setData(Collections.emptyList());

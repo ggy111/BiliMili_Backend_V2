@@ -1,7 +1,7 @@
 package com.bilimili.buaa13.controller;
 
 import com.bilimili.buaa13.entity.ResponseResult;
-import com.bilimili.buaa13.service.message.MsgUnreadService;
+import com.bilimili.buaa13.service.message.MessageUnreadService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class MsgUnreadController {
+public class MessageUnreadController {
 
     @Autowired
-    private MsgUnreadService msgUnreadService;
+    private MessageUnreadService messageUnreadService;
 
     @Autowired
     private CurrentUser currentUser;
@@ -29,7 +29,7 @@ public class MsgUnreadController {
     public ResponseResult getColumnUnread(@RequestParam("column") String column) {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
-        //responseResult.setData(msgUnreadService.getUnreadByColumn(uid, column));
+        //responseResult.setData(messageUnreadService.getUnreadByColumn(uid, column));
         return responseResult;
     } /**
      * 批量清除多个列的未读消息提示
@@ -40,7 +40,7 @@ public class MsgUnreadController {
     public ResponseResult clearBatchUnread(@RequestParam("columns") String[] columns) {
         Integer uid = currentUser.getUserId();
         for (String column : columns) {
-            msgUnreadService.clearUnread(uid, column);
+            messageUnreadService.clearOneUnread(uid, column);
         }
         ResponseResult responseResult = new ResponseResult();
         responseResult.setMessage("批量未读消息已清除");
@@ -54,7 +54,7 @@ public class MsgUnreadController {
     @PostMapping("/msg-unread/clear-all")
     public ResponseResult clearAllUnread() {
         Integer uid = currentUser.getUserId();
-        //msgUnreadService.clearAllUnread(uid);
+        //messageUnreadService.clearAllUnread(uid);
         ResponseResult responseResult = new ResponseResult();
         responseResult.setMessage("所有未读消息已清除");
         return responseResult;
@@ -73,7 +73,7 @@ public class MsgUnreadController {
                                                      @RequestParam("endTime") Long endTime) {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
-        /**responseResult.setData(msgUnreadService.getUnreadByColumnInTimeRange(uid, column, startTime, endTime));**/
+        /**responseResult.setData(messageUnreadService.getUnreadByColumnInTimeRange(uid, column, startTime, endTime));**/
         return responseResult;
     }
 
@@ -90,7 +90,7 @@ public class MsgUnreadController {
                                                     @RequestParam("endTime") Long endTime) {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
-        //responseResult.setData(msgUnreadService.getBatchUnreadInTimeRange(uid, columns, startTime, endTime));
+        //responseResult.setData(messageUnreadService.getBatchUnreadInTimeRange(uid, columns, startTime, endTime));
         return responseResult;
     }
 
@@ -104,7 +104,7 @@ public class MsgUnreadController {
     public ResponseResult setNotificationStatus(@RequestParam("column") String column,
                                                 @RequestParam("status") Boolean status) {
         Integer uid = currentUser.getUserId();
-        //msgUnreadService.setNotificationStatus(uid, column, status);
+        //messageUnreadService.setNotificationStatus(uid, column, status);
         ResponseResult responseResult = new ResponseResult();
         responseResult.setMessage("消息提醒状态已更新");
         return responseResult;
@@ -119,7 +119,7 @@ public class MsgUnreadController {
     public ResponseResult getNotificationStatus(@RequestParam("column") String column) {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
-        //responseResult.setData(msgUnreadService.getNotificationStatus(uid, column));
+        //responseResult.setData(messageUnreadService.getNotificationStatus(uid, column));
         return responseResult;
     }
 
@@ -135,7 +135,7 @@ public class MsgUnreadController {
         Integer uid = currentUser.getUserId();
         for (String column : columns) {
             if(success){
-            //msgUnreadService.setNotificationStatus(uid, column, status);
+            //messageUnreadService.setNotificationStatus(uid, column, status);
             }
         }
         ResponseResult responseResult = new ResponseResult();
@@ -151,7 +151,7 @@ public class MsgUnreadController {
     public ResponseResult getAllNotificationStatuses() {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
-        // responseResult.setData(msgUnreadService.getAllNotificationStatuses(uid));
+        // responseResult.setData(messageUnreadService.getAllNotificationStatuses(uid));
         return responseResult;
     }
 
@@ -165,7 +165,7 @@ public class MsgUnreadController {
     public ResponseResult resetUnreadCount(@RequestParam("column") String column,
                                            @RequestParam("count") Integer count) {
         Integer uid = currentUser.getUserId();
-        //msgUnreadService.resetUnreadCount(uid, column, count);
+        //messageUnreadService.resetUnreadCount(uid, column, count);
         ResponseResult responseResult = new ResponseResult();
         responseResult.setMessage("未读消息数已重置");
         return responseResult;
@@ -182,7 +182,7 @@ public class MsgUnreadController {
                                                  @RequestParam("counts") Integer[] counts) {
         Integer uid = currentUser.getUserId();
         for (int i = 0; i < columns.length; i++) {
-            //msgUnreadService.resetUnreadCount(uid, columns[i], counts[i]);
+            //messageUnreadService.resetUnreadCount(uid, columns[i], counts[i]);
         }
         ResponseResult responseResult = new ResponseResult();
         responseResult.setMessage("批量未读消息数已重置");
@@ -199,7 +199,7 @@ public class MsgUnreadController {
     public ResponseResult incrementUnreadCount(@RequestParam("column") String column,
                                                @RequestParam("increment") Integer increment) {
         Integer uid = currentUser.getUserId();
-        //msgUnreadService.incrementUnreadCount(uid, column, increment);
+        //messageUnreadService.incrementUnreadCount(uid, column, increment);
         ResponseResult responseResult = new ResponseResult();
         responseResult.setMessage("未读消息数已增加");
         return responseResult;
@@ -216,7 +216,7 @@ public class MsgUnreadController {
                                                      @RequestParam("increments") Integer[] increments) {
         Integer uid = currentUser.getUserId();
         for (int i = 0; i < columns.length; i++) {
-            //msgUnreadService.incrementUnreadCount(uid, columns[i], increments[i]);
+            //messageUnreadService.incrementUnreadCount(uid, columns[i], increments[i]);
         }
         ResponseResult responseResult = new ResponseResult();
         responseResult.setMessage("批量未读消息数已增加");
@@ -233,7 +233,7 @@ public class MsgUnreadController {
     public ResponseResult getMsgUnread() {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
-        responseResult.setData(msgUnreadService.getUnread(uid));
+        responseResult.setData(messageUnreadService.getUnreadByUid(uid));
         return responseResult;
     }
 
@@ -244,7 +244,7 @@ public class MsgUnreadController {
     @PostMapping("/bilimili/msg-unread/clear")
     public void clearUnread(@RequestParam("column") String column) {
         Integer uid = currentUser.getUserId();
-        msgUnreadService.clearUnread(uid, column);
+        messageUnreadService.clearOneUnread(uid, column);
     }
 
 

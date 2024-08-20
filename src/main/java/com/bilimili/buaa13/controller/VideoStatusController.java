@@ -1,24 +1,23 @@
 package com.bilimili.buaa13.controller;
 
 import com.bilimili.buaa13.entity.ResponseResult;
-import com.bilimili.buaa13.service.video.VideoStatsService;
+import com.bilimili.buaa13.service.video.VideoStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Random;
-import java.util.Map;
-
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 
 @RestController
-public class VideoStatsController {
+public class VideoStatusController {
 
 
     @Autowired
-    private VideoStatsService videoStatsService;
+    private VideoStatusService videoStatusService;
 
     //-----------------------------------------------------------------------------------------------------
     //修改于2024.08.19
@@ -215,7 +214,7 @@ public class VideoStatsController {
      */
     @PostMapping("/video/play/visitor")
     public ResponseResult newPlayWithVisitor(@RequestParam("vid") Integer vid) {
-        videoStatsService.updateVideoStats(vid, "play", true, 1);
+        videoStatusService.updateVideoStatus(vid, "play", true, 1);
         return new ResponseResult();
     }
 

@@ -10,7 +10,7 @@ import java.util.List;
 
 @Mapper
 public interface ChatDetailedMapper extends BaseMapper<ChatDetailed> {
-    @Select("select * from chat_detailed where user_id = #{post_id} and another_id = #{accept_id}")
+    @Select("select * from chat_detailed where post_id = #{post_id} and accept_id = #{accept_id}")
     List<ChatDetailed> selectAllChatDetailed(@Param("post_id") Integer post_id,
                                              @Param("accept_id") Integer accept_id);
 }

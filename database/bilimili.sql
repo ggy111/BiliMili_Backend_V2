@@ -152,6 +152,7 @@ CREATE TABLE `chat_detailed` (
                                  `accept_del` tinyint(4) NOT NULL DEFAULT '0' COMMENT '接受者是否删除',
                                  `withdraw` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否撤回',
                                  `time` datetime NOT NULL COMMENT '消息发送时间',
+                                 `status` int(4) not null default 1 comment '消息状态',
                                  PRIMARY KEY (`id`),
                                  UNIQUE KEY `id` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COMMENT='聊天记录表';
