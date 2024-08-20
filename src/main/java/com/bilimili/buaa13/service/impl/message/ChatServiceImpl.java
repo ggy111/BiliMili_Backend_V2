@@ -10,7 +10,7 @@ import com.bilimili.buaa13.mapper.ChatMapper;
 import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.service.message.ChatDetailedService;
 import com.bilimili.buaa13.service.message.ChatService;
-import com.bilimili.buaa13.service.message.MsgUnreadService;
+import com.bilimili.buaa13.service.message.MessageUnreadService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.tools.RedisTool;
 import io.netty.channel.Channel;
@@ -36,7 +36,7 @@ public class ChatServiceImpl implements ChatService {
     private UserMapper userMapper;
 
     @Autowired
-    private MsgUnreadService msgUnreadService;
+    private MessageUnreadService messageUnreadService;
 
     @Autowired
     private UserService userService;
@@ -169,7 +169,7 @@ public class ChatServiceImpl implements ChatService {
         if (chat.getUnreadNum() > 0) {
             // 原本有未读的话 要额外做一点更新
             // msg_unread中的whisper要减去相应数量
-            msgUnreadService.subUnreadWhisper(acceptId, chat.getUnreadNum());
+            messageUnreadService.subUnreadWhisper(acceptId, chat.getUnreadNum());
         }
 
         // 更新字段伪删除 并清除未读
@@ -238,7 +238,7 @@ public class ChatServiceImpl implements ChatService {
                         chatMapper.update(null, updateWrapperPA);
                     }
                     // 更新对方用户的未读消息
-                    msgUnreadService.addOneUnread(acceptId, "message");
+                    messageUnreadService.addOneUnread(acceptId, "message");
                     //1注释Redis
                     redisTool.storeZSet("chat_zset:" + acceptId, chatPA.getId());    // 添加到这个用户的最近聊天的有序集合
                 } else {
@@ -299,7 +299,7 @@ public class ChatServiceImpl implements ChatService {
                     map.put("type", "已读");
                     setMapChannel(acceptId, chat, map);
                     // msg_unread中的whisper要减去相应数量
-                    msgUnreadService.subUnreadWhisper(acceptId, chat.getUnreadNum());
+                    messageUnreadService.subUnreadWhisper(acceptId, chat.getUnreadNum());
                 }
 
             },taskExecutor);

@@ -1,7 +1,7 @@
 package com.bilimili.buaa13.controller;
 
 import com.bilimili.buaa13.entity.ResponseResult;
-import com.bilimili.buaa13.service.message.MsgUnreadService;
+import com.bilimili.buaa13.service.message.MessageUnreadService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class MsgUnreadController {
+public class MessageUnreadController {
     @Autowired
-    private MsgUnreadService msgUnreadService;
+    private MessageUnreadService messageUnreadService;
 
     @Autowired
     private CurrentUser currentUser;
@@ -25,7 +25,7 @@ public class MsgUnreadController {
     public ResponseResult getMsgUnread() {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
-        responseResult.setData(msgUnreadService.getUnreadByUid(uid));
+        responseResult.setData(messageUnreadService.getUnreadByUid(uid));
         return responseResult;
     }
 
@@ -36,6 +36,6 @@ public class MsgUnreadController {
     @PostMapping("/bilimili/msg-unread/clear")
     public void clearUnread(@RequestParam("column") String column) {
         Integer uid = currentUser.getUserId();
-        msgUnreadService.clearOneUnread(uid, column);
+        messageUnreadService.clearOneUnread(uid, column);
     }
 }

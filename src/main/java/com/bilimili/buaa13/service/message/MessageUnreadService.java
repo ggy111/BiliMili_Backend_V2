@@ -1,8 +1,8 @@
 package com.bilimili.buaa13.service.message;
 
-import com.bilimili.buaa13.entity.MsgUnread;
+import com.bilimili.buaa13.entity.MessageUnread;
 
-public interface MsgUnreadService {
+public interface MessageUnreadService {
 
     /**
      * 给指定用户的某一列未读消息加一
@@ -30,5 +30,5 @@ public interface MsgUnreadService {
      * @param uid   用户ID
      * @return  MsgUnread对象
      */
-    MsgUnread getUnreadByUid(Integer uid);
+    MessageUnread getUnreadByUid(Integer uid);
 }

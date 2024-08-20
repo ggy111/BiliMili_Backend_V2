@@ -7,7 +7,7 @@ import com.bilimili.buaa13.entity.*;
 import com.bilimili.buaa13.entity.dto.UserDTO;
 import com.bilimili.buaa13.im.IMServer;
 import com.bilimili.buaa13.mapper.FavoriteMapper;
-import com.bilimili.buaa13.mapper.MsgUnreadMapper;
+import com.bilimili.buaa13.mapper.MessageUnreadMapper;
 import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.service.record.UserRecordService;
 import com.bilimili.buaa13.service.user.UserAccountService;
@@ -52,7 +52,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     private UserMapper userMapper;
 
     @Autowired
-    private MsgUnreadMapper msgUnreadMapper;
+    private MessageUnreadMapper messageUnreadMapper;
 
     @Autowired
     private FavoriteMapper favoriteMapper;
@@ -153,7 +153,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         String encodedPassword = passwordEncoder.encode(password);  // 密文存储
         User newUser = getNewUser(account, encodedPassword, newUserUid);
         userMapper.insert(newUser);
-        msgUnreadMapper.insert(new MsgUnread(newUser.getUid(),0,0,0,0,0,0));
+        messageUnreadMapper.insert(new MessageUnread(newUser.getUid(),0,0,0,0,0,0));
         favoriteMapper.insert(new Favorite(newUser.getUid(), newUser.getUid(), 1, 1, null, "默认收藏夹", "", 0, null));
         favoriteMapper.insert(new Favorite(5000+ newUser.getUid(), newUser.getUid(), 1, 1, null, "历史记录", "", 0, null));
         List<Integer> zero=new ArrayList<>();

@@ -4,11 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.bilimili.buaa13.entity.Chat;
 import com.bilimili.buaa13.entity.IMResponse;
-import com.bilimili.buaa13.entity.MsgUnread;
+import com.bilimili.buaa13.entity.MessageUnread;
 import com.bilimili.buaa13.im.IMServer;
 import com.bilimili.buaa13.mapper.ChatMapper;
-import com.bilimili.buaa13.mapper.MsgUnreadMapper;
-import com.bilimili.buaa13.service.message.MsgUnreadService;
+import com.bilimili.buaa13.mapper.MessageUnreadMapper;
+import com.bilimili.buaa13.service.message.MessageUnreadService;
 import com.bilimili.buaa13.tools.RedisTool;
 import io.netty.channel.Channel;
 import org.slf4j.Logger;
@@ -24,11 +24,11 @@ import java.util.Set;
 import java.util.concurrent.*;
 
 @Service
-public class MsgUnreadServiceImpl implements MsgUnreadService {
+public class MessageUnreadServiceImpl implements MessageUnreadService {
 
-    private static final Logger log = LoggerFactory.getLogger(MsgUnreadServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(MessageUnreadServiceImpl.class);
     @Autowired
-    private MsgUnreadMapper msgUnreadMapper;
+    private MessageUnreadMapper messageUnreadMapper;
 
     @Autowired
     private ChatMapper chatMapper;
@@ -78,9 +78,9 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
         executorService = Executors.newFixedThreadPool(10);
         try{
             Future<?> addFuture = executorService.submit(()->{
-                UpdateWrapper<MsgUnread> updateWrapper = new UpdateWrapper<>();
+                UpdateWrapper<MessageUnread> updateWrapper = new UpdateWrapper<>();
                 updateWrapper.eq("uid", uid).setSql(column + " = " + column + " + 1");
-                msgUnreadMapper.update(null, updateWrapper);
+                messageUnreadMapper.update(null, updateWrapper);
                 redisTool.deleteValue("msg_unread:" + uid);
             },taskExecutor);
             addFuture.get();
@@ -98,20 +98,20 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
      */
     @Override
     public void clearOneUnread(Integer uid, String column) {
-        QueryWrapper<MsgUnread> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<MessageUnread> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("uid", uid).ne(column, 0);
-        MsgUnread msgUnread = msgUnreadMapper.selectOne(queryWrapper);
+        MessageUnread messageUnread = messageUnreadMapper.selectOne(queryWrapper);
         // 如果本身就是0条未读,不执行下面的操作了
-        if (msgUnread == null) return;
+        if (messageUnread == null) return;
         if (column.equals("message")) {
             // 如果是清除私聊消息还需要去把chat表的全部未读清掉
             UpdateWrapper<Chat> chatUpdateWrapper = new UpdateWrapper<>();
             chatUpdateWrapper.eq("accept_id", uid).set("unread_num", 0);
             chatMapper.update(null, chatUpdateWrapper);
         }
-        UpdateWrapper<MsgUnread> updateWrapper = new UpdateWrapper<>();
+        UpdateWrapper<MessageUnread> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("uid", uid).set(column, 0);
-        msgUnreadMapper.update(null, updateWrapper);
+        messageUnreadMapper.update(null, updateWrapper);
         redisTool.deleteValue("msg_unread:" + uid);
 
         // 通知用户的全部channel 更新该消息类型未读数为0
@@ -145,16 +145,16 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
      * @return  MsgUnread对象
      */
     @Override
-    public MsgUnread getUnreadByUid(Integer uid) {
+    public MessageUnread getUnreadByUid(Integer uid) {
         executorService = Executors.newFixedThreadPool(10);
-        MsgUnread msgUnread = redisTool.getObject("msg_unread:" + uid, MsgUnread.class);
-        if (msgUnread == null) {
-            msgUnread = msgUnreadMapper.selectById(uid);
-            if (msgUnread != null) {
-                MsgUnread finalMsgUnread = msgUnread;
+        MessageUnread messageUnread = redisTool.getObject("msg_unread:" + uid, MessageUnread.class);
+        if (messageUnread == null) {
+            messageUnread = messageUnreadMapper.selectById(uid);
+            if (messageUnread != null) {
+                MessageUnread finalMessageUnread = messageUnread;
                 try{
                     Future<?> updateMsgRedis = executorService.submit(()->{
-                        redisTool.setExObjectValue("msg_unread:" + uid, finalMsgUnread);    // 异步更新到redis
+                        redisTool.setExObjectValue("msg_unread:" + uid, finalMessageUnread);    // 异步更新到redis
                     },taskExecutor);
                     updateMsgRedis.get();
                 }catch (InterruptedException ie){
@@ -165,29 +165,29 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
                     shutdownTermination(executorService);
                 }
             } else {
-                return new MsgUnread(uid,0,0,0,0,0,0);
+                return new MessageUnread(uid,0,0,0,0,0,0);
             }
         }
-        return msgUnread;
+        return messageUnread;
     }
 
     public void updateCount(Integer uid, Integer count) {
         // 查询当前的 message 值
-        MsgUnread currentMessage = msgUnreadMapper.selectById(uid);
+        MessageUnread currentMessage = messageUnreadMapper.selectById(uid);
         // 计算新的 message 值
         int newMessage = Math.max(currentMessage.getMessage() - count, 0);
         currentMessage.setMessage(newMessage);
         // 更新数据库
-        msgUnreadMapper.updateById(currentMessage);
+        messageUnreadMapper.updateById(currentMessage);
 
         // 假设MsgUnread类中有一个version字段用于乐观锁
-        MsgUnread msgUnread = msgUnreadMapper.selectById(uid);
-        if (msgUnread != null) {
-            newMessage = Math.max(msgUnread.getMessage() - count, 0);
-            msgUnread.setMessage(newMessage);
+        MessageUnread messageUnread = messageUnreadMapper.selectById(uid);
+        if (messageUnread != null) {
+            newMessage = Math.max(messageUnread.getMessage() - count, 0);
+            messageUnread.setMessage(newMessage);
 
             // 尝试更新，如果更新失败则重试
-            int updateCount = msgUnreadMapper.updateByIdWithVersion(msgUnread);
+            int updateCount = messageUnreadMapper.updateByIdWithVersion(messageUnread);
             if (updateCount == 0) {
                 updateCount(uid,count);
             }

@@ -8,7 +8,7 @@ import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.entity.IMResponse;
 import com.bilimili.buaa13.entity.UserVideo;
 import com.bilimili.buaa13.entity.Video;
-import com.bilimili.buaa13.service.message.MsgUnreadService;
+import com.bilimili.buaa13.service.message.MessageUnreadService;
 import com.bilimili.buaa13.service.video.UserVideoService;
 import com.bilimili.buaa13.service.video.VideoStatusService;
 import com.bilimili.buaa13.tools.RedisTool;
@@ -31,7 +31,7 @@ public class UserVideoServiceImpl implements UserVideoService {
     private VideoStatusService videoStatusService;
 
     @Autowired
-    private MsgUnreadService msgUnreadService;
+    private MessageUnreadService messageUnreadService;
 
     @Autowired
     private VideoMapper videoMapper;
@@ -122,7 +122,7 @@ public class UserVideoServiceImpl implements UserVideoService {
                 if(!Objects.equals(video.getUid(), uid)) {
                     // 更新最新被点赞的视频
                     redisTool.storeZSet("be_loved_zset:" + video.getUid(), vid);
-                    msgUnreadService.addOneUnread(video.getUid(), "up_vote");
+                    messageUnreadService.addOneUnread(video.getUid(), "up_vote");
                     // netty 通知未读消息
                     Map<String, Object> map = new HashMap<>();
                     map.put("type", "接收");

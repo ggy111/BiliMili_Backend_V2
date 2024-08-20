@@ -325,22 +325,22 @@ public class ArticleController {
         Map<String, Object> map = articleService.getArticleWithDataById(aid);
         if (map == null) {
             responseResult.setCode(404);
-            responseResult.setMessage("ERROR");
+            responseResult.setMessage("错误");
             return responseResult;
         }
         Article article = (Article) map.get("article");
         if (article.getStatus() != 1) {
             responseResult.setCode(405);
-            responseResult.setMessage("ERROR");
+            responseResult.setMessage("错误");
             return responseResult;
         }
         String[] vidString = article.getVid().split(",");
-        List<Integer> vids = new ArrayList<>();
+        List<Integer> vidList = new ArrayList<>();
         for(String vid : vidString){
-            vids.add(Integer.parseInt(vid));
+            vidList.add(Integer.parseInt(vid));
         }
         Map<String, Object> dataMap = new HashMap<>();
-        HistoryController.setHistoryMap(vids, videoMapper, videoStatusMapper,dataMap);
+        HistoryController.setHistoryMap(vidList, videoMapper, videoStatusMapper,dataMap);
         responseResult.setData(dataMap);
         return responseResult;
     }

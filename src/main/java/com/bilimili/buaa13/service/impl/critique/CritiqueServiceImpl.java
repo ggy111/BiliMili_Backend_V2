@@ -9,7 +9,7 @@ import com.bilimili.buaa13.mapper.ArticleMapper;
 import com.bilimili.buaa13.mapper.CritiqueMapper;
 import com.bilimili.buaa13.service.article.ArticleStatusService;
 import com.bilimili.buaa13.service.critique.CritiqueService;
-import com.bilimili.buaa13.service.message.MsgUnreadService;
+import com.bilimili.buaa13.service.message.MessageUnreadService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.tools.RedisTool;
 import io.netty.channel.Channel;
@@ -50,7 +50,7 @@ public class CritiqueServiceImpl implements CritiqueService {
     private UserService userService;
 
     @Autowired
-    private MsgUnreadService msgUnreadService;
+    private MessageUnreadService messageUnreadService;
 
     @Autowired
     @Qualifier("taskExecutor")
@@ -238,7 +238,7 @@ public class CritiqueServiceImpl implements CritiqueService {
             if(!critique.getAcceptId().equals(critique.getPostId())) {
                 //1注释Redis
                 redisTool.storeZSet("reply_zset:" + critique.getAcceptId(), critique.getCriId());
-                msgUnreadService.addOneUnread(critique.getAcceptId(), "reply");
+                messageUnreadService.addOneUnread(critique.getAcceptId(), "reply");
 
                 // 通知未读消息
                 Map<String, Object> map = new HashMap<>();

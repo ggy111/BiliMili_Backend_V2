@@ -425,3 +425,25 @@ CREATE TABLE `post` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 -- Dump completed on 2024-04-16 17:42:34
+
+DROP TABLE IF EXISTS `user_record_string`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_record_string` (
+                        `uid` int(11) NOT NULL COMMENT '用户id',
+                        `play_json` varchar(2000) NOT NULL COMMENT '用户近七天播放量',
+                        `play_new` int(11) NOT NULL DEFAULT '0' COMMENT '今天的新播放量',
+                        `play_old` int(11) DEFAULT '0' COMMENT '昨天老播放量',
+                        `love_json` varchar(2000) NOT NULL COMMENT '用户近七天点赞量',
+                        `love_new` int(11) NOT NULL DEFAULT '0' COMMENT '今天的新点赞量',
+                        `love_old` int(11) DEFAULT '0' COMMENT '昨天老点赞量',
+                        `collect_json` varchar(2000) NOT NULL COMMENT '用户近七天收藏量',
+                        `collect_new` int(11) NOT NULL DEFAULT '0' COMMENT '今天的新收藏量',
+                        `collect_old` int(11) DEFAULT '0' COMMENT '昨天老收藏量',
+                        `fan_json` varchar(2000) NOT NULL COMMENT '用户近七天粉丝量',
+                        `fan_new` int(11) NOT NULL DEFAULT '0' COMMENT '今天的新粉丝量',
+                        `fan_old` int(11) DEFAULT '0' COMMENT '昨天老粉丝量',
+                        PRIMARY KEY (`uid`),
+                        UNIQUE KEY `id` (`uid`)
+) ENGINE=InnoDB AUTO_INCREMENT=5000 DEFAULT CHARSET=utf8mb4 COMMENT='创作周报表';
+/*!40101 SET character_set_client = @saved_cs_client */;

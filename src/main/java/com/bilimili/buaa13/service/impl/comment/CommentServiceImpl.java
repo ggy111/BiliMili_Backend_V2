@@ -9,7 +9,7 @@ import com.bilimili.buaa13.im.IMServer;
 import com.bilimili.buaa13.mapper.CommentMapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.service.comment.CommentService;
-import com.bilimili.buaa13.service.message.MsgUnreadService;
+import com.bilimili.buaa13.service.message.MessageUnreadService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.video.VideoStatusService;
 import com.bilimili.buaa13.tools.RedisTool;
@@ -45,7 +45,7 @@ public class CommentServiceImpl implements CommentService {
     private UserService userService;
 
     @Autowired
-    private MsgUnreadService msgUnreadService;
+    private MessageUnreadService messageUnreadService;
 
     @Autowired
     @Qualifier("taskExecutor")
@@ -176,7 +176,7 @@ public class CommentServiceImpl implements CommentService {
             if(!comment.getToUserId().equals(comment.getUid())) {
                 //1注释Redis
                 redisTool.storeZSet("reply_zset:" + comment.getToUserId(), comment.getCid());
-                msgUnreadService.addOneUnread(comment.getToUserId(), "reply");
+                messageUnreadService.addOneUnread(comment.getToUserId(), "reply");
 
                 // 通知未读消息
                 Map<String, Object> map = new HashMap<>();

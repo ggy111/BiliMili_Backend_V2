@@ -8,7 +8,7 @@ import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.mapper.ArticleMapper;
 import com.bilimili.buaa13.mapper.CritiqueMapper;
 import com.bilimili.buaa13.service.article.ArticleStatusService;
-import com.bilimili.buaa13.service.message.MsgUnreadService;
+import com.bilimili.buaa13.service.message.MessageUnreadService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.video.VideoDenounceService;
 import com.bilimili.buaa13.tools.RedisTool;
@@ -39,7 +39,7 @@ public class VideoDenounceImpl implements VideoDenounceService {
     private UserService userService;
 
     @Autowired
-    private MsgUnreadService msgUnreadService;
+    private MessageUnreadService messageUnreadService;
 
     @Autowired
     @Qualifier("taskExecutor")

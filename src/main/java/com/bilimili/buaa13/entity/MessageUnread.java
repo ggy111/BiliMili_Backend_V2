@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MsgUnread {
+public class MessageUnread {
     @TableId
     private Integer uid;    // 用户uid 不自动增长 跟随注册时的uid
     private Integer reply;  // 回复我的
