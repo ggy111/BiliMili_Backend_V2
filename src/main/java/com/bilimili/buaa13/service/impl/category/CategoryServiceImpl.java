@@ -112,8 +112,8 @@ public class CategoryServiceImpl implements CategoryService {
             List<String> dataList = new ArrayList<>();
             for (Object sor : sortedCategories) {
                 dataList.add(JSON.toJSONString(sor));
+                redisTemplate.opsForList().rightPush("categoryList", JSON.toJSONString(sor));
             }
-            redisTemplate.opsForList().rightPushAll("categoryList", dataList);
         } catch (Exception e) {
             log.error("存储redis分类列表失败");
         }
