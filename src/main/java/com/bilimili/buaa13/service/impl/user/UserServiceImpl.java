@@ -240,7 +240,7 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.selectById(uid);
         // 先更新数据库
         UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("uid", uid).set("headPortrait", headPortrait_url);
+        updateWrapper.eq("uid", uid).set("head_portrait", headPortrait_url);
         userMapper.update(null, updateWrapper);
         CompletableFuture.runAsync(() -> {
             //1注释Redis

@@ -61,6 +61,7 @@ public class UserController {
     public ResponseResult getOneUserInfo(@RequestParam("uid") Integer uid) {
         ResponseResult responseResult = new ResponseResult();
         responseResult.setData(userService.getUserByUId(uid));
+        System.out.println("getUserInfo: " + responseResult);
         return responseResult;
     }
 }

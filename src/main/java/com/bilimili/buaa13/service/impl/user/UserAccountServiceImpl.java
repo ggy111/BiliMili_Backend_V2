@@ -488,8 +488,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         UserDTO userDTO = new UserDTO();
         userDTO.setUid(user.getUid());
         userDTO.setNickname(user.getNickname());
-        userDTO.setHeadPortrait_url(user.getHeadPortrait());
-        userDTO.setBackground_url(user.getBackground());
+        userDTO.setAvatar_url(user.getHeadPortrait());
+        userDTO.setBg_url(user.getBackground());
         userDTO.setGender(user.getGender());
         userDTO.setDescription(user.getDescription());
         userDTO.setExperience(user.getExperience());
@@ -505,8 +505,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         userDTO.setUid(user.getUid());
         userDTO.setState(user.getState());
         userDTO.setNickname("账号已注销");
-        userDTO.setHeadPortrait_url("https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png");
-        userDTO.setBackground_url("https://tinypic.host/images/2023/11/15/69PB2Q5W9D2U7L.png");
+        userDTO.setAvatar_url("https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png");
+        userDTO.setBg_url("https://tinypic.host/images/2023/11/15/69PB2Q5W9D2U7L.png");
         userDTO.setGender(2);
         userDTO.setDescription("-");
         userDTO.setExperience(0);

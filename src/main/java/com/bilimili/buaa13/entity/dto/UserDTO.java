@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 public class UserDTO {
     private Integer uid;
     private String nickname;
-    private String headPortrait_url;
-    private String background_url;
+    private String avatar_url;
+    private String bg_url;
     private Integer gender; // 性别，0 女性 1 男性 2无性别，默认2
     private String description;
     private Integer experience;    // 经验值 50/200/1500/4500/10800/28800 分别是0~6级的区间
