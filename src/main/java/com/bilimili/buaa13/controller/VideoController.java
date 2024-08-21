@@ -145,10 +145,10 @@ public class VideoController {
             videoList = videoService.getVideosDataWithPageByVideoList(randomVideos, 1, 10);
             Collections.shuffle(videoList);     // 随机打乱列表顺序
         }
-        System.out.println("videoList again:" + videoList.size());
+        //System.out.println("videoList again:" + videoList.size());
         map.put("videos", videoList);
         map.put("vids", randomVid);
-        System.out.println("vids + : " + randomVid);
+        //System.out.println("vids + : " + randomVid);
         if (!videoList.isEmpty()) {
             map.put("more", true);
         } else {

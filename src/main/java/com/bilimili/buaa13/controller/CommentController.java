@@ -44,7 +44,7 @@ public class CommentController {
                                               @RequestParam("type") Integer sortType) {
         ResponseResult responseResult = new ResponseResult();
         Long count = redisTemplate.opsForZSet().zCard("comment_video:" + vid);
-        System.out.println("getCritiqueTreeByAid "+count);
+        //System.out.println("getCritiqueTreeByAid "+count);
         if (count == null) {return responseResult;}
         Map<String, Object> map = new HashMap<>();
         if (offset >= count) {
@@ -61,7 +61,7 @@ public class CommentController {
             map.put("comments", commentService.getCommentTreeByVid(vid, offset, sortType));
         }
         responseResult.setData(map);
-        System.out.println("getCritiqueTreeByAid map: "+map);
+        //System.out.println("getCritiqueTreeByAid map: "+map);
         return responseResult;
     }
 

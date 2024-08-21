@@ -39,6 +39,7 @@ public class FollowController {
     public ResponseResult isFans(@RequestParam("uidFollow") Integer up, @RequestParam("uidFans") Integer fan) {
         ResponseResult responseResult = new ResponseResult();
         List<Integer> fans = followService.getUidFans(up,true);
+        System.out.println("isFans: "+fans);
         responseResult.setData(false);
         if(fans==null || fans.isEmpty()) {
             responseResult.setData(false);
@@ -46,7 +47,7 @@ public class FollowController {
         else if (fans.contains(fan)) {
             responseResult.setData(true);
         }
-        System.out.println(responseResult.getData());
+        //System.out.println(responseResult.getData());
         return responseResult;
     }
     /**
@@ -84,7 +85,7 @@ public class FollowController {
                                        @RequestParam("uidFans") Integer uidFans,
                                        @RequestParam("isfollowing") boolean isfollowing) throws JsonProcessingException {
         ResponseResult responseResult = new ResponseResult();
-        System.out.println(isfollowing);
+        //System.out.println(isfollowing);
         if(!isfollowing){
             followService.addFollow(uidFollow, uidFans);
             responseResult.setMessage("关注成功");

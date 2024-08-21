@@ -117,7 +117,12 @@ public class FollowServiceImpl implements FollowService {
      */
     @Override
     public void addFollow(Integer uidFollow, Integer uidFans) throws JsonProcessingException {
+        if(uidFollow.equals(uidFans)){return;}
         Follow newFollow = new Follow(uidFollow,uidFans,1);
+        QueryWrapper<Follow> followQueryWrapper = new QueryWrapper<>();
+        followQueryWrapper.eq("uid_follow", uidFollow).eq("uid_fans", uidFans);
+        Follow follow = followMapper.selectOne(followQueryWrapper);
+        if(follow!=null) return;
         followMapper.insert(newFollow);
         String key = "follow:" + uidFollow;
         redisTool.storeZSet(key,uidFans);

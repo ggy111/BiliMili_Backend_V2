@@ -15,6 +15,7 @@ COPY target/bilimili.jar /bilimili/bilimili.jar
 
 # 暴露应用运行所需的端口
 EXPOSE 7070
+EXPOSE 7071
 
 # 启动应用
 CMD ["java", "-jar", "bilimili.jar"]

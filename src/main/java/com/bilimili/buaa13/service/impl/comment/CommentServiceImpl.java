@@ -307,7 +307,7 @@ public class CommentServiceImpl implements CommentService {
         } else if(sortType == 2){ // 时间
             commentQueryWrapper.orderByDesc("create_time");
         }
-        System.out.println("getRootCommentsByVid "+commentMapper.selectList(commentQueryWrapper));
+        //System.out.println("getRootCommentsByVid "+commentMapper.selectList(commentQueryWrapper));
         return commentMapper.selectList(commentQueryWrapper);
     }
 
