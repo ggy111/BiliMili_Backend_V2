@@ -1,3 +1,9 @@
+# 使用 Maven 镜像构建应用
+FROM maven:latest AS builder
+WORKDIR /bilimili
+COPY . .
+RUN mvn clean package
+
 # 使用官方的OpenJDK镜像作为基础镜像
 FROM openjdk:17-jdk-alpine
 
