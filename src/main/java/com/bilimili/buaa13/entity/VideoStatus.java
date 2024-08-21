@@ -12,7 +12,7 @@ public class VideoStatus {
     @TableId
     private Integer vid;
     private Integer play;
-    private Integer barrage;
+    private Integer danmu;
     private Integer good;
     private Integer bad;
     private Integer coin;

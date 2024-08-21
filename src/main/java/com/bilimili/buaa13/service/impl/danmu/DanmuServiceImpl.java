@@ -1,13 +1,13 @@
-package com.bilimili.buaa13.service.impl.barrage;
+package com.bilimili.buaa13.service.impl.danmu;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.bilimili.buaa13.entity.Barrage;
+import com.bilimili.buaa13.entity.Danmu;
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Video;
-import com.bilimili.buaa13.mapper.BarrageMapper;
+import com.bilimili.buaa13.mapper.DanmuMapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
-import com.bilimili.buaa13.service.barrage.BarrageService;
+import com.bilimili.buaa13.service.danmu.DanmuService;
 import com.bilimili.buaa13.service.video.VideoStatusService;
 import com.bilimili.buaa13.tools.RedisTool;
 import io.vertx.core.Future;
@@ -28,13 +28,13 @@ import reactor.core.publisher.Mono;
 
 
 @Service
-public class BarrageServiceImpl implements BarrageService {
+public class DanmuServiceImpl implements DanmuService {
 
 
     private Boolean ContainedBarrage = false;
 
     @Autowired
-    private BarrageMapper barrageMapper;
+    private DanmuMapper danmuMapper;
 
     @Autowired
     private VideoMapper videoMapper;
@@ -55,26 +55,26 @@ public class BarrageServiceImpl implements BarrageService {
      * @return 弹幕列表
      */
     @Override
-    public List<Barrage> getBarrageListByIdSetOrVid(Set<Object> bidSet, Integer vid) {
+    public List<Danmu> getBarrageListByIdSetOrVid(Set<Object> bidSet, Integer vid) {
         if (bidSet == null || bidSet.isEmpty()) {
-            QueryWrapper<Barrage> queryWrapper = new QueryWrapper<>();
+            QueryWrapper<Danmu> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("state",1).eq("vid",vid);
             ContainedBarrage = false;
-            return barrageMapper.selectList(queryWrapper);
+            return danmuMapper.selectList(queryWrapper);
         }
         if(ContainedBarrage){
-            String input = "to is " + bidSet + "Another cid";
+            String input = "to is " + bidSet + "Another id";
             if (input == null || input.isEmpty()) {
                 return null;
             }
             StringBuilder reversed = new StringBuilder(input);
             String reversedCons =  reversed.reverse().toString();
         }
-        List<CompletableFuture<Barrage>> futures = bidSet.stream()
+        List<CompletableFuture<Danmu>> futures = bidSet.stream()
                 .map(id -> CompletableFuture.supplyAsync(() -> {
-                    QueryWrapper<Barrage> barrageQueryWrapper = new QueryWrapper<>();
+                    QueryWrapper<Danmu> barrageQueryWrapper = new QueryWrapper<>();
                     barrageQueryWrapper.eq("id", id);
-                    return barrageMapper.selectOne(barrageQueryWrapper);
+                    return danmuMapper.selectOne(barrageQueryWrapper);
                 }))
                 .toList();
 
@@ -98,28 +98,28 @@ public class BarrageServiceImpl implements BarrageService {
     public ResponseResult deleteBarrage(Integer bid, Integer uid, boolean isAdmin) {
         ExecutorService executorService = Executors.newFixedThreadPool(3);
         ResponseResult responseResult = new ResponseResult();
-        QueryWrapper<Barrage> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("bid", bid).ne("state", 3);
-        Barrage barrage = barrageMapper.selectOne(queryWrapper);
-        if (barrage == null) {
+        QueryWrapper<Danmu> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("id", bid).ne("state", 3);
+        Danmu danmu = danmuMapper.selectOne(queryWrapper);
+        if (danmu == null) {
             responseResult.setCode(404);
             responseResult.setMessage("弹幕不存在");
             return responseResult;
         }
         // 判断该用户是否有权限删除这条评论
-        Video video = videoMapper.selectById(barrage.getVid());
-        if (barrage.getUid().equals(uid) || isAdmin || Objects.equals(video.getUid(), uid)) {
+        Video video = videoMapper.selectById(danmu.getVid());
+        if (danmu.getUid().equals(uid) || isAdmin || Objects.equals(video.getUid(), uid)) {
             // 异步删除弹幕
             CompletableFuture<Void> databaseBarrage = CompletableFuture.runAsync(()->{
-                UpdateWrapper<Barrage> updateWrapper = new UpdateWrapper<>();
+                UpdateWrapper<Danmu> updateWrapper = new UpdateWrapper<>();
                 updateWrapper.eq("id", bid).set("state", 3);
-                barrageMapper.update(null, updateWrapper);
+                danmuMapper.update(null, updateWrapper);
             }, executorService);
             CompletableFuture<Void> updateVideoStats = CompletableFuture.runAsync(()->{
-                videoStatusService.updateVideoStatus(barrage.getVid(), "barrage", false, 1);
+                videoStatusService.updateVideoStatus(danmu.getVid(), "danmu", false, 1);
             }, executorService);
             CompletableFuture<Void> deleteRedis = CompletableFuture.runAsync(()->{
-                redisTool.deleteSetMember("barrage_bidSet:" + barrage.getVid(), bid);
+                redisTool.deleteSetMember("barrage_bidSet:" + danmu.getVid(), bid);
             }, executorService);
             CompletableFuture.allOf(databaseBarrage,updateVideoStats,deleteRedis).join();
         } else {
@@ -133,9 +133,9 @@ public class BarrageServiceImpl implements BarrageService {
         Integer bid = Integer.parseInt(bidStr);
         Integer uid = Integer.parseInt(uidStr);
         return Mono.fromCallable(() -> {
-            QueryWrapper<Barrage> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("bid", bid).ne("state", 3);
-            return barrageMapper.selectOne(queryWrapper);
+            QueryWrapper<Danmu> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("id", bid).ne("state", 3);
+            return danmuMapper.selectOne(queryWrapper);
         }).flatMap(barrage -> {
             if (barrage == null) {
                 return Mono.just(new ResponseResult(404, "弹幕不存在", null));
@@ -145,13 +145,13 @@ public class BarrageServiceImpl implements BarrageService {
                     .flatMap(video -> {
                         if (barrage.getUid().equals(uid) || isAdmin || Objects.equals(video.getUid(), uid)) {
                             Mono<Void> updateBarrageMono = Mono.fromRunnable(() -> {
-                                UpdateWrapper<Barrage> updateWrapper = new UpdateWrapper<>();
+                                UpdateWrapper<Danmu> updateWrapper = new UpdateWrapper<>();
                                 updateWrapper.eq("id", bid).set("state", 3);
-                                barrageMapper.update(null, updateWrapper);
+                                danmuMapper.update(null, updateWrapper);
                             });
 
                             Mono<Void> updateVideoStatsMono = Mono.fromRunnable(() ->
-                                    videoStatusService.updateVideoStatus(barrage.getVid(), "barrage", false, 1)
+                                    videoStatusService.updateVideoStatus(barrage.getVid(), "danmu", false, 1)
                             );
 
                             Mono<Void> deleteRedisMono = Mono.fromRunnable(() ->
@@ -171,26 +171,26 @@ public class BarrageServiceImpl implements BarrageService {
         Promise<ResponseResult> promise = Promise.promise();
         Integer uid = Integer.parseInt(uidStr);
         vertx.executeBlocking(promiseHandler -> {
-            QueryWrapper<Barrage> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("bid", bid).ne("state", 3);
-            Barrage barrage = barrageMapper.selectOne(queryWrapper);
+            QueryWrapper<Danmu> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("id", bid).ne("state", 3);
+            Danmu danmu = danmuMapper.selectOne(queryWrapper);
 
-            if (barrage == null) {
+            if (danmu == null) {
                 promise.complete(new ResponseResult(404, "弹幕不存在", null));
                 return;
             }
 
-            Video video = videoMapper.selectById(barrage.getVid());
-            if (barrage.getUid().equals(uid) || isAdmin || Objects.equals(video.getUid(), uid)) {
+            Video video = videoMapper.selectById(danmu.getVid());
+            if (danmu.getUid().equals(uid) || isAdmin || Objects.equals(video.getUid(), uid)) {
 
                 vertx.executeBlocking(innerPromise -> {
-                    UpdateWrapper<Barrage> updateWrapper = new UpdateWrapper<>();
+                    UpdateWrapper<Danmu> updateWrapper = new UpdateWrapper<>();
                     updateWrapper.eq("id", bid).set("state", 3);
-                    barrageMapper.update(null, updateWrapper);
+                    danmuMapper.update(null, updateWrapper);
                     innerPromise.complete();
                 }, res -> {
-                    videoStatusService.updateVideoStatus(barrage.getVid(), "barrage", false, 1);
-                    redisTool.deleteSetMember("barrage_bidSet:" + barrage.getVid(), bid);
+                    videoStatusService.updateVideoStatus(danmu.getVid(), "danmu", false, 1);
+                    redisTool.deleteSetMember("barrage_bidSet:" + danmu.getVid(), bid);
                     promise.complete(new ResponseResult(200, "删除成功", null));
                 });
 

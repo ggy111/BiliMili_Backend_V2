@@ -81,7 +81,7 @@ public class VideoController {
             Collections.shuffle(videoList);
         }
 
-        System.out.println("videoList Size :" + videoList.size());
+        //System.out.println("videoList Size :" + videoList.size());
         responseResult.setData(videoList);
         return responseResult;
     }
@@ -93,7 +93,7 @@ public class VideoController {
      */
     @GetMapping("/video/cumulative/visitor")
     public ResponseResult cumulativeVideosForVisitor(@RequestParam("vids") String vids) {
-        System.out.println("这个函数被调用了,vids的值 : " + vids);
+        //System.out.println("这个函数被调用了,vids的值 : " + vids);
         ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = new HashMap<>();
         List<Integer> vidsList = new ArrayList<>();
@@ -112,7 +112,7 @@ public class VideoController {
         //Set<Object> set = redisTool.getMembers("video_status:1");
         List<Video> allVideos = videoMapper.selectAllVideoByStatus(1);
         List<Integer> allVideoIds = new ArrayList<>();
-        System.out.println("allVideo有如下内容"+allVideos);
+        //System.out.println("allVideo有如下内容"+allVideos);
         if (allVideos == null) {
             map.put("videos", new ArrayList<>());
             map.put("vids", new ArrayList<>());

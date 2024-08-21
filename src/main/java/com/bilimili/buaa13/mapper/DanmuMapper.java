@@ -1,14 +1,14 @@
 package com.bilimili.buaa13.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.bilimili.buaa13.entity.Barrage;
+import com.bilimili.buaa13.entity.Danmu;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 import java.util.Map;
 
 @Mapper
-public interface BarrageMapper extends BaseMapper<Barrage> {
+public interface DanmuMapper extends BaseMapper<Danmu> {
 
 
     //----------------------------------------------------------------------------------
@@ -18,19 +18,19 @@ public interface BarrageMapper extends BaseMapper<Barrage> {
     @Insert("INSERT INTO barrage (bid,vid, uid, content, time_in_video, create_date, color, mode, word_size) " +
             "VALUES (#{bid},#{vid}, #{userId}, #{content}, #{sendTime}, #{createTime}, #{color}, #{mode}, #{fontSize})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
-    int insertBarrage(Barrage barrage);
+    int insertBarrage(Danmu danmu);
 
     // 根据视频ID获取弹幕列表
     @Select("SELECT * FROM barrage WHERE vid = #{vid} ORDER BY time_in_video ASC")
-    List<Barrage> getBarragesByVid(@Param("vid") Integer vid);
+    List<Danmu> getBarragesByVid(@Param("vid") Integer vid);
 
     // 根据用户ID获取用户发送的所有弹幕
     @Select("SELECT * FROM barrage WHERE uid = #{userId} ORDER BY create_date DESC")
-    List<Barrage> getBarragesByUserId(@Param("userId") Integer userId);
+    List<Danmu> getBarragesByUserId(@Param("userId") Integer userId);
 
     // 获取指定视频指定时间范围内的弹幕
     @Select("SELECT * FROM barrage WHERE vid = #{vid} AND time_in_video BETWEEN #{startTime} AND #{endTime} ORDER BY time_in_video ASC")
-    List<Barrage> getBarragesByVidAndTimeRange(@Param("vid") Integer vid, @Param("startTime") String startTime, @Param("endTime") String endTime);
+    List<Danmu> getBarragesByVidAndTimeRange(@Param("vid") Integer vid, @Param("startTime") String startTime, @Param("endTime") String endTime);
 
     // 删除指定用户的所有弹幕
     @Delete("DELETE FROM barrage WHERE uid = #{userId}")
@@ -50,15 +50,15 @@ public interface BarrageMapper extends BaseMapper<Barrage> {
 
     // 获取某个视频下特定颜色的弹幕
     @Select("SELECT * FROM barrage WHERE vid = #{vid} AND color = #{color} ORDER BY time_in_video ASC")
-    List<Barrage> getBarragesByVidAndColor(@Param("vid") Integer vid, @Param("color") String color);
+    List<Danmu> getBarragesByVidAndColor(@Param("vid") Integer vid, @Param("color") String color);
 
     // 获取某个视频下特定类型的弹幕
     @Select("SELECT * FROM barrage WHERE vid = #{vid} AND mode = #{mode} ORDER BY time_in_video ASC")
-    List<Barrage> getBarragesByVidAndmode(@Param("vid") Integer vid, @Param("mode") Integer mode);
+    List<Danmu> getBarragesByVidAndmode(@Param("vid") Integer vid, @Param("mode") Integer mode);
 
     // 获取某个视频下特定字体大小的弹幕
     @Select("SELECT * FROM barrage WHERE vid = #{vid} AND word_size = #{fontSize} ORDER BY time_in_video ASC")
-    List<Barrage> getBarragesByVidAndFontSize(@Param("vid") Integer vid, @Param("fontSize") Integer fontSize);
+    List<Danmu> getBarragesByVidAndFontSize(@Param("vid") Integer vid, @Param("fontSize") Integer fontSize);
 
     // 获取某个视频下的热门弹幕（按出现频率排序）
     @Select("SELECT content, COUNT(*) as count FROM barrage WHERE vid = #{vid} GROUP BY content ORDER BY count DESC LIMIT #{limit}")
@@ -75,7 +75,7 @@ public interface BarrageMapper extends BaseMapper<Barrage> {
 
     // 获取所有删除的弹幕（物理删除）
     @Select("SELECT * FROM barrage WHERE state = 3")
-    List<Barrage> getAllDeletedBarrages();
+    List<Danmu> getAllDeletedBarrages();
 
     // 逻辑删除弹幕
     @Update("UPDATE barrage SET state = 3 WHERE bid = #{id}")
@@ -87,15 +87,15 @@ public interface BarrageMapper extends BaseMapper<Barrage> {
 
     // 获取某段时间内的所有弹幕
     @Select("SELECT * FROM barrage WHERE create_date BETWEEN #{startTime} AND #{endTime} ORDER BY create_date ASC")
-    List<Barrage> getBarragesByTimeRange(@Param("startTime") String startTime, @Param("endTime") String endTime);
+    List<Danmu> getBarragesByTimeRange(@Param("startTime") String startTime, @Param("endTime") String endTime);
 
     // 获取指定时间段内特定用户的弹幕
     @Select("SELECT * FROM barrage WHERE uid = #{userId} AND create_date BETWEEN #{startTime} AND #{endTime} ORDER BY create_date ASC")
-    List<Barrage> getUserBarragesByTimeRange(@Param("userId") Integer userId, @Param("startTime") String startTime, @Param("endTime") String endTime);
+    List<Danmu> getUserBarragesByTimeRange(@Param("userId") Integer userId, @Param("startTime") String startTime, @Param("endTime") String endTime);
 
     // 获取指定时间段内特定视频的弹幕
     @Select("SELECT * FROM barrage WHERE vid = #{vid} AND create_date BETWEEN #{startTime} AND #{endTime} ORDER BY create_date ASC")
-    List<Barrage> getVidBarragesByTimeRange(@Param("vid") Integer vid, @Param("startTime") String startTime, @Param("endTime") String endTime);
+    List<Danmu> getVidBarragesByTimeRange(@Param("vid") Integer vid, @Param("startTime") String startTime, @Param("endTime") String endTime);
 
 
     //-------------------------------------------------------------------------------

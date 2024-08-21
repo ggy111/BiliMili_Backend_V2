@@ -72,6 +72,9 @@ public class UserAccountController {
     public ResponseResult adminLogin(@RequestBody Map<String, String> map) {
         String username = map.get("username");
         String password = map.get("password");
+/*        System.out.println("已经进入adminLogin");
+        System.out.println("用户名username:"+username);
+        System.out.println("密码password:"+password);*/
         return userAccountService.adminLogin(username, password);
     }
 

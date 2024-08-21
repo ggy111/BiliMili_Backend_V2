@@ -80,7 +80,7 @@ public interface CritiqueService {
     /**
      * 单独更新点赞或点踩
      * @param criId    评论id
-     * @param column    "up_vote" 点赞 "down_vote" 点踩
+     * @param column    "love" 点赞 "bad" 点踩
      * @param increase  true 增加 false 减少
      * @param count     更改数量
      */

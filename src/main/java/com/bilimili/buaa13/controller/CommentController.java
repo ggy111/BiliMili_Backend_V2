@@ -41,9 +41,10 @@ public class CommentController {
     @GetMapping("/comment/get")
     public ResponseResult getCritiqueTreeByAid(@RequestParam("vid") Integer vid,
                                               @RequestParam("offset") Long offset,
-                                              @RequestParam("sortType") Integer sortType) {
+                                              @RequestParam("type") Integer sortType) {
         ResponseResult responseResult = new ResponseResult();
-        Long count = redisTemplate.opsForZSet().zCard("comment_aideo:" + vid);
+        Long count = redisTemplate.opsForZSet().zCard("comment_video:" + vid);
+        System.out.println("getCritiqueTreeByAid "+count);
         if (count == null) {return responseResult;}
         Map<String, Object> map = new HashMap<>();
         if (offset >= count) {
@@ -60,6 +61,7 @@ public class CommentController {
             map.put("comments", commentService.getCommentTreeByVid(vid, offset, sortType));
         }
         responseResult.setData(map);
+        System.out.println("getCritiqueTreeByAid map: "+map);
         return responseResult;
     }
 
@@ -95,7 +97,6 @@ public class CommentController {
     @NotNull
     private ResponseResult getCritiqueResponseResult(@RequestParam("vid") Integer vid, @RequestParam("root_id") Integer rootId, @RequestParam("parent_id") Integer parentId, @RequestParam("to_user_id") Integer toUserId, @RequestParam("content") String content, CurrentUser currentUser, CommentService commentService) {
         Integer uid = currentUser.getUserId();
-
         ResponseResult responseResult = new ResponseResult();
         CommentTree commentTree = commentService.sendComment(vid, uid, rootId, parentId, toUserId, content);
         if (commentTree == null) {

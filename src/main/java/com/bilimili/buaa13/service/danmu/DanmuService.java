@@ -1,12 +1,12 @@
-package com.bilimili.buaa13.service.barrage;
+package com.bilimili.buaa13.service.danmu;
 
+import com.bilimili.buaa13.entity.Danmu;
 import com.bilimili.buaa13.entity.ResponseResult;
-import com.bilimili.buaa13.entity.Barrage;
 
 import java.util.List;
 import java.util.Set;
 
-public interface BarrageService {
+public interface DanmuService {
     /**
      * 根据弹幕ID集合查询弹幕列表
      *
@@ -14,7 +14,7 @@ public interface BarrageService {
      * @param vid 视频id
      * @return 弹幕列表
      */
-    List<Barrage> getBarrageListByIdSetOrVid(Set<Object> bidSet, Integer vid);
+    List<Danmu> getBarrageListByIdSetOrVid(Set<Object> bidSet, Integer vid);
 
     /**
      * 删除弹幕

@@ -351,7 +351,7 @@ public class CritiqueServiceImpl implements CritiqueService {
         QueryWrapper<Critique> critiqueQueryWrapper = new QueryWrapper<>();
         critiqueQueryWrapper.in("id", rootIdsSet).ne("is_deleted", 1);
         if (sortType == 1) { // 热度
-            critiqueQueryWrapper.orderByDesc("(up_vote - down_vote)").last("LIMIT 10 OFFSET " + offset);
+            critiqueQueryWrapper.orderByDesc("(love - bad)").last("LIMIT 10 OFFSET " + offset);
         } else if(sortType == 2){ // 时间
             critiqueQueryWrapper.orderByDesc("create_time");
         }
@@ -386,17 +386,17 @@ public class CritiqueServiceImpl implements CritiqueService {
         UpdateWrapper<Critique> updateWrapper = new UpdateWrapper<>();
         if (addUpVote) {
             updateWrapper.setSql(
-                    "up_vote = up_vote + 1, down_vote = CASE WHEN " +
-                            "down_vote - 1 < 0 " +
+                    "love = love + 1, bad = CASE WHEN " +
+                            "bad - 1 < 0 " +
                             "THEN 0 " +
-                            "ELSE down_vote - 1 END"
+                            "ELSE bad - 1 END"
             );
         } else {
             updateWrapper.setSql(
-                    "down_vote = down_vote + 1, up_vote = CASE WHEN " +
-                            "up_vote - 1 < 0 " +
+                    "bad = bad + 1, love = CASE WHEN " +
+                            "love - 1 < 0 " +
                             "THEN 0 " +
-                            "ELSE up_vote - 1 END"
+                            "ELSE love - 1 END"
             );
         }
 
@@ -406,7 +406,7 @@ public class CritiqueServiceImpl implements CritiqueService {
     /**
      * 单独更新点赞或点踩
      * @param criId    评论id
-     * @param column    "up_vote" 点赞 "down_vote" 点踩
+     * @param column    "love" 点赞 "bad" 点踩
      * @param increase  true 增加 false 减少
      * @param count     更改数量
      * 2024.08.03

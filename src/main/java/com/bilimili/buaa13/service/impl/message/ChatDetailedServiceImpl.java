@@ -47,7 +47,7 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
             return map;
         }
         QueryWrapper<ChatDetailed> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("bid", set);
+        queryWrapper.in("id", set);
         if(offset >= Integer.MAX_VALUE){
             //不要超过int最大值
             map.put("messageList", Collections.emptyList());

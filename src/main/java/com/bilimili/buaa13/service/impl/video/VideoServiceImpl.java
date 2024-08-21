@@ -230,10 +230,10 @@ public class VideoServiceImpl implements VideoService {
             }
             //1注释Redis
             Integer lastStatus = video.getStatus();
-            video.setStatus(1);
+            video.setStatus(status);
             UpdateWrapper<Video> updateWrapper = new UpdateWrapper<>();
             // 更新视频状态审核
-            updateWrapper.eq("vid", vid).set("status", 1).set("upload_date", new Date());
+            updateWrapper.eq("vid", vid).set("status", status).set("upload_date", new Date());
             int flag = videoMapper.update(null, updateWrapper);
             if (flag > 0) {
                 // 更新成功

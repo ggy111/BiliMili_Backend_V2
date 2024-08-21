@@ -71,6 +71,7 @@ public class CommentServiceImpl implements CommentService {
             CommentTree commentTree = buildCommentTree(comment,0L,2L);
             commentTrees.add(commentTree);
         }
+        //System.out.println("getCommentTreeByVid+: "+commentTrees);
         return commentTrees;
     }
 
@@ -85,24 +86,24 @@ public class CommentServiceImpl implements CommentService {
     private CommentTree buildCommentTree(Comment comment, Long start, Long end) {
         //先将子节点设为null，下面再递归构建
         CommentTree commentTree = new CommentTree(
-                comment.getCid(),
+                comment.getId(),
                 comment.getVid(),
                 comment.getRootId(),
                 comment.getParentId(),
                 comment.getContent(),
                 userService.getUserByUId(comment.getUid()),
                 userService.getUserByUId(comment.getToUserId()),
-                comment.getUpVote(),
-                comment.getDownVote(),
+                comment.getLove(),
+                comment.getBad(),
                 null,
                 comment.getCreateTime(),
                 0L
         );
 
         // 递归查询构建子评论树
-        Integer cid = comment.getCid();
+        Integer Id = comment.getId();
         QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<>();
-        commentQueryWrapper.eq("parent_id", cid).ne("is_deleted", 1);
+        commentQueryWrapper.eq("parent_id", Id).ne("is_deleted", 1);
         long count = commentMapper.selectCount(commentQueryWrapper);
         commentTree.setCount(count);
         List<Comment> comments;
@@ -115,7 +116,7 @@ public class CommentServiceImpl implements CommentService {
         Page<Comment> commentPage = commentMapper.selectPage(page, commentQueryWrapper);
         //查询回复的评论数组
         comments = commentPage.getRecords();
-        List<Comment> sonComments = getChildCommentsByRootId(comment.getCid(), start, end);
+        List<Comment> sonComments = getChildCommentsByRootId(comment.getId(), start, end);
         if (comment.getRootId() == 0 || (comments!=null && !comments.isEmpty()) || (sonComments !=null && !sonComments.isEmpty())) {
             List<CommentTree> sonTreeList = new ArrayList<>();
             if(sonComments ==null || sonComments.isEmpty()){ sonComments = comments;}
@@ -123,7 +124,7 @@ public class CommentServiceImpl implements CommentService {
                 CommentTree sonNode = buildCommentTree(sonComment, start, end);
                 sonTreeList.add(sonNode);
             }
-            commentTree.setSonNode(sonTreeList);
+            commentTree.setReplies(sonTreeList);
         }
         return commentTree;
     }
@@ -143,6 +144,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentTree sendComment(Integer vid, Integer uid, Integer rootId, Integer parentId, Integer toUserId, String content) {
         if (content == null || content.isEmpty() || content.length() > 2000) return null;
+        //System.out.println("sendComment: "+uid);
         Comment comment = new Comment(
                 null,
                 vid,
@@ -157,6 +159,7 @@ public class CommentServiceImpl implements CommentService {
                 null,
                 null
         );
+        System.out.println("sendComment:  comment: "+comment);
         commentMapper.insert(comment);
         // 更新视频评论 + 1
         videoStatusService.updateVideoStatus(comment.getVid(), "comment", true, 1);
@@ -167,15 +170,15 @@ public class CommentServiceImpl implements CommentService {
             //1注释Redis
             // 如果不是根级评论，则加入 redis 对应的 storeZSet 中
             if (!rootId.equals(0)) {
-                redisTool.storeZSet("comment_reply:" + rootId, comment.getCid());
+                redisTool.storeZSet("comment_reply:" + rootId, comment.getId());
             } else {
-                redisTool.storeZSet("comment_video:"+ vid, comment.getCid());
+                redisTool.storeZSet("comment_video:"+ vid, comment.getId());
             }
-            // 表示被回复的用户收到的回复评论的 cid 有序集合
+            // 表示被回复的用户收到的回复评论的 Id 有序集合
             // 如果不是回复自己
             if(!comment.getToUserId().equals(comment.getUid())) {
                 //1注释Redis
-                redisTool.storeZSet("reply_zset:" + comment.getToUserId(), comment.getCid());
+                redisTool.storeZSet("reply_zset:" + comment.getToUserId(), comment.getId());
                 messageUnreadService.addOneUnread(comment.getToUserId(), "reply");
 
                 // 通知未读消息
@@ -195,17 +198,17 @@ public class CommentServiceImpl implements CommentService {
 
     /**
      * 删除评论
-     * @param cid    评论id
+     * @param Id    评论id
      * @param uid   当前用户id
      * @param isAdmin   是否是管理员
      * @return  响应对象
      */
     @Override
     @Transactional
-    public ResponseResult deleteComment(Integer cid, Integer uid, boolean isAdmin) {
+    public ResponseResult deleteComment(Integer Id, Integer uid, boolean isAdmin) {
         ResponseResult responseResult = new ResponseResult();
         QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<>();
-        commentQueryWrapper.eq("cid", cid).ne("is_deleted", 1);
+        commentQueryWrapper.eq("Id", Id).ne("is_deleted", 1);
         Comment comment = commentMapper.selectOne(commentQueryWrapper);
         if (comment == null) {
             responseResult.setCode(404);
@@ -218,11 +221,11 @@ public class CommentServiceImpl implements CommentService {
         if (comment.getUid().equals(uid) || isAdmin || video.getUid().equals(uid)) {
             // 删除评论
             UpdateWrapper<Comment> deleteCommentWrapper = new UpdateWrapper<>();
-            deleteCommentWrapper.eq("cid", comment.getCid()).set("is_deleted", 1);
+            deleteCommentWrapper.eq("Id", comment.getId()).set("is_deleted", 1);
             commentMapper.update(null, deleteCommentWrapper);
             videoStatusService.updateVideoStatus(comment.getVid(), "comment", false, 1);
             //并行流递归删除子评论
-            List<Comment> childComments = getChildCommentsByRootId(cid,0L,-1L);
+            List<Comment> childComments = getChildCommentsByRootId(Id,0L,-1L);
             if (childComments == null || childComments.isEmpty()) {
                 responseResult.setMessage("已删除完毕");
                 return responseResult;
@@ -230,7 +233,7 @@ public class CommentServiceImpl implements CommentService {
             List<ResponseResult> responseResults = childComments.stream().parallel().flatMap(
                     childComment ->{
                         ResponseResult childResponse = new ResponseResult();
-                        childResponse = deleteComment(childComment.getCid(),uid,true);
+                        childResponse = deleteComment(childComment.getId(),uid,true);
                         return Stream.of(childResponse);
                     }
             ).toList();
@@ -242,13 +245,13 @@ public class CommentServiceImpl implements CommentService {
              */
             if (comment.getRootId()==0) {
                 // 查询总共要减少多少评论数
-                int count = Math.toIntExact(redisTool.getZSetNumber("comment_reply:" + comment.getCid()));
+                int count = Math.toIntExact(redisTool.getZSetNumber("comment_reply:" + comment.getId()));
                 videoStatusService.updateVideoStatus(comment.getVid(), "comment", false, count + 1);
-                redisTool.deleteZSetMember("comment_video:" + comment.getVid(), comment.getCid());
-                redisTool.deleteValue("comment_reply:" + comment.getCid());
+                redisTool.deleteZSetMember("comment_video:" + comment.getVid(), comment.getId());
+                redisTool.deleteValue("comment_reply:" + comment.getId());
             } else {
                 videoStatusService.updateVideoStatus(comment.getVid(), "comment", false, 1);
-                redisTool.deleteZSetMember("comment_reply:" + comment.getRootId(), comment.getCid());
+                redisTool.deleteZSetMember("comment_reply:" + comment.getRootId(), comment.getId());
             }
 
             responseResult.setCode(200);
@@ -261,9 +264,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
     /**
-     * @param rootId 根级节点的评论 cid, 即楼层 cid
-     * @return 1. 根据 redis 查找出回复该评论的子评论 cid 列表
-     * 2. 根据 cid 多线程查询出所有评论的详细信息
+     * @param rootId 根级节点的评论 Id, 即楼层 Id
+     * @return 1. 根据 redis 查找出回复该评论的子评论 Id 列表
+     * 2. 根据 Id 多线程查询出所有评论的详细信息
      * 2024.08.03
      */
     @Override
@@ -272,17 +275,13 @@ public class CommentServiceImpl implements CommentService {
         Set<Object> replyIds = redisTemplate.opsForZSet().range("comment_reply:" + rootId, start, end);
         if (replyIds == null || replyIds.isEmpty()) return Collections.emptyList();
         QueryWrapper<Comment> wrapper = new QueryWrapper<>();
-        wrapper.in("bid", replyIds).ne("is_deleted", 1);
-        //return commentMapper.selectList(wrapper);
-        if(end.equals(-1L)){
-            return commentMapper.getRootCommentByStartNoLimit(rootId, start);
-        }
-        return commentMapper.getRootCommentsByStartAndLimit(rootId, start, end - start +1);
+        wrapper.in("Id", replyIds).ne("is_deleted", 1);
+        return commentMapper.selectList(wrapper);
     }
 
     /**
      * 根据视频 vid 获取根评论列表，一次查 10 条
-     * @param vid 视频 cid
+     * @param vid 视频 Id
      * @param offset 偏移量，已经获取到的根评论数量
      * @param sortType 1:按热度排序 2:按时间排序
      * @return List<Comment>
@@ -302,54 +301,52 @@ public class CommentServiceImpl implements CommentService {
         if (rootIdsSet == null || rootIdsSet.isEmpty()) return Collections.emptyList();
 
         QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<>();
-        commentQueryWrapper.in("bid", rootIdsSet).ne("is_deleted", 1);
+        commentQueryWrapper.in("Id", rootIdsSet).ne("is_deleted", 1);
         if (sortType == 1) { // 热度
-            commentQueryWrapper.orderByDesc("(up_vote - down_vote)").last("LIMIT 10 OFFSET " + offset);
+            commentQueryWrapper.orderByDesc("(love - bad)").last("LIMIT 10 OFFSET " + offset);
         } else if(sortType == 2){ // 时间
             commentQueryWrapper.orderByDesc("create_time");
         }
-        //return commentMapper.selectList(commentQueryWrapper);
-        if(sortType == 1) return commentMapper.getVidRootCommentsByHeat(vid,offset,10L);
-        else if (sortType == 2) return commentMapper.getVidRootCommentsByTime(vid,offset,10L);
-        else return Collections.emptyList();
+        System.out.println("getRootCommentsByVid "+commentMapper.selectList(commentQueryWrapper));
+        return commentMapper.selectList(commentQueryWrapper);
     }
 
     /**
      * 获取更多回复评论
      * 由于获取的是回复，所以根据当前评论节点为基准，构建评论树
-     * @param cid 根评论id
+     * @param Id 根评论id
      * @return  包含全部回复评论的评论树
      * 2024.08.03
      */
     @Override
-    public CommentTree getMoreCommentsById(Integer cid) {
-        Comment comment = commentMapper.selectById(cid);
+    public CommentTree getMoreCommentsById(Integer Id) {
+        Comment comment = commentMapper.selectById(Id);
         return buildCommentTree(comment, 0L, -1L);
     }
 
     /**
      * 同时相对更新点赞和点踩
      * 用于原本点踩了，现在直接点赞，一次改完。
-     * @param cid    评论id
+     * @param Id    评论id
      * @param addUpVote   true 点赞 false 点踩
      * 2024.08.03
      */
     @Override
-    public void updateLikeAndDisLike(Integer cid, boolean addUpVote) {
+    public void updateLikeAndDisLike(Integer Id, boolean addUpVote) {
         UpdateWrapper<Comment> updateWrapper = new UpdateWrapper<>();
         if (addUpVote) {
             updateWrapper.setSql(
-                    "up_vote = up_vote + 1, down_vote = CASE WHEN " +
-                    "down_vote - 1 < 0 " +
+                    "love = love + 1, bad = CASE WHEN " +
+                    "bad - 1 < 0 " +
                     "THEN 0 " +
-                    "ELSE down_vote - 1 END"
+                    "ELSE bad - 1 END"
             );
         } else {
             updateWrapper.setSql(
-                    "down_vote = down_vote + 1, up_vote = CASE WHEN " +
-                    "up_vote - 1 < 0 " +
+                    "bad = bad + 1, love = CASE WHEN " +
+                    "love - 1 < 0 " +
                     "THEN 0 " +
-                    "ELSE up_vote - 1 END"
+                    "ELSE love - 1 END"
             );
         }
 
@@ -358,16 +355,16 @@ public class CommentServiceImpl implements CommentService {
 
     /**
      * 单独更新点赞或点踩
-     * @param cid    评论id
-     * @param column    "up_vote" 点赞 "down_vote" 点踩
+     * @param Id    评论id
+     * @param column    "love" 点赞 "bad" 点踩
      * @param increase  true 增加 false 减少
      * @param count     更改数量
      * 2024.08.03
      */
     @Override
-    public void updateComment(Integer cid, String column, boolean increase, Integer count) {
+    public void updateComment(Integer Id, String column, boolean increase, Integer count) {
         UpdateWrapper<Comment> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("id", cid);
+        updateWrapper.eq("id", Id);
         if (increase) {
             updateWrapper.setSql(column + " = " + column + " + " + count);
         } else {

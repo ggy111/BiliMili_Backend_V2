@@ -275,7 +275,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         Map<String, Object> UserDTOMap = getUserDTOMap(user,token);
         responseResult.setMessage("登录成功");
         responseResult.setData(UserDTOMap);
-        System.out.println("已经到login最后了 " +responseResult);
+        //System.out.println("已经到login最后了 " +responseResult);
         return responseResult;
     }
 
@@ -293,6 +293,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         ResponseResult responseResult = loginUserMap.containsKey("responseResult") ? (ResponseResult) loginUserMap.get("responseResult") : null;
         if(user == null){return responseResult;}
         if (responseResult == null) { responseResult = new ResponseResult();}
+
         // 普通用户无权访问
         if (user.getRole() == 0) {
             responseResult.setCode(403);

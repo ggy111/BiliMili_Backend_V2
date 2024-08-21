@@ -22,7 +22,7 @@ public class MessageUnreadController {
     //-----------------------------------------------------------------------------------------
     /**
      * 获取当前用户某一列的未读消息数
-     * @param column    msg_unread表列名 "reply"/"at"/"up_vote"/"system"/"whisper"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at"/"love"/"system"/"whisper"/"dynamic"
      * @return 响应结果，包含指定列的未读消息数
      */
     @GetMapping("/msg-unread/column")
@@ -62,7 +62,7 @@ public class MessageUnreadController {
 
     /**
      * 获取当前用户某一列的未读消息数，并按时间段过滤
-     * @param column    msg_unread表列名 "reply"/"at"/"up_vote"/"system"/"whisper"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at"/"love"/"system"/"whisper"/"dynamic"
      * @param startTime 开始时间（时间戳）
      * @param endTime   结束时间（时间戳）
      * @return 响应结果，包含按时间段过滤后的未读消息数
@@ -96,7 +96,7 @@ public class MessageUnreadController {
 
     /**
      * 为特定列设置未读消息提醒的状态
-     * @param column    msg_unread表列名 "reply"/"at"/"up_vote"/"system"/"whisper"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at"/"love"/"system"/"whisper"/"dynamic"
      * @param status    提醒状态，true表示开启提醒，false表示关闭提醒
      * @return 响应结果，表示设置操作是否成功
      */
@@ -112,7 +112,7 @@ public class MessageUnreadController {
 
     /**
      * 获取某一列的未读消息提醒状态
-     * @param column    msg_unread表列名 "reply"/"at"/"up_vote"/"system"/"whisper"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at"/"love"/"system"/"whisper"/"dynamic"
      * @return 响应结果，包含消息提醒状态
      */
     @GetMapping("/msg-unread/notification-status")
@@ -157,7 +157,7 @@ public class MessageUnreadController {
 
     /**
      * 重置某一列的未读消息数为指定值
-     * @param column    msg_unread表列名 "reply"/"at"/"up_vote"/"system"/"whisper"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at"/"love"/"system"/"whisper"/"dynamic"
      * @param count     要重置的未读消息数
      * @return 响应结果，表示重置操作是否成功
      */
@@ -191,7 +191,7 @@ public class MessageUnreadController {
 
     /**
      * 增加某一列的未读消息数
-     * @param column    msg_unread表列名 "reply"/"at"/"up_vote"/"system"/"whisper"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at"/"love"/"system"/"whisper"/"dynamic"
      * @param increment 增加的未读消息数
      * @return 响应结果，表示增加操作是否成功
      */
@@ -240,7 +240,7 @@ public class MessageUnreadController {
 
     /**
      * 清除某一列的未读消息提示
-     * @param column    msg_unread表列名 "reply"/"at"/"up_vote"/"system"/"whisper"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at"/"love"/"system"/"whisper"/"dynamic"
      */
     @PostMapping("/msg-unread/clear")
     public void clearUnread(@RequestParam("column") String column) {

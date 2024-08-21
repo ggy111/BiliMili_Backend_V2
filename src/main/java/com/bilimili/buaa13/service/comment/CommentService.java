@@ -40,15 +40,15 @@ public interface CommentService {
 
 
     /**
-     * @param rootId 根级节点的评论 cid, 即楼层 cid
-     * @return 1. 根据 redis 查找出回复该评论的子评论 cid 列表
-     * 2. 根据 cid 查询出所有评论的详细信息
+     * @param rootId 根级节点的评论 id, 即楼层 id
+     * @return 1. 根据 redis 查找出回复该评论的子评论 id 列表
+     * 2. 根据 id 查询出所有评论的详细信息
      */
     List<Comment> getChildCommentsByRootId(Integer rootId, Long start, Long end);
 
     /**
      * 根据视频 vid 获取根评论列表，一次查 10 条
-     * @param vid 视频 cid
+     * @param vid 视频 id
      * @param offset 偏移量，已经获取到的根评论数量
      * @param sortType 1:按热度排序 2:按时间排序
      * @return List<Comment>
@@ -74,7 +74,7 @@ public interface CommentService {
     /**
      * 单独更新点赞或点踩
      * @param cid    评论id
-     * @param column    "up_vote" 点赞 "down_vote" 点踩
+     * @param column    "love" 点赞 "bad" 点踩
      * @param increase  true 增加 false 减少
      * @param count     更改数量
      */

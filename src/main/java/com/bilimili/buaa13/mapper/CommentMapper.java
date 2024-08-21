@@ -190,7 +190,7 @@ public interface CommentMapper extends BaseMapper<Comment> {
      * 根据vid和开始位置，限制个数查询，按照热度排序
      */
     @Select("select * from comment where vid = #{vid} order by " +
-            "(select up_vote - down_vote from comment where comment.vid = #{vid})" +
+            "comment.up_vote - comment.down_vote " +
             "limit #{limit} offset #{start}")
     List<Comment> getVidRootCommentsByHeat(@Param("vid") Integer vid,
                                            @Param("start") Long start,

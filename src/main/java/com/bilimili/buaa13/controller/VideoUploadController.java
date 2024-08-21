@@ -36,7 +36,7 @@ public class VideoUploadController {
      * @throws IOException
      */
     @PostMapping("/video/upload-chunk")
-    public ResponseResult uploadFragment(@RequestParam("fragment") MultipartFile fragment,
+    public ResponseResult uploadFragment(@RequestParam("chunk") MultipartFile fragment,
                                       @RequestParam("hash") String hash,
                                       @RequestParam("index") Integer index) throws IOException {
         try {

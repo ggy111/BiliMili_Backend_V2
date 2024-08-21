@@ -7,14 +7,14 @@ public interface MessageUnreadService {
     /**
      * 给指定用户的某一列未读消息加一
      * @param uid   用户ID
-     * @param column    msg_unread表列名 "reply"/"at_num"/"up_vote"/"system_message"/"message"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at_num"/"love"/"system_message"/"message"/"dynamic"
      */
     void addOneUnread(Integer uid, String column);
 
     /**
      * 清除指定用户的某一列未读消息
      * @param uid   用户ID
-     * @param column    msg_unread表列名 "reply"/"at_num"/"up_vote"/"system_message"/"message"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at_num"/"love"/"system_message"/"message"/"dynamic"
      */
     void clearOneUnread(Integer uid, String column);
 

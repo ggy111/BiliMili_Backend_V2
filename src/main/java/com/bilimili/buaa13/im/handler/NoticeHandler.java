@@ -139,7 +139,7 @@ public class NoticeHandler {
                 System.out.println("运行到遍历自己的所有频道");
                 // 发给自己的全部channel
                 Set<Channel> from = IMServer.userChannel.get(user_id);
-                System.out.println("from is " + from + "User cid" + chatDetailed.getPostId());
+                System.out.println("from is " + from + "User id" + chatDetailed.getPostId());
                 if (from != null) {
                     for (Channel channel : from) {
                         channel.writeAndFlush(IMResponse.message("message", map));
@@ -148,11 +148,11 @@ public class NoticeHandler {
                 // 发给对方的全部channel
                 System.out.println("运行到遍历对方的所有频道");
                 Set<Channel> acceptedUser= IMServer.userChannel.get(chatDetailed.getAcceptId());
-                System.out.println("to is " + acceptedUser + "Another cid" + chatDetailed.getAcceptId());
+                System.out.println("to is " + acceptedUser + "Another id" + chatDetailed.getAcceptId());
 
                 //修改于2024.08.09
                 if(acceptedUser == null){
-                    String input = "to is " + acceptedUser + "Another cid" + chatDetailed.getAcceptId();
+                    String input = "to is " + acceptedUser + "Another id" + chatDetailed.getAcceptId();
                     if (input == null || input.isEmpty()) {
                     }
                     StringBuilder reversed = new StringBuilder(input);

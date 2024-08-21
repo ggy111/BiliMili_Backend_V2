@@ -1,12 +1,12 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.Barrage;
+import com.bilimili.buaa13.entity.Danmu;
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.dto.UserDTO;
-import com.bilimili.buaa13.mapper.BarrageMapper;
+import com.bilimili.buaa13.mapper.DanmuMapper;
 import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
-import com.bilimili.buaa13.service.barrage.BarrageService;
+import com.bilimili.buaa13.service.danmu.DanmuService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.VideoReviewService;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 @RestController
-public class BarrageController {
+public class DanmuController {
     @Autowired
     private UserMapper userMapper;
 
@@ -29,7 +29,7 @@ public class BarrageController {
     private UserService userService;
 
     @Autowired
-    private BarrageMapper barrageMapper;
+    private DanmuMapper danmuMapper;
 
     @Autowired
     private VideoMapper videoMapper;
@@ -41,7 +41,7 @@ public class BarrageController {
     private VideoReviewService videoReviewService;
 
     @Autowired
-    private BarrageService barrageService;
+    private DanmuService danmuService;
 
     @Autowired
     private RedisTool redisTool;
@@ -52,7 +52,7 @@ public class BarrageController {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    private final List<Barrage> individualBarrageList = new ArrayList<>();
+    private final List<Danmu> individualDanmuList = new ArrayList<>();
 
 
     //------------------------------------------------------------------------------------
@@ -69,8 +69,8 @@ public class BarrageController {
         for(int i=0;i<vid.length();++i){
             vidInt = vidInt*10 + vid.charAt(i)-'0';
         }
-        List<Barrage> barrageResult = barrageService.getBarrageListByIdSetOrVid(idset,vidInt);
-        while (!individualBarrageList.isEmpty()) {
+        List<Danmu> danmuResult = danmuService.getBarrageListByIdSetOrVid(idset,vidInt);
+        while (!individualDanmuList.isEmpty()) {
             System.out.println("IndividualBarrageList 出错，内容中出现未期望的barrage实体");
             UserDTO individual = new UserDTO();
             individual.setUid(currentUser.getUserId());
@@ -80,7 +80,7 @@ public class BarrageController {
             }
         }
         ResponseResult responseResult = new ResponseResult();
-        responseResult.setData(barrageResult);
+        responseResult.setData(danmuResult);
         return responseResult;
     }
 
@@ -92,7 +92,7 @@ public class BarrageController {
     @PostMapping("/danmu/delete")
     public ResponseResult deleteDanmu(@RequestParam("id") Integer id) {
 
-        while (!individualBarrageList.isEmpty()) {
+        while (!individualDanmuList.isEmpty()) {
             System.out.println("IndividualBarrageList 出错，内容中出现未期望的Barrage实体");
             UserDTO individual = new UserDTO();
             individual.setUid(currentUser.getUserId());
@@ -104,7 +104,7 @@ public class BarrageController {
 
 
         Integer loginUid = currentUser.getUserId();
-        return barrageService.deleteBarrage(id, loginUid, currentUser.isAdmin());
+        return danmuService.deleteBarrage(id, loginUid, currentUser.isAdmin());
     }
 
     //------------------------------------------------------------------------------------------

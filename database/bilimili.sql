@@ -107,7 +107,7 @@ DROP TABLE IF EXISTS `video_status`;
 CREATE TABLE `video_status` (
                                `vid` int(11) NOT NULL COMMENT '视频ID',
                                `play` int(11) NOT NULL DEFAULT '0' COMMENT '播放量',
-                               `barrage` int(11) NOT NULL DEFAULT '0' COMMENT '弹幕数',
+                               `danmu` int(11) NOT NULL DEFAULT '0' COMMENT '弹幕数',
                                `good` int(11) NOT NULL DEFAULT '0' COMMENT '点赞数',
                                `bad` int(11) NOT NULL DEFAULT '0' COMMENT '点踩数',
                                `coin` int(11) NOT NULL DEFAULT '0' COMMENT '投币数',
@@ -215,20 +215,20 @@ DROP TABLE IF EXISTS `comment`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `comment` (
-  `cid` int(11) NOT NULL AUTO_INCREMENT COMMENT '评论主id',
+  id int(11) NOT NULL AUTO_INCREMENT COMMENT '评论主id',
   `vid` int(11) NOT NULL COMMENT '评论的视频id',
   `uid` int(11) DEFAULT NULL COMMENT '发送者id',
   `root_id` int(11) NOT NULL DEFAULT '0' COMMENT '根节点评论的id,如果为0表示为根节点',
   `parent_id` int(11) NOT NULL COMMENT '被回复的评论id，只有root_id为0时才允许为0，表示根评论',
   `to_user_id` int(11) NOT NULL COMMENT '回复目标用户id',
   `content` varchar(2000) NOT NULL COMMENT '评论内容',
-  `up_vote` int(11) NOT NULL DEFAULT '0' COMMENT '该条评论的点赞数',
-  `down_vote` int(11) DEFAULT '0' COMMENT '不喜欢的数量',
+  love int(11) NOT NULL DEFAULT '0' COMMENT '该条评论的点赞数',
+  bad int(11) DEFAULT '0' COMMENT '不喜欢的数量',
   `create_time` datetime NOT NULL COMMENT '创建时间',
   `is_top` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否置顶 0普通 1置顶',
   `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '软删除 0未删除 1已删除',
-  PRIMARY KEY (cid),
-  UNIQUE KEY `id` (cid)
+  PRIMARY KEY (id),
+  UNIQUE KEY `id` (id)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COMMENT='评论表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -255,25 +255,25 @@ CREATE TABLE `postComment` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `barrage`
+-- Table structure for table `danmu`
 --
 
-DROP TABLE IF EXISTS `barrage`;
+DROP TABLE IF EXISTS `danmu`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `barrage` (
-  `bid` int(11) NOT NULL AUTO_INCREMENT COMMENT '弹幕ID',
+CREATE TABLE `danmu` (
+  id int(11) NOT NULL AUTO_INCREMENT COMMENT '弹幕ID',
   `vid` int(11) NOT NULL COMMENT '视频ID',
   `uid` int(11) NOT NULL COMMENT '用户ID',
   `content` varchar(100) NOT NULL COMMENT '弹幕内容',
-  `word_size` tinyint(4) NOT NULL DEFAULT '25' COMMENT '字体大小',
+  fontsize tinyint(4) NOT NULL DEFAULT '25' COMMENT '字体大小',
   `mode` tinyint(4) NOT NULL DEFAULT '1' COMMENT '弹幕模式 1滚动 2顶部 3底部',
   `color` varchar(7) NOT NULL DEFAULT '#FFFFFF' COMMENT '弹幕颜色 6位十六进制标准格式',
-  `time_in_video` double NOT NULL COMMENT '弹幕所在视频的时间点',
+  time_point double NOT NULL COMMENT '弹幕所在视频的时间点',
   `state` tinyint(4) NOT NULL DEFAULT '1' COMMENT '弹幕状态 1默认过审 2被举报审核中 3删除',
   `create_date` datetime NOT NULL COMMENT '发送弹幕的日期时间',
-  PRIMARY KEY (bid),
-  UNIQUE KEY `id` (bid)
+  PRIMARY KEY (id),
+  UNIQUE KEY `id` (id)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COMMENT='弹幕表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 

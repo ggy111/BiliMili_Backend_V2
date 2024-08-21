@@ -124,8 +124,8 @@ public class FavoriteVideoController {
     private Set<Integer> findFidsOfUserFavorites(Integer uid) {
         List<Favorite> list = favoriteService.getFavorites(uid, true);
         if (list == null) return new HashSet<>();
-        System.out.println("find");
-        System.out.println(list);
+        /*System.out.println("find");
+        System.out.println(list);*/
         return list.stream()
                 .map(Favorite::getFid)
                 .collect(Collectors.toSet());

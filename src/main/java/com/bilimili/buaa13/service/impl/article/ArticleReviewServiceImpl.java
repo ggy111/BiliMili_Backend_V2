@@ -53,6 +53,7 @@ public class ArticleReviewServiceImpl implements ArticleReviewService {
      */
     @Override
     public ResponseResult getArticlesByPage(Integer status, Integer page, Integer quantity) {
+        //System.out.println("已进入getArticlesByPage");
         ResponseResult responseResult = new ResponseResult();
         if (!currentUser.isAdmin()) {
             responseResult.setCode(403);
@@ -68,11 +69,9 @@ public class ArticleReviewServiceImpl implements ArticleReviewService {
             List<Integer> aids = articleMapper.getArticleIdsByStatus(status);
             set = new HashSet<>(aids);
         }
-        List<Integer> aids = articleMapper.getArticleIdsByStatus(status);
-        Set<Integer> aidSet = new HashSet<>(aids);
-        if (!aidSet.isEmpty()) {
+        if (!set.isEmpty()) {
             // 如果集合不为空，则在数据库主键查询，并且返回没有被删除的视频
-            List<Map<String, Object>> mapList = articleService.getArticlesWithDataByIds(Collections.singleton(aidSet), page, quantity);
+            List<Map<String, Object>> mapList = articleService.getArticlesWithDataByIds(set, page, quantity);
             responseResult.setData(mapList);
         }
         return responseResult;

@@ -68,7 +68,7 @@ public class HistoryController {
             Video video = videoMapper.selectOne(videoQueryWrapper);
             VideoStatus videoStatus = videoStatusMapper.selectOne(videoStatsQueryWrapper);
             titles.add(video.getTitle());
-            videoTimes.add(video.getVideoTime());
+            videoTimes.add(video.getDuration());
             urls.add(video.getCoverUrl());
             playCounts.add(videoStatus.getPlay());
         }

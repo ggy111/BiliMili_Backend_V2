@@ -192,6 +192,7 @@ public class ArticleController {
         QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("aid", aid).ne("status", 3);
         article = articleMapper.selectOne(queryWrapper);
+        System.out.println("getArticleContentByVid: " + article);
         if (article == null) {
             responseResult.setCode(404);
             responseResult.setMessage("Article not found");

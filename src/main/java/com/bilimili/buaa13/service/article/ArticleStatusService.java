@@ -23,7 +23,7 @@ public interface ArticleStatusService {
     /**
      * 同时更新点赞和点踩
      * @param aid   视频ID
-     * @param addGood   是否点赞，true则good+1&down_vote-1，false则good-1&down_vote+1
+     * @param addGood   是否点赞，true则good+1&bad-1，false则good-1&bad+1
      */
     void updateGoodAndBad(Integer aid, boolean addGood);
 }

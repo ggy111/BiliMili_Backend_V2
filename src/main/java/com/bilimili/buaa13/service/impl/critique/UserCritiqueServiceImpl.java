@@ -103,7 +103,7 @@ public class UserCritiqueServiceImpl implements UserCritiqueService {
                 // 移除点赞记录
                 redisTool.deleteSetMember("upVote:" + postId, criId);
                 // 更新评论点赞数
-                critiqueService.updateCritique(criId, "up_vote", false, 1);
+                critiqueService.updateCritique(criId, "love", false, 1);
             }
             else if(judgeNumber == 5){
                 //以前点了赞，现在需要取消踩。不需要取消
@@ -137,7 +137,7 @@ public class UserCritiqueServiceImpl implements UserCritiqueService {
                 // 取消用户点踩记录
                 redisTool.deleteSetMember("downVote:" + postId, criId);
                 // 更新评论点踩数量
-                critiqueService.updateCritique(criId, "down_vote", false, 1);
+                critiqueService.updateCritique(criId, "bad", false, 1);
             }
             else if (judgeNumber == 0){
                 //原本点了踩，现在还要点踩，直接返回
@@ -158,7 +158,7 @@ public class UserCritiqueServiceImpl implements UserCritiqueService {
                     // 原本没有点赞，直接点踩，更新评论点踩数量
                     // 添加点踩记录
                     redisTool.addSetMember("downVote:" + postId, criId);
-                    critiqueService.updateCritique(criId, "down_vote", true, 1);
+                    critiqueService.updateCritique(criId, "bad", true, 1);
                     break;
                 case 1:
                     //取消点踩,以前没有点踩，直接过
@@ -168,7 +168,7 @@ public class UserCritiqueServiceImpl implements UserCritiqueService {
                     // 添加点赞记录
                     redisTool.addSetMember("upVote:" + postId, criId);
                     // 原来没点踩，只需要点赞, 这里只更新评论的点赞数
-                    critiqueService.updateCritique(criId, "up_vote", true, 1);
+                    critiqueService.updateCritique(criId, "love", true, 1);
                     break;
                 case 3:
                     //取消点赞，以前没有点赞，直接过

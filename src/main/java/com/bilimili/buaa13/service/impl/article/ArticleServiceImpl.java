@@ -178,9 +178,9 @@ public class ArticleServiceImpl implements ArticleService {
                 return responseResult;
             }
             Integer lastStatus = article.getStatus();
-            article.setStatus(1);
+            article.setStatus(status);
             UpdateWrapper<Article> updateWrapper = new UpdateWrapper<>();
-            updateWrapper.eq("aid", aid).set("status", 1);     // 更新专栏状态审核通过
+            updateWrapper.eq("aid", aid).set("status", status);     // 更新专栏状态审核通过
             int flag = articleMapper.update(null, updateWrapper);
             if (flag > 0) {
                 // 更新成功

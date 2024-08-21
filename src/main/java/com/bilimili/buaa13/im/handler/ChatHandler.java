@@ -89,7 +89,7 @@ class ChatHandler {
 
             // 发给自己的全部channel
             Set<Channel> from = IMServer.userChannel.get(user_id);
-            System.out.println("from is " + from + "User cid" + chatDetailed.getPostId());
+            System.out.println("from is " + from + "User id" + chatDetailed.getPostId());
             if (from != null) {
                 for (Channel channel : from) {
                     channel.writeAndFlush(IMResponse.message("message", map));
@@ -158,7 +158,7 @@ class ChatHandler {
 
             // 发给自己的全部channel
             Set<Channel> from = IMServer.userChannel.get(user_id);
-            System.out.println("from is " + from + "User cid" + chatDetailed.getPostId());
+            System.out.println("from is " + from + "User id" + chatDetailed.getPostId());
             if (from != null) {
                 for (Channel channel : from) {
                     channel.writeAndFlush(IMResponse.message("message", map));

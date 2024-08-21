@@ -19,7 +19,7 @@ public class Video {
     private String title;
     private Integer type;
     private Integer author;
-    private Double videoTime;
+    private Double duration;
     private String mainClassId;
     private String subClassId;
     private String tags;

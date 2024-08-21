@@ -75,7 +75,7 @@ public class UserCommentServiceImpl implements UserCommentService {
                 // 移除点赞记录
                 redisTool.deleteSetMember("upVote:" + uid, cid);
                 // 更新评论点赞数
-                commentService.updateComment(cid, "up_vote", false, 1);
+                commentService.updateComment(cid, "love", false, 1);
             }
             else if(judgeNumber == 5){
                 //以前点了赞，现在需要取消踩。不需要取消
@@ -109,7 +109,7 @@ public class UserCommentServiceImpl implements UserCommentService {
                 // 取消用户点踩记录
                 redisTool.deleteSetMember("downVote:" + uid, cid);
                 // 更新评论点踩数量
-                commentService.updateComment(cid, "down_vote", false, 1);
+                commentService.updateComment(cid, "bad", false, 1);
             }
             else if (judgeNumber == 0){
                 //原本点了踩，现在还要点踩，直接返回
@@ -130,7 +130,7 @@ public class UserCommentServiceImpl implements UserCommentService {
                     // 原本没有点赞，直接点踩，更新评论点踩数量
                     // 添加点踩记录
                     redisTool.addSetMember("downVote:" + uid, cid);
-                    commentService.updateComment(cid, "down_vote", true, 1);
+                    commentService.updateComment(cid, "bad", true, 1);
                     break;
                 case 1:
                     //取消点踩,以前没有点踩，直接过
@@ -140,7 +140,7 @@ public class UserCommentServiceImpl implements UserCommentService {
                     // 添加点赞记录
                     redisTool.addSetMember("upVote:" + uid, cid);
                     // 原来没点踩，只需要点赞, 这里只更新评论的点赞数
-                    commentService.updateComment(cid, "up_vote", true, 1);
+                    commentService.updateComment(cid, "love", true, 1);
                     break;
                 case 3:
                     //取消点赞，以前没有点赞，直接过

@@ -61,7 +61,7 @@ public class UserCommentController {
     public ResponseResult getUpLike(@RequestParam("uid") Integer uid) {
         ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = userCommentService.getUserUpVoteAndDownVote(uid);
-        responseResult.setData(map.get("userUpVote"));
+        responseResult.setData(map.get("userLike"));
         return responseResult;
     }
 
@@ -74,7 +74,7 @@ public class UserCommentController {
     public ResponseResult getUpDownVote(@RequestParam("uid") Integer uid) {
         ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = userCommentService.getUserUpVoteAndDownVote(uid);
-        responseResult.setData(map.get("userDownVote"));
+        responseResult.setData(map.get("userDislike"));
         return responseResult;
     }
 }
