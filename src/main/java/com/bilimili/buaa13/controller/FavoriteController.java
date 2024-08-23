@@ -56,7 +56,7 @@ public class FavoriteController {
     public ResponseResult getFavoriteDetails(@RequestParam("fid") Integer fid) {
         ResponseResult responseResult = new ResponseResult();
         responseResult.setData(favoriteService.getFavorites(fid,true));
-        return new ResponseResult();
+        return responseResult;
     }
 
     /**

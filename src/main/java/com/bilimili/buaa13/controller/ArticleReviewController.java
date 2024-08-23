@@ -39,6 +39,7 @@ public class ArticleReviewController {
     public ResponseResult getArticles(@RequestParam("astatus") Integer status,
                                       @RequestParam(value = "page", defaultValue = "1") Integer page,
                                       @RequestParam(value = "quantity", defaultValue = "10") Integer quantity) {
+        //System.out.println("测试");
         return articleReviewService.getArticlesByPage(status, page, quantity);
     }
 
