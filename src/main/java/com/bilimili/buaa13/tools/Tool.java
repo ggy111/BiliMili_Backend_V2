@@ -1,5 +1,7 @@
 package com.bilimili.buaa13.tools;
 
+import org.springframework.stereotype.Component;
+
 import java.security.MessageDigest;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -12,6 +14,7 @@ import java.util.Date;
 import java.util.Random;
 import java.util.regex.Pattern;
 
+@Component
 public class Tool {
 
     // 密码长度限制

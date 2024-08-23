@@ -97,6 +97,7 @@ public class SecurityConfig {
                                 "/image/add",
                                 "/column/favoriteVideo",
                                 "/article/get",
+                                "/article/get",
                                 "/favorite/get-all/user",
                                 "/article/get/all",
                                 "/category/getall",
@@ -123,7 +124,8 @@ public class SecurityConfig {
                                 "/column/favoriteVideo",
                                 "/following/update",
                                 "/isFans",
-                                "/column/markdown"
+                                "/column/markdown",
+                                "/review/article/getpage"
                         ).permitAll()
                         // 允许HTTP OPTIONS请求
                         .antMatchers(HttpMethod.OPTIONS).permitAll()

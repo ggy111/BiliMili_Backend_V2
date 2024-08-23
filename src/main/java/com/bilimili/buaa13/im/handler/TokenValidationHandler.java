@@ -134,8 +134,8 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
             log.error("当前token已过期");
             return null;
         }
-        String userId = JsonWebTokenTool.getSubjectFromToken(token);
-        String role = JsonWebTokenTool.getClaimFromToken(token, "role");
+        String userId = jsonWebTokenTool.getSubjectFromToken(token);
+        String role = jsonWebTokenTool.getClaimFromToken(token, "role");
         User user = redisTool.getObject("security:" + role + ":" + userId, User.class);
 
         if (user == null) {

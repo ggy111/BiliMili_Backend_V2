@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * 响应包装类
  */
@@ -11,8 +13,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 // 自定义响应对象
-public class ResponseResult {
-    private int code = 200;
+public class ResponseResult implements Serializable {
+    private Integer code = 200;
     private String message = "OK";
     private Object data;
 }

@@ -117,6 +117,7 @@ public class SearchController {
         ResponseResult responseResult = new ResponseResult();
         List<Integer> vids = esTool.searchVideosByKeyword(keyword, page, 30, true);
         responseResult.setData(videoService.getVideosWithDataByVideoIdList(vids));
+        System.out.println("getMatchingVideo: "+vids);
         return responseResult;
     }
 

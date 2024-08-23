@@ -1,0 +1,338 @@
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+java.lang.instrument.IllegalClassFormatException: Error while instrumenting java/sql/SQLException with JaCoCo 0.8.8.202204050719/5dcf34a.
+        at org.jacoco.agent.rt.internal_b6258fc.CoverageTransformer.transform(CoverageTransformer.java:94)
+        at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+        at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+        at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+        at java.base/java.lang.ClassLoader.defineClass2(Native Method)
+        at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1104)
+        at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:182)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:821)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.findClassInModuleOrNull(BuiltinClassLoader.java:741)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:665)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:700)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:669)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+        at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+        at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:521)
+        at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+        at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3502)
+        at java.base/java.lang.Class.getDeclaredMethods(Class.java:2601)
+        at org.junit.platform.commons.util.ReflectionUtils.getDeclaredMethods(ReflectionUtils.java:1492)
+        at org.junit.platform.commons.util.ReflectionUtils.findMethod(ReflectionUtils.java:1341)
+        at org.junit.platform.commons.util.ReflectionUtils.isMethodPresent(ReflectionUtils.java:1242)
+        at org.junit.jupiter.engine.discovery.predicates.IsTestClassWithTests.hasTestOrTestFactoryOrTestTemplateMethods(IsTestClassWithTests.java:50)
+        at org.junit.jupiter.engine.discovery.predicates.IsTestClassWithTests.test(IsTestClassWithTests.java:46)
+        at org.junit.jupiter.engine.discovery.ClassSelectorResolver.resolve(ClassSelectorResolver.java:67)
+        at org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolution.lambda$resolve$2(EngineDiscoveryRequestResolution.java:134)
+        at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+        at java.base/java.util.ArrayList$ArrayListSpliterator.tryAdvance(ArrayList.java:1602)
+        at java.base/java.util.stream.ReferencePipeline.forEachWithCancel(ReferencePipeline.java:129)
+        at java.base/java.util.stream.AbstractPipeline.copyIntoWithCancel(AbstractPipeline.java:527)
+        at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:513)
+        at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+        at java.base/java.util.stream.FindOps$FindOp.evaluateSequential(FindOps.java:150)
+        at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+        at java.base/java.util.stream.ReferencePipeline.findFirst(ReferencePipeline.java:647)
+        at org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolution.resolve(EngineDiscoveryRequestResolution.java:185)
+        at org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolution.resolve(EngineDiscoveryRequestResolution.java:125)
+        at org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolution.resolveCompletely(EngineDiscoveryRequestResolution.java:91)
+        at org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolution.run(EngineDiscoveryRequestResolution.java:82)
+        at org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolver.resolve(EngineDiscoveryRequestResolver.java:113)
+        at org.junit.jupiter.engine.discovery.DiscoverySelectorResolver.resolveSelectors(DiscoverySelectorResolver.java:46)
+        at org.junit.jupiter.engine.JupiterTestEngine.discover(JupiterTestEngine.java:69)
+        at org.junit.platform.launcher.core.DefaultLauncher.discoverEngineRoot(DefaultLauncher.java:168)
+        at org.junit.platform.launcher.core.DefaultLauncher.discoverRoot(DefaultLauncher.java:155)
+        at org.junit.platform.launcher.core.DefaultLauncher.discover(DefaultLauncher.java:120)
+        at org.apache.maven.surefire.junitplatform.TestPlanScannerFilter.accept(TestPlanScannerFilter.java:56)
+        at org.apache.maven.surefire.util.DefaultScanResult.applyFilter(DefaultScanResult.java:102)
+        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.scanClasspath(JUnitPlatformProvider.java:143)
+        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:124)
+        at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:384)
+        at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:345)
+        at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:126)
+        at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:418)
+Caused by: java.io.IOException: Error while instrumenting java/sql/SQLException with JaCoCo 0.8.8.202204050719/5dcf34a.
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrumentError(Instrumenter.java:161)
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrument(Instrumenter.java:111)
+        at org.jacoco.agent.rt.internal_b6258fc.CoverageTransformer.transform(CoverageTransformer.java:92)
+        ... 51 more
+Caused by: java.lang.IllegalArgumentException: Unsupported class file major version 64
+        at org.jacoco.agent.rt.internal_b6258fc.asm.ClassReader.<init>(ClassReader.java:199)
+        at org.jacoco.agent.rt.internal_b6258fc.asm.ClassReader.<init>(ClassReader.java:180)
+        at org.jacoco.agent.rt.internal_b6258fc.asm.ClassReader.<init>(ClassReader.java:166)
+        at org.jacoco.agent.rt.internal_b6258fc.core.internal.instr.InstrSupport.classReaderFor(InstrSupport.java:280)
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrument(Instrumenter.java:77)
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrument(Instrumenter.java:109)
+        ... 52 more
+java.lang.instrument.IllegalClassFormatException: Error while instrumenting javax/sql/DataSource with JaCoCo 0.8.8.202204050719/5dcf34a.
+        at org.jacoco.agent.rt.internal_b6258fc.CoverageTransformer.transform(CoverageTransformer.java:94)
+        at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+        at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+        at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+        at java.base/java.lang.ClassLoader.defineClass2(Native Method)
+        at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1104)
+        at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:182)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:821)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.findClassInModuleOrNull(BuiltinClassLoader.java:741)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:665)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:700)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:669)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+        at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+        at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:521)
+        at java.base/java.lang.Class.getDeclaredFields0(Native Method)
+        at java.base/java.lang.Class.privateGetDeclaredFields(Class.java:3397)
+        at java.base/java.lang.Class.getDeclaredFields(Class.java:2468)
+        at org.junit.platform.commons.util.ReflectionUtils.getDeclaredFields(ReflectionUtils.java:1470)
+        at org.junit.platform.commons.util.ReflectionUtils.findAllFieldsInHierarchy(ReflectionUtils.java:1200)
+        at org.junit.platform.commons.util.ReflectionUtils.findFields(ReflectionUtils.java:1188)
+        at org.junit.jupiter.engine.descriptor.ExtensionUtils.registerExtensionsFromFields(ExtensionUtils.java:96)
+        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.prepare(ClassBasedTestDescriptor.java:150)
+        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.prepare(ClassBasedTestDescriptor.java:80)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$prepare$2(NodeTestTask.java:123)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.prepare(NodeTestTask.java:123)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:90)
+        at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+        at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+        at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:220)
+        at org.junit.platform.launcher.core.DefaultLauncher.lambda$execute$6(DefaultLauncher.java:188)
+        at org.junit.platform.launcher.core.DefaultLauncher.withInterceptedStreams(DefaultLauncher.java:202)
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:181)
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:128)
+        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:150)
+        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:124)
+        at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:384)
+        at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:345)
+        at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:126)
+        at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:418)
+Caused by: java.io.IOException: Error while instrumenting javax/sql/DataSource with JaCoCo 0.8.8.202204050719/5dcf34a.
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrumentError(Instrumenter.java:161)
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrument(Instrumenter.java:111)
+        at org.jacoco.agent.rt.internal_b6258fc.CoverageTransformer.transform(CoverageTransformer.java:92)
+        ... 51 more
+Caused by: java.lang.IllegalArgumentException: Unsupported class file major version 64
+        at org.jacoco.agent.rt.internal_b6258fc.asm.ClassReader.<init>(ClassReader.java:199)
+        at org.jacoco.agent.rt.internal_b6258fc.asm.ClassReader.<init>(ClassReader.java:180)
+        at org.jacoco.agent.rt.internal_b6258fc.asm.ClassReader.<init>(ClassReader.java:166)
+        at org.jacoco.agent.rt.internal_b6258fc.core.internal.instr.InstrSupport.classReaderFor(InstrSupport.java:280)
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrument(Instrumenter.java:77)
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrument(Instrumenter.java:109)
+        ... 52 more
+java.lang.instrument.IllegalClassFormatException: Error while instrumenting javax/sql/CommonDataSource with JaCoCo 0.8.8.202204050719/5dcf34a.
+        at org.jacoco.agent.rt.internal_b6258fc.CoverageTransformer.transform(CoverageTransformer.java:94)
+        at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+        at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+        at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+        at java.base/java.lang.ClassLoader.defineClass2(Native Method)
+        at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1104)
+        at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:182)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:821)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.findClassInModuleOrNull(BuiltinClassLoader.java:741)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:665)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+        at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:521)
+        at java.base/java.lang.ClassLoader.defineClass2(Native Method)
+        at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1104)
+        at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:182)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:821)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.findClassInModuleOrNull(BuiltinClassLoader.java:741)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:665)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:700)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:669)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+        at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+        at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:521)
+        at java.base/java.lang.Class.getDeclaredFields0(Native Method)
+        at java.base/java.lang.Class.privateGetDeclaredFields(Class.java:3397)
+        at java.base/java.lang.Class.getDeclaredFields(Class.java:2468)
+        at org.junit.platform.commons.util.ReflectionUtils.getDeclaredFields(ReflectionUtils.java:1470)
+        at org.junit.platform.commons.util.ReflectionUtils.findAllFieldsInHierarchy(ReflectionUtils.java:1200)
+        at org.junit.platform.commons.util.ReflectionUtils.findFields(ReflectionUtils.java:1188)
+        at org.junit.jupiter.engine.descriptor.ExtensionUtils.registerExtensionsFromFields(ExtensionUtils.java:96)
+        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.prepare(ClassBasedTestDescriptor.java:150)
+        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.prepare(ClassBasedTestDescriptor.java:80)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$prepare$2(NodeTestTask.java:123)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.prepare(NodeTestTask.java:123)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:90)
+        at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+        at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+        at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:220)
+        at org.junit.platform.launcher.core.DefaultLauncher.lambda$execute$6(DefaultLauncher.java:188)
+        at org.junit.platform.launcher.core.DefaultLauncher.withInterceptedStreams(DefaultLauncher.java:202)
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:181)
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:128)
+        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:150)
+        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:124)
+        at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:384)
+        at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:345)
+        at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:126)
+        at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:418)
+Caused by: java.io.IOException: Error while instrumenting javax/sql/CommonDataSource with JaCoCo 0.8.8.202204050719/5dcf34a.
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrumentError(Instrumenter.java:161)
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrument(Instrumenter.java:111)
+        at org.jacoco.agent.rt.internal_b6258fc.CoverageTransformer.transform(CoverageTransformer.java:92)
+        ... 59 more
+Caused by: java.lang.IllegalArgumentException: Unsupported class file major version 64
+        at org.jacoco.agent.rt.internal_b6258fc.asm.ClassReader.<init>(ClassReader.java:199)
+        at org.jacoco.agent.rt.internal_b6258fc.asm.ClassReader.<init>(ClassReader.java:180)
+        at org.jacoco.agent.rt.internal_b6258fc.asm.ClassReader.<init>(ClassReader.java:166)
+        at org.jacoco.agent.rt.internal_b6258fc.core.internal.instr.InstrSupport.classReaderFor(InstrSupport.java:280)
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrument(Instrumenter.java:77)
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrument(Instrumenter.java:109)
+        ... 60 more
+java.lang.instrument.IllegalClassFormatException: Error while instrumenting java/sql/Wrapper with JaCoCo 0.8.8.202204050719/5dcf34a.
+        at org.jacoco.agent.rt.internal_b6258fc.CoverageTransformer.transform(CoverageTransformer.java:94)
+        at java.instrument/java.lang.instrument.ClassFileTransformer.transform(ClassFileTransformer.java:244)
+        at java.instrument/sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+        at java.instrument/sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:541)
+        at java.base/java.lang.ClassLoader.defineClass2(Native Method)
+        at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1104)
+        at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:182)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:821)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.findClassInModuleOrNull(BuiltinClassLoader.java:741)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:665)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+        at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:521)
+        at java.base/java.lang.ClassLoader.defineClass2(Native Method)
+        at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1104)
+        at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:182)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:821)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.findClassInModuleOrNull(BuiltinClassLoader.java:741)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:665)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:700)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:669)
+        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)
+        at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+        at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:521)
+        at java.base/java.lang.Class.getDeclaredFields0(Native Method)
+        at java.base/java.lang.Class.privateGetDeclaredFields(Class.java:3397)
+        at java.base/java.lang.Class.getDeclaredFields(Class.java:2468)
+        at org.junit.platform.commons.util.ReflectionUtils.getDeclaredFields(ReflectionUtils.java:1470)
+        at org.junit.platform.commons.util.ReflectionUtils.findAllFieldsInHierarchy(ReflectionUtils.java:1200)
+        at org.junit.platform.commons.util.ReflectionUtils.findFields(ReflectionUtils.java:1188)
+        at org.junit.jupiter.engine.descriptor.ExtensionUtils.registerExtensionsFromFields(ExtensionUtils.java:96)
+        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.prepare(ClassBasedTestDescriptor.java:150)
+        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.prepare(ClassBasedTestDescriptor.java:80)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$prepare$2(NodeTestTask.java:123)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.prepare(NodeTestTask.java:123)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:90)
+        at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+        at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+        at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:220)
+        at org.junit.platform.launcher.core.DefaultLauncher.lambda$execute$6(DefaultLauncher.java:188)
+        at org.junit.platform.launcher.core.DefaultLauncher.withInterceptedStreams(DefaultLauncher.java:202)
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:181)
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:128)
+        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:150)
+        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:124)
+        at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:384)
+        at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:345)
+        at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:126)
+        at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:418)
+Caused by: java.io.IOException: Error while instrumenting java/sql/Wrapper with JaCoCo 0.8.8.202204050719/5dcf34a.
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrumentError(Instrumenter.java:161)
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrument(Instrumenter.java:111)
+        at org.jacoco.agent.rt.internal_b6258fc.CoverageTransformer.transform(CoverageTransformer.java:92)
+        ... 59 more
+Caused by: java.lang.IllegalArgumentException: Unsupported class file major version 64
+        at org.jacoco.agent.rt.internal_b6258fc.asm.ClassReader.<init>(ClassReader.java:199)
+        at org.jacoco.agent.rt.internal_b6258fc.asm.ClassReader.<init>(ClassReader.java:180)
+        at org.jacoco.agent.rt.internal_b6258fc.asm.ClassReader.<init>(ClassReader.java:166)
+        at org.jacoco.agent.rt.internal_b6258fc.core.internal.instr.InstrSupport.classReaderFor(InstrSupport.java:280)
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrument(Instrumenter.java:77)
+        at org.jacoco.agent.rt.internal_b6258fc.core.instr.Instrumenter.instrument(Instrumenter.java:109)
+        ... 60 more
+[INFO] Running com.bilimili.buaa13.ApplicationTests
+11:46:33.602 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating CacheAwareContextLoaderDelegate from class [org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate]
+11:46:33.635 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating BootstrapContext using constructor [public org.springframework.test.context.support.DefaultBootstrapContext(java.lang.Class,org.springframework.test.context.CacheAwareContextLoaderDelegate)]
+11:46:33.690 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating TestContextBootstrapper for test class [com.bilimili.buaa13.ApplicationTests] from class [org.springframework.boot.test.context.SpringBootTestContextBootstrapper]
+11:46:33.707 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating CacheAwareContextLoaderDelegate from class [org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate]
+11:46:33.708 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating BootstrapContext using constructor [public org.springframework.test.context.support.DefaultBootstrapContext(java.lang.Class,org.springframework.test.context.CacheAwareContextLoaderDelegate)]
+11:46:33.708 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating TestContextBootstrapper for test class [com.bilimili.buaa13.ApplicationTests] from class [org.springframework.boot.test.context.SpringBootTestContextBootstrapper]
+11:46:33.709 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating CacheAwareContextLoaderDelegate from class [org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate]
+11:46:33.709 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating BootstrapContext using constructor [public org.springframework.test.context.support.DefaultBootstrapContext(java.lang.Class,org.springframework.test.context.CacheAwareContextLoaderDelegate)]
+11:46:33.709 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating TestContextBootstrapper for test class [com.bilimili.buaa13.ApplicationTests] from class [org.springframework.boot.test.context.SpringBootTestContextBootstrapper]
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.237 s <<< FAILURE! - in com.bilimili.buaa13.ApplicationTests
+[ERROR] com.bilimili.buaa13.ApplicationTests  Time elapsed: 0.236 s  <<< ERROR!
+java.lang.NoClassDefFoundError: org/springframework/test/context/TestContextAnnotationUtils
+Caused by: java.lang.ClassNotFoundException: org.springframework.test.context.TestContextAnnotationUtils
+
+[INFO] Running com.bilimili.buaa13.comment.TestComment
+11:46:33.728 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating CacheAwareContextLoaderDelegate from class [org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate]
+11:46:33.728 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating BootstrapContext using constructor [public org.springframework.test.context.support.DefaultBootstrapContext(java.lang.Class,org.springframework.test.context.CacheAwareContextLoaderDelegate)]
+11:46:33.728 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating TestContextBootstrapper for test class [com.bilimili.buaa13.comment.TestComment] from class [org.springframework.boot.test.context.SpringBootTestContextBootstrapper]
+11:46:33.729 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating CacheAwareContextLoaderDelegate from class [org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate]
+11:46:33.729 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating BootstrapContext using constructor [public org.springframework.test.context.support.DefaultBootstrapContext(java.lang.Class,org.springframework.test.context.CacheAwareContextLoaderDelegate)]
+11:46:33.729 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating TestContextBootstrapper for test class [com.bilimili.buaa13.comment.TestComment] from class [org.springframework.boot.test.context.SpringBootTestContextBootstrapper]
+11:46:33.730 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating CacheAwareContextLoaderDelegate from class [org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate]
+11:46:33.730 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating BootstrapContext using constructor [public org.springframework.test.context.support.DefaultBootstrapContext(java.lang.Class,org.springframework.test.context.CacheAwareContextLoaderDelegate)]
+11:46:33.730 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating TestContextBootstrapper for test class [com.bilimili.buaa13.comment.TestComment] from class [org.springframework.boot.test.context.SpringBootTestContextBootstrapper]
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0 s <<< FAILURE! - in com.bilimili.buaa13.comment.TestComment
+[ERROR] com.bilimili.buaa13.comment.TestComment  Time elapsed: 0 s  <<< ERROR!
+java.lang.NoClassDefFoundError: org/springframework/test/context/TestContextAnnotationUtils
+Caused by: java.lang.ClassNotFoundException: org.springframework.test.context.TestContextAnnotationUtils
+
+[INFO] 
+[INFO] Results:
+[INFO]
+[ERROR] Errors: 
+[ERROR]   ApplicationTests 禄 NoClassDefFound org/springframework/test/context/TestContex...
+[ERROR]   TestComment 禄 NoClassDefFound org/springframework/test/context/TestContextAnno...
+[INFO]
+[ERROR] Tests run: 2, Failures: 0, Errors: 2, Skipped: 0
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  10.699 s
+[INFO] Finished at: 2024-08-22T11:46:34+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.22.2:test (default-test) on project backend: There are test failures.
+[ERROR]
+[ERROR] Please refer to D:\ziliao\杞欢宸ョ▼鍩虹\瀹為獙\bilimili\bilimili-backend-main\target\surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

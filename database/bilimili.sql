@@ -298,8 +298,7 @@ CREATE TABLE `favorite` (
   UNIQUE KEY `fid` (`fid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COMMENT='收藏夹';
 /*!40101 SET character_set_client = @saved_cs_client */;
-ALTER TABLE favorite
-MODIFY COLUMN `fid` int(11) NOT NULL AUTO_INCREMENT COMMENT '收藏夹ID';
+insert into favorite (fid, uid, title) values (50000, 0, '分隔符');
 
 --
 -- Table structure for table `favorite_video`

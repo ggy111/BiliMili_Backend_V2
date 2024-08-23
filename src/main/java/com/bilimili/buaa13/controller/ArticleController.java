@@ -25,14 +25,11 @@ import java.util.*;
 
 @RestController
 public class ArticleController {
-    @Autowired
+    @Autowired(required = true)
     private OSS ossClient;
-
 
     @Autowired
     private VideoReviewService videoReviewService;
-
-
 
     @Autowired
     private UserMapper userMapper;
@@ -98,11 +95,11 @@ public class ArticleController {
         try {
             boolean canGetArticle = false;
 
-            System.out.println("controller层没问题");
+            //System.out.println("controller层没问题");
             ResponseResult responseResult = articleService.updateArticleStatus(aid, status);
-            System.out.println("updateArticleStatus没问题");
+            //System.out.println("updateArticleStatus没问题");
             if(status == 1){
-                System.out.println("Status = 1");
+                //System.out.println("Status = 1");
                 //将发布消息发送给粉丝
                 // redis 查不到再查数据库
                 QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
