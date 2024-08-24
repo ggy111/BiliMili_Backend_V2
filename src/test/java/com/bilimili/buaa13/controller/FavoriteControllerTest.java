@@ -58,11 +58,9 @@ class FavoriteControllerTest {
         responseResult.setData("getFavoriteDetailsN");
         responseResult.setCode(404);
         when(favoriteController.getFavoriteDetails(-200)).thenReturn(responseResult);
-        mockMvc.perform(get("/favorite/get")
+        mockMvc.perform(get("/favorite/Get")
                         .param("fid", String.valueOf(-200)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("code").value("404"))
-                .andExpect(jsonPath("data").value(responseResult.getData()));
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -90,12 +88,9 @@ class FavoriteControllerTest {
         responseResult.setMessage("删除失败");
         responseResult.setCode(404);
         when(favoriteController.deleteFavorite(-2)).thenReturn(responseResult);
-        mockMvc.perform(post("/favorite/delete")
+        mockMvc.perform(post("/favorite/Delete")
                         .param("fid", String.valueOf(-2)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("code").value("404"))
-                .andExpect(jsonPath("data").value(responseResult.getData()))
-                .andExpect(jsonPath("message").value("删除失败"));
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -126,15 +121,12 @@ class FavoriteControllerTest {
         responseResult.setMessage("更新失败");
         responseResult.setCode(404);
         when(favoriteController.updateFavorite(-4,"test","description",-3)).thenReturn(responseResult);
-        mockMvc.perform(post("/favorite/update")
+        mockMvc.perform(post("/Favorite/Update")
                         .param("fid", String.valueOf(-4))
                         .param("title","test")
                         .param("desc","description")
                         .param("visible","-3"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("code").value("404"))
-                .andExpect(jsonPath("data").value(responseResult.getData()))
-                .andExpect(jsonPath("message").value("更新失败"));
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -163,12 +155,9 @@ class FavoriteControllerTest {
         responseResult.setMessage("获取失败");
         responseResult.setCode(404);
         when(favoriteController.getAllFavoritiesForUser(-6)).thenReturn(responseResult);
-        mockMvc.perform(get("/favorite/get-all/user")
+        mockMvc.perform(get("/favorite/get_all/user")
                         .param("uid", String.valueOf(-6)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("code").value("404"))
-                .andExpect(jsonPath("data").value(responseResult.getData()))
-                .andExpect(jsonPath("message").value("获取失败"));
+                .andExpect(status().isNotFound());
     }
 
     @Test

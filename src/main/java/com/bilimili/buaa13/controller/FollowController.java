@@ -39,7 +39,7 @@ public class FollowController {
     public ResponseResult isFans(@RequestParam("uidFollow") Integer up, @RequestParam("uidFans") Integer fan) {
         ResponseResult responseResult = new ResponseResult();
         List<Integer> fans = followService.getUidFans(up,true);
-        System.out.println("isFans: "+fans);
+        //System.out.println("isFans: "+fans);
         responseResult.setData(false);
         if(fans==null || fans.isEmpty()) {
             responseResult.setData(false);
