@@ -57,6 +57,7 @@ public class UserController {
         }
     }
 
+
     @GetMapping("/user/info/get-one")
     public ResponseResult getOneUserInfo(@RequestParam("uid") Integer uid) {
         ResponseResult responseResult = new ResponseResult();
