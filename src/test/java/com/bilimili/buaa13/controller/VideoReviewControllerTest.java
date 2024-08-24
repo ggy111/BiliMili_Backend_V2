@@ -26,8 +26,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class VideoReviewControllerTest {
-    @Autowired
+    @MockBean
     private VideoReviewController videoReviewController;
+    @Autowired
+    private MockMvc mockMvc;
 
     @Test
     @WithMockUser
@@ -38,7 +40,7 @@ public class VideoReviewControllerTest {
         responseResult.setMessage("查询成功");
         responseResult.setCode(200);
         when(videoReviewController.getVideos(0,1,1)).thenReturn(responseResult);
-        mockMvc.perform(post("/review/video/getpage")
+        mockMvc.perform(get("/review/video/getpage")
                         .param("vstatus", String.valueOf(0))
                         .param("page", String.valueOf(1))
                         .param("quantity", String.valueOf(1)))
@@ -59,7 +61,7 @@ public class VideoReviewControllerTest {
         responseResult.setMessage("查询失败");
         responseResult.setCode(500);
         when(videoReviewController.getVideos(-1,1,1)).thenReturn(responseResult);
-        mockMvc.perform(post("/review/video/getpage")
+        mockMvc.perform(get("/review/video/getpage")
                         .param("vstatus", String.valueOf(-1))
                         .param("page", String.valueOf(1))
                         .param("quantity", String.valueOf(1)))
@@ -79,7 +81,7 @@ public class VideoReviewControllerTest {
         responseResult.setMessage("查询成功");
         responseResult.setCode(200);
         when(videoReviewController.getOneVideo(5)).thenReturn(responseResult);
-        mockMvc.perform(post("/review/video/getone")
+        mockMvc.perform(get("/review/video/getone")
                         .param("vid", String.valueOf(5)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("code").value("200"))
@@ -97,7 +99,7 @@ public class VideoReviewControllerTest {
         responseResult.setMessage("查询失败");
         responseResult.setCode(500);
         when(videoReviewController.getOneVideo(-1)).thenReturn(responseResult);
-        mockMvc.perform(post("/review/video/getone")
+        mockMvc.perform(get("/review/video/getone")
                         .param("vid", String.valueOf(-1)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("code").value("500"))

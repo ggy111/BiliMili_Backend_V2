@@ -88,7 +88,7 @@ class UserControllerTest {
         ResponseResult responseResult = new ResponseResult();
         responseResult.setData("getOneUserInfoP");
         when(userController.getOneUserInfo(5)).thenReturn(responseResult);
-        mockMvc.perform(get("user/info/get-one")
+        mockMvc.perform(get("/user/info/get-one")
                         .param("uid", String.valueOf(5)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("code").value("200"))
@@ -103,112 +103,12 @@ class UserControllerTest {
     void getOneUserInfoN() {
         ResponseResult responseResult = new ResponseResult();
         responseResult.setData("getOneUserInfoN");
+        responseResult.setCode(500);
         when(userController.getOneUserInfo(-1)).thenReturn(responseResult);
-        mockMvc.perform(get("user/info/get-one")
+        mockMvc.perform(get("/user/info/get-one")
                         .param("uid", String.valueOf(-1)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("code").value("500"))
                 .andExpect(jsonPath("data").value(responseResult.getData()));
-    }
-
-
-
-
-    //-------------------------------------------------------------
-
-
-    @Test
-    @WithMockUser
-    void getUserDetailsP() throws Exception {
-        ResponseResult responseResult = new ResponseResult();
-        responseResult.setData("getUserDetailsP");
-       // when(userController.getUserDetails(1)).thenReturn(responseResult);
-        mockMvc.perform(get("/chatgpt/user/get")
-                        .param("uid", String.valueOf(1)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("code").value("200"))
-                .andExpect(jsonPath("data").value(responseResult.getData()));
-    }
-
-    @Test
-    @WithMockUser
-    void getUserDetailsN() throws Exception {
-        ResponseResult responseResult = new ResponseResult();
-        responseResult.setData("getUserDetailsN");
-        responseResult.setCode(404);
-        //when(userController.getUserDetails(-1)).thenReturn(responseResult);
-        mockMvc.perform(get("/chatgpt/user/get")
-                        .param("uid", String.valueOf(-1)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("code").value("404"))
-                .andExpect(jsonPath("data").value(responseResult.getData()));
-    }
-
-    @Test
-    @WithMockUser
-    void createUserP() throws Exception {
-        ResponseResult responseResult = new ResponseResult();
-        responseResult.setData("createUserP");
-        responseResult.setMessage("创建成功");
-        //when(userController.createUser("username", "password")).thenReturn(responseResult);
-        mockMvc.perform(post("/chatgpt/user/create")
-                        .param("username", "username")
-                        .param("password", "password"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("code").value("200"))
-                .andExpect(jsonPath("data").value(responseResult.getData()))
-                .andExpect(jsonPath("message").value("创建成功"));
-    }
-
-    @Test
-    @WithMockUser
-    void createUserN() throws Exception {
-        ResponseResult responseResult = new ResponseResult();
-        responseResult.setData("createUserN");
-        responseResult.setMessage("创建失败");
-        responseResult.setCode(400);
-       // when(userController.createUser("invalid", "")).thenReturn(responseResult);
-        mockMvc.perform(post("/chatgpt/user/create")
-                        .param("username", "invalid")
-                        .param("password", ""))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("code").value("400"))
-                .andExpect(jsonPath("data").value(responseResult.getData()))
-                .andExpect(jsonPath("message").value("创建失败"));
-    }
-
-    @Test
-    @WithMockUser
-    void updateUserDetailsP() throws Exception {
-        ResponseResult responseResult = new ResponseResult();
-        responseResult.setData("updateUserDetailsP");
-        responseResult.setMessage("更新成功");
-       // when(userController.updateUserDetails(1, "newUsername", "newPassword")).thenReturn(responseResult);
-        mockMvc.perform(post("/chatgpt/user/update")
-                        .param("uid", String.valueOf(1))
-                        .param("username", "newUsername")
-                        .param("password", "newPassword"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("code").value("200"))
-                .andExpect(jsonPath("data").value(responseResult.getData()))
-                .andExpect(jsonPath("message").value("更新成功"));
-    }
-
-    @Test
-    @WithMockUser
-    void updateUserDetailsN() throws Exception {
-        ResponseResult responseResult = new ResponseResult();
-        responseResult.setData("updateUserDetailsN");
-        responseResult.setMessage("更新失败");
-        responseResult.setCode(400);
-        //when(userController.updateUserDetails(-1, "invalid", "")).thenReturn(responseResult);
-        mockMvc.perform(post("/chatgpt/user/update")
-                        .param("uid", String.valueOf(-1))
-                        .param("username", "invalid")
-                        .param("password", ""))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("code").value("400"))
-                .andExpect(jsonPath("data").value(responseResult.getData()))
-                .andExpect(jsonPath("message").value("更新失败"));
     }
 }

@@ -141,6 +141,7 @@ public class ChatControllerTest {
         Mockito.verify(chatService).deleteOneChat(2, 1);
     }
 
+
     @Test
     @SneakyThrows
     @WithMockUser

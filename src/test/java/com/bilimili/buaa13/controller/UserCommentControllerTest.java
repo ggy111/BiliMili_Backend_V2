@@ -27,8 +27,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class UserCommentControllerTest {
-    @Autowired
+    @MockBean
     private UserCommentController userCommentController;
+    @Autowired
+    private MockMvc mockMvc;
 
     @Test
     @WithMockUser
@@ -39,11 +41,9 @@ public class UserCommentControllerTest {
         responseResult.setCode(200);
         responseResult.setMessage("更新成功");
         when(userCommentController.getLikeAndDislike()).thenReturn(responseResult);
-        mockMvc.perform(get("/comment/get-like-and-dislike")
+        mockMvc.perform(get("/comment/get-like-and-dislike"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("code").value("200"))
-                .andExpect(jsonPath("data").value(responseResult.getData());
+                .andExpect(jsonPath("data").value(responseResult.getData()));
     }
-
-
 }
