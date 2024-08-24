@@ -247,11 +247,4 @@ public class MessageUnreadController {
         Integer uid = currentUser.getUserId();
         messageUnreadService.clearOneUnread(uid, column);
     }
-
-
-
-
-
-
-
 }
